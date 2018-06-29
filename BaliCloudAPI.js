@@ -21,11 +21,11 @@
  * This function retrieves a copy of the Bali document associated with the
  * specified reference from the Bali Cloud Environment™.
  * 
- * @param {Reference} reference A reference to the document to be read.
+ * @param {Reference} reference A reference to the document to be retrieved.
  * @returns {Document} The corresponding document.
  */
-exports.readDocument = function(reference) {
-    console.log('readDocument(' + reference + ')');
+exports.retrieveDocument = function(reference) {
+    console.log('retrieveDocument(' + reference + ')');
 };
 
 
@@ -97,7 +97,8 @@ exports.receiveMessage = function(reference) {
  * specified reference in the Bali Cloud Environment™.
  * 
  * @param {Reference} reference A reference to the message queue.
- * @returns {Document} The message to be send.
+ * @param {Document} message The message to be sent.
+ * @returns {Document} The message to be sent.
  */
 exports.sendMessage = function(reference, message) {
     console.log('sendMessage(' + reference + ', ' +  message + ')');
