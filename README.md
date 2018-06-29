@@ -1,2 +1,2 @@
-# js-bali-cloud-api
-This module provides a javascript client API to the Bali Cloud Environment™.
+# js-bali-instruction-set
+This project contains a JavaScript based parser and formatter for the Bali Virtual Machine™ instruction set.
