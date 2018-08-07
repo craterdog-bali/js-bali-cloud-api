@@ -62,9 +62,3 @@ CloudRepository.prototype.storeDocument = function(documentId, document) {
     console.log('storeDocument(' + documentId + ')');
     throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
 };
-
-
-CloudRepository.prototype.deleteDocument = function(documentId) {
-    console.log('deleteDocument(' + documentId + ')');
-    throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
-};

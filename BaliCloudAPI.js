@@ -47,21 +47,7 @@ exports.BaliCloudAPI = BaliCloudAPI;
 BaliCloudAPI.prototype.retrieveDocument = function(citation) {
     var documentId = citation.tag + citation.version;
     console.log('retrieveDocument(' + documentId + ')');
-
-    // check the cache
-    var document = this.cache[documentId];
-
-    // next check the repository if necessary
-    if (!document) {
-        var source = this.repository.fetchDocument(documentId);
-        if (source) {
-            // validate and cache the document
-            document = language.parseDocument(source);
-            validateDocument(this, documentId, document);
-            this.cache[documentId] = document;
-        }
-    }
-
+    var document = fetchDocument(this, documentId);
     return document;
 };
 
@@ -72,42 +58,50 @@ BaliCloudAPI.prototype.retrieveDocument = function(citation) {
  * of the document may then be modified and saved back to the Bali Cloud
  * Environment™ as a draft or as the new version..
  * 
- * @param {SourceCitation} citation A citation of the document to be checked out.
+ * @param {SourceCitation} citation A citation of the version of the document to be checked out.
+ * @param {Version} newVersion The new version for the checked out document.
  * @returns {TreeNode} A new version of the corresponding document.
  */
-BaliCloudAPI.prototype.checkoutDocument = function(documentId) {
-    console.log('checkoutDocument(' + documentId + ')');
+BaliCloudAPI.prototype.checkoutDocument = function(citation, newVersion) {
+    var currentId = citation.tag + citation.version;
+    var newId = citation.tag + newVersion;
+    console.log('checkoutDocument(' + currentId + ', ' + newId + ')');
+
+    // make sure the current version of the document exists
+    if (!this.repository.documentExists(currentId)) {
+        throw new Error('CLOUD: The document being checked out does not exist: ' + currentId);
+    }
 
     // make sure the new version of the document doesn't already exist
-    if (this.repository.documentExists(documentId) || this.repository.draftExists(documentId)) {
-        throw new Error('CLOUD: The document being checked out already exists: ' + documentId);
+    if (this.cache[newId] || this.repository.documentExists(newId) || this.repository.draftExists(newId)) {
+        throw new Error('CLOUD: The new version of the document being checked out already exists: ' + newId);
     }
 
-    // fetch the current version of the document
-    var currentId = currentVersion(documentId);
-
-    // check the cache
-    var document = this.cache[currentId];
-
-    // next check the repository if necessary
-    if (!document) {
-        var source = this.repository.fetchDocument(currentId);
-        if (source) {
-            // validate and cache the document
-            document = language.parseDocument(source);
-            validateDocument(this, documentId, document);
-            this.cache[documentId] = document;
-        }
-    }
+    // fetch the document
+    var document = fetchDocument(this, currentId);
     if (!document) {
         throw new Error('CLOUD: The document being checked does not exist: ' + currentId);
     }
-    document = language.removeSeal(document);  // remove the last seal
 
     // store the current version as a draft of the new version
-    this.repository.storeDraft(documentId, document);
+    document = language.removeSeal(document);  // remove the last seal
+    this.repository.storeDraft(newId, document);
 
     return document;
+};
+
+
+/**
+ * This method retrieves a copy of the Bali document draft associated with the
+ * specified citation from the Bali Cloud Environment™.
+ * 
+ * @param {String} draftId The identifier of the document draft to be retrieved.
+ * @returns {TreeNode} The corresponding document draft.
+ */
+BaliCloudAPI.prototype.retrieveDraft = function(draftId) {
+    console.log('retrieveDraft(' + draftId + ')');
+    var draft = fetchDraft(this, draftId);
+    return draft;
 };
 
 
@@ -122,10 +116,10 @@ BaliCloudAPI.prototype.checkoutDocument = function(documentId) {
 BaliCloudAPI.prototype.saveDraft = function(reference, draft) {
     console.log('saveDraft(' + reference + ')');
     var documentId = resolveIdentifier(this, reference);
-    if (documentExists(this, documentId)) {
+    if (this.repository.documentExists(documentId)) {
         throw new Error('CLOUD: The draft being saved is already committed: ' + documentId);
     }
-    storeDraft(this, documentId, draft);
+    this.repository.storeDraft(documentId, draft);
 };
 
 
@@ -138,7 +132,7 @@ BaliCloudAPI.prototype.saveDraft = function(reference, draft) {
 BaliCloudAPI.prototype.discardDraft = function(reference) {
     console.log('discardDraft(' + reference + ')');
     var documentId = resolveIdentifier(this, reference);
-    deleteDraft(this, documentId);
+    this.repository.deleteDraft(documentId);
 };
 
 
@@ -152,11 +146,11 @@ BaliCloudAPI.prototype.discardDraft = function(reference) {
 BaliCloudAPI.prototype.commitDocument = function(reference, document) {
     console.log('commitDocument(' + reference + ', ' +  document + ')');
     var documentId = resolveIdentifier(this, reference);
-    if (documentExists(this, documentId)) {
+    if (this.repository.documentExists(documentId)) {
         throw new Error('CLOUD: The document being saved is already committed: ' + documentId);
     }
-    storeDocument(this, documentId, document);
-    if (draftExists(this, documentId)) deleteDraft(this, documentId);
+    this.repository.storeDocument(documentId, document);
+    if (this.repository.draftExists(documentId)) this.repository.deleteDraft(documentId);
 };
 
 
@@ -210,11 +204,12 @@ BaliCloudAPI.prototype.publishEvent = function(event) {
 
 var MAX_CACHE_SIZE = 64;
 
-function currentVersion(documentId) {
-    console.log('currentVersion(' + documentId + ')');
-    // TODO: how to handle varying tag lengths?
-    var tag = documentId.slice(0, 32);
-    var version = documentId.slice(33);
+function currentIdentifier(citation) {
+    var tag = citation.tag.toString();
+    var version = citation.version.toString();
+    var documentId = tag + version;
+    console.log('currentIdentifier(' + documentId + ')');
+
     var numbers = version.slice(1).split('.');
     var number = Number(numbers.pop());
     if (number > 1) {
@@ -264,71 +259,47 @@ function resolveIdentifier(client, reference) {
     return documentId;
 }
 
-function fetchDraft(client, documentId) {
-    console.log('fetchDraft(' + documentId + ')');
-    var draft;
-    try {
-        var source = fs.readFileSync(client.drafts + documentId);
-        var document = language.parseDocument(source);
-        validateDocument(client, documentId, document);
+function fetchDraft(client, draftId) {
+    console.log('fetchDraft(' + draftId + ')');
+
+    var draft = client.cache[draftId];
+    if (draft) {
+        throw new Error('CLOUD: The following document already exists: ' + draftId);
+    }
+    var source = client.repository.fetchDocument(draftId);
+    if (source) {
+        // validate the draft
+        draft = language.parseDocument(source);
+        validateDocument(client, draftId, draft);
         // don't cache drafts since they are mutable
-        draft = language.getBody(document);  // strip off the last seal
-    } catch (e) {
-        // ignore it and return undefined
     }
     return draft;
 }
 
-function storeDraft(client, documentId, draft) {
-    console.log('storeDraft(' + documentId + ')');
-    client.notaryKey.notarizeDocument(draft);
-    try {
-        fs.writeFileSync(client.drafts + documentId, draft, 0o600);
-    } catch (e) {
-        throw new Error('CLOUD: The following draft could not be stored in the filesystem: ' + documentId + '\n' + draft);
-    }
-}
-
-function deleteDraft(client, documentId) {
-    console.log('deleteDraft(' + documentId + ')');
-    try {
-        fs.unlinkSync(client.drafts + documentId);
-    } catch (e) {
-        throw new Error('CLOUD: The following draft could not be deleted from the filesystem: ' + documentId);
-    }
-}
-
-function documentExists(client, documentId) {
-    console.log('documentExists(' + documentId + ')');
-    try {
-        return fs.existsSync(client.documents + documentId);
-    } catch (e) {
-        throw new Error('CLOUD: The filesystem is not currently accessible.');
-    }
-}
-
-function fetchDocument(client, citation) {
-    var documentId = citation.tag + citation.version;
+function fetchDocument(client, documentId) {
     console.log('fetchDocument(' + documentId + ')');
+
+    // check the cache
     var document = client.cache[documentId];
+
+    // next check the repository if necessary
     if (!document) {
-        var source;
-        try {
-            source = fs.readFileSync(client.documents + documentId);
-        } catch (e) {
-            return;  // undefined
-        }
-        if (!citation.sourceMatches(source)) {
-            throw new Error('CLOUD: The citation to the following document is invalid: ' + citation + '\n' + document);
-        }
-        document = language.parseDocument(source);
-        try {
+        var source = client.repository.fetchDocument(documentId);
+        if (source) {
+            // validate the document
+            document = language.parseDocument(source);
             validateDocument(client, documentId, document);
-        } catch (e) {
-            throw new Error('CLOUD: The following document is invalid: ' + document);
+
+            // cache the document
+            if (client.cache.size > MAX_CACHE_SIZE) {
+                // delete the first (oldest) cached document
+                var key = client.cache.keys().next().value;
+                client.cache.delete(key);
+            }
+            client.cache[documentId] = document;
         }
-        cacheDocument(client, documentId, document);
     }
+
     return document;
 }
 
@@ -349,24 +320,4 @@ function validateDocument(client, documentId, document) {
             throw new Error('CLOUD: The following document is invalid: ' + documentId + '\n' + document);
         }
     }
-}
-
-function storeDocument(client, documentId, document) {
-    console.log('storeDocument(' + documentId + ')');
-    client.notaryKey.notarizeDocument(document);
-    try {
-        fs.writeFileSync(client.documents + documentId, document, 0o400);
-    } catch (e) {
-        throw new Error('CLOUD: The following document could not be stored in the filesystem: ' + documentId + '\n' + document);
-    }
-}
-
-function cacheDocument(client, documentId, document) {
-    console.log('cacheDocument(' + documentId + ')');
-    if (client.cache.size > MAX_CACHE_SIZE) {
-        // delete the first (oldest) cached document
-        var key = client.cache.keys().next().value;
-        client.cache.delete(key);
-    }
-    client.cache[documentId] = document;
 }

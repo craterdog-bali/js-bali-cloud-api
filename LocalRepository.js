@@ -117,15 +117,3 @@ LocalRepository.prototype.storeDocument = function(documentId, document) {
         throw new Error('REPOSITORY: The following document could not be stored in the filesystem: ' + documentId);
     }
 };
-
-
-LocalRepository.prototype.deleteDocument = function(documentId) {
-    console.log('deleteDocument(' + documentId + ')');
-    try {
-        if (fs.existsSync(this.documents + documentId)) {
-            fs.unlinkSync(this.documents + documentId);
-        }
-    } catch (e) {
-        throw new Error('REPOSITORY: The following document could not be deleted from the filesystem: ' + documentId);
-    }
-};
