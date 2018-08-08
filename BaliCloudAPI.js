@@ -36,7 +36,7 @@ exports.BaliCloudAPI = BaliCloudAPI;
  * This method retrieves a read-only copy of the Bali document associated with the
  * specified citation from the Bali Environment™.
  * 
- * @param {SourceCitation} citation A citation of the document to be retrieved.
+ * @param {SourceCitation} citation A citation for the document to be retrieved.
  * @returns {Document} The associated document.
  */
 BaliCloudAPI.prototype.retrieveDocument = function(citation) {
@@ -53,7 +53,7 @@ BaliCloudAPI.prototype.retrieveDocument = function(citation) {
  * of the document may then be modified and saved back to the Bali
  * Environment™ as a draft or committed as a new version.
  * 
- * @param {SourceCitation} citation A citation of the version of the document being checked out.
+ * @param {SourceCitation} citation A citation for the version of the document being checked out.
  * @param {String} newVersion The new version for the checked out document.
  * @returns {Document} A new version of the associated document.
  */
@@ -153,29 +153,45 @@ BaliCloudAPI.prototype.commitDraft = function(draftId, draft) {
 
 
 /**
- * This method retrieves a message from the message queue associated with the
- * specified reference in the Bali Environment™. If there are no messages
- * currently on the queue then this method returns Template.NONE.
+ * This method sends a message to a component in the Bali Environment™. It causes
+ * a new Bali Virtual Machine™ to be created to handle the processing of the message.
  * 
- * @param {URL} reference A reference to the message queue.
- * @returns {Document} The received message.
+ * @param {SourceCitation} citation A citation for the document that is to process
+ * the message.
+ * @param {Document} message The message to be sent.
  */
-BaliCloudAPI.prototype.receiveMessage = function(reference) {
-    console.log('receiveMessage(' + reference + ')');
-    var documentId = resolveIdentifier(this, reference);
+BaliCloudAPI.prototype.sendMessage = function(citation, message) {
+    var documentId = citation.tag + citation.version;
+    console.log('sendMessage(' + documentId + ', ' +  message + ')');
+    // TODO: add implementation
 };
 
 
 /**
- * This method sends a message to the message queue associated with the
- * specified reference in the Bali Environment™.
+ * This method queues a message on the message queue associated with the
+ * specified identifier in the Bali Environment™. If the queue does not
+ * exist it is created.
  * 
- * @param {URL} reference A reference to the message queue.
- * @param {Document} message The message to be sent.
+ * @param {String} queueId The identifier of the queue on which to place the message.
+ * @param {Document} message The message to be queued.
  */
-BaliCloudAPI.prototype.sendMessage = function(reference, message) {
-    console.log('sendMessage(' + reference + ', ' +  message + ')');
-    var documentId = resolveIdentifier(this, reference);
+BaliCloudAPI.prototype.queueMessage = function(queueId, message) {
+    console.log('queueMessage(' + queueId + ', ' +  message + ')');
+    // TODO: add implementation
+};
+
+
+/**
+ * This method retrieves a message from the message queue associated with the
+ * specified reference in the Bali Environment™. If there are no messages
+ * currently on the queue then this method returns <code>undefined</code>.
+ * 
+ * @param {String} queueId The identifier of the queue from which to retrieve the message.
+ * @returns {Document} The received message.
+ */
+BaliCloudAPI.prototype.retrieveMessage = function(queueId) {
+    console.log('retrieveMessage(' + queueId + ')');
+    // TODO: add implementation
 };
 
 
@@ -187,6 +203,7 @@ BaliCloudAPI.prototype.sendMessage = function(reference, message) {
  */
 BaliCloudAPI.prototype.publishEvent = function(event) {
     console.log('publishEvent(' + event + ')');
+    // TODO: add implementation
 };
 
 
