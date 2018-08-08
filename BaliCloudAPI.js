@@ -7,12 +7,9 @@
  * under the terms of The MIT License (MIT), as published by the Open   *
  * Source Initiative. (See http://opensource.org/licenses/MIT)          *
  ************************************************************************/
-'use strict';
 
 /*
- * This library provides useful functions for accessing the Bali Cloud
- * Environment™. It provides a local filesystem based cloud implementation
- * that is useful for testing purposes only.
+ * This library provides useful functions for accessing the Bali Environment™.
  */
 var language = require('bali-language/BaliLanguage');
 var notary = require('bali-digital-notary');
@@ -29,8 +26,6 @@ var notary = require('bali-digital-notary');
 function BaliCloudAPI(notaryKey, repository) {
     this.notaryKey = notaryKey;
     this.repository = repository;
-    this.tags = new Map();
-    this.cache = new Map();
     return this;
 }
 BaliCloudAPI.prototype.constructor = BaliCloudAPI;
@@ -38,11 +33,11 @@ exports.BaliCloudAPI = BaliCloudAPI;
 
 
 /**
- * This method retrieves a copy of the Bali document associated with the
- * specified citation from the Bali Cloud Environment™.
+ * This method retrieves a read-only copy of the Bali document associated with the
+ * specified citation from the Bali Environment™.
  * 
  * @param {SourceCitation} citation A citation of the document to be retrieved.
- * @returns {TreeNode} The corresponding document.
+ * @returns {Document} The associated document.
  */
 BaliCloudAPI.prototype.retrieveDocument = function(citation) {
     var documentId = citation.tag + citation.version;
@@ -54,26 +49,28 @@ BaliCloudAPI.prototype.retrieveDocument = function(citation) {
 
 /**
  * This method checks out a new version of the Bali document associated
- * with the specified citation from the Bali Cloud Environment™. The version
- * of the document may then be modified and saved back to the Bali Cloud
- * Environment™ as a draft or as the new version..
+ * with the specified citation from the Bali Environment™. The new version
+ * of the document may then be modified and saved back to the Bali
+ * Environment™ as a draft or committed as a new version.
  * 
- * @param {SourceCitation} citation A citation of the version of the document to be checked out.
- * @param {Version} newVersion The new version for the checked out document.
- * @returns {TreeNode} A new version of the corresponding document.
+ * @param {SourceCitation} citation A citation of the version of the document being checked out.
+ * @param {String} newVersion The new version for the checked out document.
+ * @returns {Document} A new version of the associated document.
  */
 BaliCloudAPI.prototype.checkoutDocument = function(citation, newVersion) {
-    var currentId = citation.tag + citation.version;
-    var newId = citation.tag + newVersion;
+    var tag = citation.tag;
+    var currentVersion = citation.version;
+    var currentId = tag + currentVersion;
+    var newId = tag + newVersion;
     console.log('checkoutDocument(' + currentId + ', ' + newId + ')');
 
-    // make sure the current version of the document exists
-    if (!this.repository.documentExists(currentId)) {
-        throw new Error('CLOUD: The document being checked out does not exist: ' + currentId);
+    // validate the new version number
+    if (!validNextVersion(currentVersion, newVersion)) {
+        throw new Error('CLOUD: The new version (' + newVersion + ') is not a valid next version for: ' + currentVersion);
     }
 
     // make sure the new version of the document doesn't already exist
-    if (this.cache[newId] || this.repository.documentExists(newId) || this.repository.draftExists(newId)) {
+    if (documentCached(newId) || this.repository.documentExists(newId) || this.repository.draftExists(newId)) {
         throw new Error('CLOUD: The new version of the document being checked out already exists: ' + newId);
     }
 
@@ -84,19 +81,36 @@ BaliCloudAPI.prototype.checkoutDocument = function(citation, newVersion) {
     }
 
     // store the current version as a draft of the new version
-    document = language.removeSeal(document);  // remove the last seal
-    this.repository.storeDraft(newId, document);
+    var draft = language.removeSeal(document);  // remove the last seal
+    this.repository.storeDraft(newId, draft);
 
-    return document;
+    return draft;
+};
+
+
+/**
+ * This method saves a draft of a Bali document associated with the specified
+ * identifier into the Bali Environment™.
+ * 
+ * @param {String} draftId The identifier for the Bali document draft to be saved.
+ * @param {Document} draft The draft of the document to be saved.
+ */
+BaliCloudAPI.prototype.saveDraft = function(draftId, draft) {
+    console.log('saveDraft(' + draftId + ')');
+    if (this.repository.documentExists(draftId)) {
+        throw new Error('CLOUD: The draft being saved is already committed: ' + draftId);
+    }
+    this.repository.storeDraft(draftId, draft);
 };
 
 
 /**
  * This method retrieves a copy of the Bali document draft associated with the
- * specified citation from the Bali Cloud Environment™.
+ * specified identifier from the Bali Environment™. This draft may then be modified
+ * and saved or committed to the Bali Environment™.
  * 
  * @param {String} draftId The identifier of the document draft to be retrieved.
- * @returns {TreeNode} The corresponding document draft.
+ * @returns {Document} The associated document draft.
  */
 BaliCloudAPI.prototype.retrieveDraft = function(draftId) {
     console.log('retrieveDraft(' + draftId + ')');
@@ -106,61 +120,45 @@ BaliCloudAPI.prototype.retrieveDraft = function(draftId) {
 
 
 /**
- * This method saves a draft of a Bali document associated with the specified
- * reference into the Bali Cloud Environment™. The version of the document may
- * then be modified and saved back to the Bali Cloud Environment™.
+ * This method discards any draft of the Bali document associated with the
+ * specified identifier that has been saved into the Bali Environment™.
  * 
- * @param {URL} reference A reference to the document to be saved.
- * @param {TreeNode} draft The draft version of the document to be saved.
+ * @param {String} draftId The identifier of the document draft to be discarded.
  */
-BaliCloudAPI.prototype.saveDraft = function(reference, draft) {
-    console.log('saveDraft(' + reference + ')');
-    var documentId = resolveIdentifier(this, reference);
-    if (this.repository.documentExists(documentId)) {
-        throw new Error('CLOUD: The draft being saved is already committed: ' + documentId);
-    }
-    this.repository.storeDraft(documentId, draft);
+BaliCloudAPI.prototype.discardDraft = function(draftId) {
+    console.log('discardDraft(' + draftId + ')');
+    this.repository.deleteDraft(draftId);
 };
 
 
 /**
- * This method discards a draft of a Bali document associated with the specified
- * reference that has been saved into the Bali Cloud Environment™.
+ * This method commits a draft of a Bali document as a new version associated with the
+ * specified identifier to the Bali Environment™.
  * 
- * @param {URL} reference A reference to the draft to be discarded
+ * @param {String} draftId The identifier of the document draft to be committed.
+ * @param {Document} draft The draft of the new version of the document to be committed.
  */
-BaliCloudAPI.prototype.discardDraft = function(reference) {
-    console.log('discardDraft(' + reference + ')');
-    var documentId = resolveIdentifier(this, reference);
-    this.repository.deleteDraft(documentId);
-};
+BaliCloudAPI.prototype.commitDraft = function(draftId, draft) {
+    console.log('commitDraft(' + draftId + ', ' +  draft + ')');
 
-
-/**
- * This method commits a new version of a Bali document associated with the
- * specified reference to the Bali Cloud Environment™.
- * 
- * @param {URL} reference A reference to the document to be committed.
- * @param {TreeNode} document The new version of the document to be committed.
- */
-BaliCloudAPI.prototype.commitDocument = function(reference, document) {
-    console.log('commitDocument(' + reference + ', ' +  document + ')');
-    var documentId = resolveIdentifier(this, reference);
-    if (this.repository.documentExists(documentId)) {
-        throw new Error('CLOUD: The document being saved is already committed: ' + documentId);
+    // store the new version of the document in the repository
+    if (this.repository.documentExists(draftId)) {
+        throw new Error('CLOUD: The draft being saved is already committed: ' + draftId);
     }
-    this.repository.storeDocument(documentId, document);
-    if (this.repository.draftExists(documentId)) this.repository.deleteDraft(documentId);
+    this.repository.storeDocument(draftId, draft);
+
+    // delete the stored draft if one exists from the repository
+    if (this.repository.draftExists(draftId)) this.repository.deleteDraft(draftId);
 };
 
 
 /**
  * This method retrieves a message from the message queue associated with the
- * specified reference in the Bali Cloud Environment™. If there are no messages
+ * specified reference in the Bali Environment™. If there are no messages
  * currently on the queue then this method returns Template.NONE.
  * 
  * @param {URL} reference A reference to the message queue.
- * @returns {TreeNode} The received message.
+ * @returns {Document} The received message.
  */
 BaliCloudAPI.prototype.receiveMessage = function(reference) {
     console.log('receiveMessage(' + reference + ')');
@@ -170,10 +168,10 @@ BaliCloudAPI.prototype.receiveMessage = function(reference) {
 
 /**
  * This method sends a message to the message queue associated with the
- * specified reference in the Bali Cloud Environment™.
+ * specified reference in the Bali Environment™.
  * 
  * @param {URL} reference A reference to the message queue.
- * @param {TreeNode} message The message to be sent.
+ * @param {Document} message The message to be sent.
  */
 BaliCloudAPI.prototype.sendMessage = function(reference, message) {
     console.log('sendMessage(' + reference + ', ' +  message + ')');
@@ -182,10 +180,10 @@ BaliCloudAPI.prototype.sendMessage = function(reference, message) {
 
 
 /**
- * This method publishes an event to the Bali Cloud Environment™. Any task that
+ * This method publishes an event to the Bali Environment™. Any task that
  * is interested in the event will be automatically notified.
  * 
- * @param {TreeNode} event The event to be published.
+ * @param {Document} event The event to be published.
  */
 BaliCloudAPI.prototype.publishEvent = function(event) {
     console.log('publishEvent(' + event + ')');
@@ -194,114 +192,28 @@ BaliCloudAPI.prototype.publishEvent = function(event) {
 
 // PRIVATE FUNCTIONS
 
-// These functions implement the document cache for the client side API.
-// Since all documents are immutable, there are no cache consistency issues.
-// The caching rules are as follows:
-// 1) The cache is always checked before downloading a document.
-// 2) A downloaded document is always validated before use.
-// 3) A validated document is always cached locally.
-// 4) The cache will delete the oldest document when it is full.
+function validNextVersion(currentVersion, nextVersion) {
+    console.log('validNextVersion(' + currentVersion + ', ' + nextVersion + ')');
 
-var MAX_CACHE_SIZE = 64;
+    // extract the version numbers
+    var currentNumbers = currentVersion.slice(1).split('.');
+    var nextNumbers = nextVersion.slice(1).split('.');
 
-function currentIdentifier(citation) {
-    var tag = citation.tag.toString();
-    var version = citation.version.toString();
-    var documentId = tag + version;
-    console.log('currentIdentifier(' + documentId + ')');
-
-    var numbers = version.slice(1).split('.');
-    var number = Number(numbers.pop());
-    if (number > 1) {
-        number--;
-        numbers.push(number.toString());
+    // walk the lists looking for the first different version number
+    var index = 0;
+    while (index < currentNumbers.length && index < nextNumbers.length) {
+        var currentNumber = currentNumbers[index];
+        var nextNumber = nextNumbers[index];
+        if (currentNumber !== nextNumber) {
+            // the final next version number must be one more than the current version number
+            return (nextNumber === currentNumber + 1 && nextNumbers.length === index + 1);
+        }
+        index++;
     }
-    return tag + 'v' + numbers.join();
+    // the current and next versions are the same so invalid
+    return false;
 }
 
-function resolveIdentifier(client, reference) {
-    console.log('resolveIdentifier(' + reference + ')');
-    if (reference.protocol !== 'bali:') {
-        throw new Error('CLOUD: The reference does not use the "bali:" protocol: ' + reference);
-    }
-    var source = reference.pathname.replace(/%23/, '#');  // decode '#' character
-    var catalog = language.parseCatalog(source);
-    var name = language.getStringForKey('name', catalog);
-    var tag = language.getStringForKey('tag, catalog');
-    var version = language.getStringForKey('version', catalog);
-
-    if (!version) {
-        throw new Error('CLOUD: The reference does not have a valid version string: ' + reference);
-    }
-    if (name && !/^(\/[A-Za-z0-9]+)+$/g.test(name)) {
-        throw new Error('CLOUD: The reference has an invalid name: ' + name);
-    }
-    if (!tag) {
-        // attempt to lookup the tag by name
-        if (!name) {
-            throw new Error('CLOUD: The reference does not include a name: ' + reference);
-        }
-        tag = client.tags.get(name);
-        if (!tag) {
-            throw new Error('CLOUD: The reference name does not have a corresponding tag: ' + name);
-        }
-
-    } else {
-        // record the name of the documentId in the name registry
-        if (name) {
-            if (client.tags.get(name)) {
-                throw new Error('CLOUD: The reference name already corresponds to another documentId: ' + name);
-            }
-            client.tags.set(name, tag);
-        }
-    }
-    var documentId = tag + version;
-    return documentId;
-}
-
-function fetchDraft(client, draftId) {
-    console.log('fetchDraft(' + draftId + ')');
-
-    var draft = client.cache[draftId];
-    if (draft) {
-        throw new Error('CLOUD: The following document already exists: ' + draftId);
-    }
-    var source = client.repository.fetchDocument(draftId);
-    if (source) {
-        // validate the draft
-        draft = language.parseDocument(source);
-        validateDocument(client, draftId, draft);
-        // don't cache drafts since they are mutable
-    }
-    return draft;
-}
-
-function fetchDocument(client, documentId) {
-    console.log('fetchDocument(' + documentId + ')');
-
-    // check the cache
-    var document = client.cache[documentId];
-
-    // next check the repository if necessary
-    if (!document) {
-        var source = client.repository.fetchDocument(documentId);
-        if (source) {
-            // validate the document
-            document = language.parseDocument(source);
-            validateDocument(client, documentId, document);
-
-            // cache the document
-            if (client.cache.size > MAX_CACHE_SIZE) {
-                // delete the first (oldest) cached document
-                var key = client.cache.keys().next().value;
-                client.cache.delete(key);
-            }
-            client.cache[documentId] = document;
-        }
-    }
-
-    return document;
-}
 
 function validateDocument(client, documentId, document) {
     console.log('validateDocument(' + documentId + ')');
@@ -321,3 +233,67 @@ function validateDocument(client, documentId, document) {
         }
     }
 }
+
+
+function documentCached(documentId) {
+    console.log('documentCached(' + documentId + ')');
+    return CACHE.has(documentId);
+}
+
+
+function fetchDraft(client, draftId) {
+    console.log('fetchDraft(' + draftId + ')');
+
+    var draft = CACHE.get(draftId);
+    if (draft) {
+        throw new Error('CLOUD: The following document already exists: ' + draftId);
+    }
+    var source = client.repository.fetchDocument(draftId);
+    if (source) {
+        // validate the draft
+        draft = language.parseDocument(source);
+        validateDocument(client, draftId, draft);
+        // don't cache drafts since they are mutable
+    }
+    return draft;
+}
+
+
+function fetchDocument(client, documentId) {
+    console.log('fetchDocument(' + documentId + ')');
+
+    // check the cache
+    var document = CACHE.get(documentId);
+
+    // next check the repository if necessary
+    if (!document) {
+        var source = client.repository.fetchDocument(documentId);
+        if (source) {
+            // validate the document
+            document = language.parseDocument(source);
+            validateDocument(client, documentId, document);
+
+            // cache the document
+            if (CACHE.size > MAX_CACHE_SIZE) {
+                // delete the first (oldest) cached document
+                var key = CACHE.keys().next().value;
+                CACHE.delete(key);
+            }
+            CACHE.set(documentId, document);
+        }
+    }
+
+    return document;
+}
+
+
+// This creates a document cache for the client side API.
+// Since all documents are immutable, there are no cache consistency issues.
+// The caching rules are as follows:
+// 1) The cache is always checked before downloading a document.
+// 2) A downloaded document is always validated before use.
+// 3) A validated document is always cached locally.
+// 4) The cache will delete the oldest document when it is full.
+
+var MAX_CACHE_SIZE = 64;
+var CACHE = new Map();

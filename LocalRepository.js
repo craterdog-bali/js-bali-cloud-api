@@ -65,7 +65,7 @@ LocalRepository.prototype.storeDraft = function(draftId, draft) {
     try {
         fs.writeFileSync(this.drafts + draftId, draft);  // TODO: add read-write options flags
     } catch (e) {
-        throw new Error('REPOSITORY: The following draft could not be stored to the filesystem: ' + draftId);
+        throw new Error('REPOSITORY: The filesystem is not currently accessible.');
     }
 };
 
@@ -77,7 +77,7 @@ LocalRepository.prototype.deleteDraft = function(draftId) {
             fs.unlinkSync(this.drafts + draftId);
         }
     } catch (e) {
-        throw new Error('REPOSITORY: The following draft could not be deleted from the filesystem: ' + draftId);
+        throw new Error('REPOSITORY: The filesystem is not currently accessible.');
     }
 };
 
@@ -114,6 +114,6 @@ LocalRepository.prototype.storeDocument = function(documentId, document) {
         }
         fs.writeFileSync(this.documents + documentId, document);  // TODO: add readonly options flags
     } catch (e) {
-        throw new Error('REPOSITORY: The following document could not be stored in the filesystem: ' + documentId);
+        throw new Error('REPOSITORY: The filesystem is not currently accessible.');
     }
 };
