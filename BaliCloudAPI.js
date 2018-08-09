@@ -70,7 +70,7 @@ BaliCloudAPI.prototype.checkoutDocument = function(citation, newVersion) {
     }
 
     // make sure the new version of the document doesn't already exist
-    if (documentCached(newId) || this.repository.documentExists(newId) || this.repository.draftExists(newId)) {
+    if (isCached(newId) || this.repository.documentExists(newId) || this.repository.draftExists(newId)) {
         throw new Error('CLOUD: The new version of the document being checked out already exists: ' + newId);
     }
 
@@ -82,6 +82,7 @@ BaliCloudAPI.prototype.checkoutDocument = function(citation, newVersion) {
 
     // store the current version as a draft of the new version
     var draft = language.removeSeal(document);  // remove the last seal
+    language.setPreviousCitation(draft, citation);  // add previous version citation
     this.repository.storeDraft(newId, draft);
 
     return draft;
@@ -114,7 +115,17 @@ BaliCloudAPI.prototype.saveDraft = function(draftId, draft) {
  */
 BaliCloudAPI.prototype.retrieveDraft = function(draftId) {
     console.log('retrieveDraft(' + draftId + ')');
-    var draft = fetchDraft(this, draftId);
+    var draft;
+    if (isCached(draftId)) {
+        throw new Error('CLOUD: The following committed document already exists: ' + draftId);
+    }
+    var source = this.repository.fetchDraft(draftId);
+    if (source) {
+        // validate the draft
+        draft = language.parseDocument(source);
+        validateDocument(this, draftId, draft);
+        // don't cache drafts since they are mutable
+    }
     return draft;
 };
 
@@ -145,11 +156,16 @@ BaliCloudAPI.prototype.commitDraft = function(draftId, draft) {
     if (this.repository.documentExists(draftId)) {
         throw new Error('CLOUD: The draft being saved is already committed: ' + draftId);
     }
+    this.notaryKey.notarizeDocument(draft);
     this.repository.storeDocument(draftId, draft);
 
     // delete the stored draft if one exists from the repository
     if (this.repository.draftExists(draftId)) this.repository.deleteDraft(draftId);
 };
+
+
+var SEND_QUEUE_ID = '#JXT095QY01HBLHPAW04ZR5WSH41MWG4H';
+var EVENT_QUEUE_ID = '#3RMGDVN7D6HLAPFXQNPF7DV71V3MAL43';
 
 
 /**
@@ -163,7 +179,12 @@ BaliCloudAPI.prototype.commitDraft = function(draftId, draft) {
 BaliCloudAPI.prototype.sendMessage = function(citation, message) {
     var documentId = citation.tag + citation.version;
     console.log('sendMessage(' + documentId + ', ' +  message + ')');
-    // TODO: add implementation
+
+    // add the target citation
+    language.setAttribute(message, '$target', citation.toString());
+
+    // store the message on the queue
+    queueMessage(this, SEND_QUEUE_ID, message);
 };
 
 
@@ -177,7 +198,9 @@ BaliCloudAPI.prototype.sendMessage = function(citation, message) {
  */
 BaliCloudAPI.prototype.queueMessage = function(queueId, message) {
     console.log('queueMessage(' + queueId + ', ' +  message + ')');
-    // TODO: add implementation
+
+    // store the message on the queue
+    queueMessage(this, queueId, message);
 };
 
 
@@ -187,11 +210,19 @@ BaliCloudAPI.prototype.queueMessage = function(queueId, message) {
  * currently on the queue then this method returns <code>undefined</code>.
  * 
  * @param {String} queueId The identifier of the queue from which to retrieve the message.
- * @returns {Document} The received message.
+ * @returns {Document} The retrieved message or <code>undefined</code> if the queue is empty.
  */
-BaliCloudAPI.prototype.retrieveMessage = function(queueId) {
-    console.log('retrieveMessage(' + queueId + ')');
-    // TODO: add implementation
+BaliCloudAPI.prototype.receiveMessage = function(queueId) {
+    console.log('receiveMessage(' + queueId + ')');
+    var message;
+    var source = this.repository.dequeueMessage(queueId);
+    if (source) {
+        // validate the document
+        message = language.parseDocument(source);
+        var messageId = language.getStringForKey('$tag');
+        validateDocument(this, messageId, message);
+    }
+    return message;
 };
 
 
@@ -203,15 +234,23 @@ BaliCloudAPI.prototype.retrieveMessage = function(queueId) {
  */
 BaliCloudAPI.prototype.publishEvent = function(event) {
     console.log('publishEvent(' + event + ')');
-    // TODO: add implementation
+
+    // store the message on the queue
+    queueMessage(this, EVENT_QUEUE_ID, event);
 };
 
 
-// PRIVATE FUNCTIONS
+// PRIVATE HELPER FUNCTIONS
+
+function queueMessage(client, queueId, message) {
+    var messageId = language.tag();
+    language.setAttribute(message, '$tag', messageId);
+    client.notaryKey.notarizeDocument(message);
+    client.repository.queueMessage(queueId, messageId, message);
+}
+
 
 function validNextVersion(currentVersion, nextVersion) {
-    console.log('validNextVersion(' + currentVersion + ', ' + nextVersion + ')');
-
     // extract the version numbers
     var currentNumbers = currentVersion.slice(1).split('.');
     var nextNumbers = nextVersion.slice(1).split('.');
@@ -222,7 +261,7 @@ function validNextVersion(currentVersion, nextVersion) {
         var currentNumber = currentNumbers[index];
         var nextNumber = nextNumbers[index];
         if (currentNumber !== nextNumber) {
-            // the final next version number must be one more than the current version number
+            // the final next version number must be one more than the corresponding current version number
             return (nextNumber === currentNumber + 1 && nextNumbers.length === index + 1);
         }
         index++;
@@ -233,7 +272,6 @@ function validNextVersion(currentVersion, nextVersion) {
 
 
 function validateDocument(client, documentId, document) {
-    console.log('validateDocument(' + documentId + ')');
     var certificate;
     var seal = language.getSeal(document);
     while (seal) {
@@ -252,33 +290,24 @@ function validateDocument(client, documentId, document) {
 }
 
 
-function documentCached(documentId) {
-    console.log('documentCached(' + documentId + ')');
+// This defines a document cache for the client side API.
+// Since all documents are immutable, there are no cache consistency issues.
+// The caching rules are as follows:
+// 1) The cache is always checked before downloading a document.
+// 2) A downloaded document is always validated before use.
+// 3) A validated document is always cached locally.
+// 4) The cache will delete the oldest document when it is full.
+
+var MAX_CACHE_SIZE = 64;
+var CACHE = new Map();
+
+
+function isCached(documentId) {
     return CACHE.has(documentId);
 }
 
 
-function fetchDraft(client, draftId) {
-    console.log('fetchDraft(' + draftId + ')');
-
-    var draft = CACHE.get(draftId);
-    if (draft) {
-        throw new Error('CLOUD: The following document already exists: ' + draftId);
-    }
-    var source = client.repository.fetchDocument(draftId);
-    if (source) {
-        // validate the draft
-        draft = language.parseDocument(source);
-        validateDocument(client, draftId, draft);
-        // don't cache drafts since they are mutable
-    }
-    return draft;
-}
-
-
 function fetchDocument(client, documentId) {
-    console.log('fetchDocument(' + documentId + ')');
-
     // check the cache
     var document = CACHE.get(documentId);
 
@@ -302,15 +331,3 @@ function fetchDocument(client, documentId) {
 
     return document;
 }
-
-
-// This creates a document cache for the client side API.
-// Since all documents are immutable, there are no cache consistency issues.
-// The caching rules are as follows:
-// 1) The cache is always checked before downloading a document.
-// 2) A downloaded document is always validated before use.
-// 3) A validated document is always cached locally.
-// 4) The cache will delete the oldest document when it is full.
-
-var MAX_CACHE_SIZE = 64;
-var CACHE = new Map();

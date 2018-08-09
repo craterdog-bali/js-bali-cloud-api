@@ -23,42 +23,45 @@ exports.CloudRepository = CloudRepository;
 
 
 CloudRepository.prototype.draftExists = function(draftId) {
-    console.log('draftExists(' + draftId + ')');
     throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
 };
 
 
 CloudRepository.prototype.fetchDraft = function(draftId) {
-    console.log('fetchDraft(' + draftId + ')');
     throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
 };
 
 
 CloudRepository.prototype.storeDraft = function(draftId, draft) {
-    console.log('storeDraft(' + draftId + ')');
     throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
 };
 
 
 CloudRepository.prototype.deleteDraft = function(draftId) {
-    console.log('deleteDraft(' + draftId + ')');
     throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
 };
 
 
 CloudRepository.prototype.documentExists = function(documentId) {
-    console.log('documentExists(' + documentId + ')');
     throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
 };
 
 
 CloudRepository.prototype.fetchDocument = function(documentId) {
-    console.log('fetchDocument(' + documentId + ')');
     throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
 };
 
 
 CloudRepository.prototype.storeDocument = function(documentId, document) {
-    console.log('storeDocument(' + documentId + ')');
+    throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
+};
+
+
+CloudRepository.prototype.queueMessage = function(queueId, messageId, message) {
+    throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
+};
+
+
+CloudRepository.prototype.dequeueMessage = function(queueId) {
     throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
 };
