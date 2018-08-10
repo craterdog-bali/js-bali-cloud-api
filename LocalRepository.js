@@ -27,7 +27,7 @@ function LocalRepository(filesystem) {
         if (!fs.existsSync(this.documents)) fs.mkdirSync(this.documents);
         if (!fs.existsSync(this.queues)) fs.mkdirSync(this.queues);
     } catch (e) {
-        throw new Error('REPOSITORY: The filesystem is not currently accessible.');
+        throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
     }
     return this;
 }
@@ -40,7 +40,7 @@ LocalRepository.prototype.draftExists = function(draftId) {
         var filename = this.drafts + draftId;
         return fs.existsSync(filename);
     } catch (e) {
-        throw new Error('REPOSITORY: The filesystem is not currently accessible.');
+        throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
     }
 };
 
@@ -53,7 +53,7 @@ LocalRepository.prototype.fetchDraft = function(draftId) {
             draft = fs.readFileSync(filename).toString();
         }
     } catch (e) {
-        throw new Error('REPOSITORY: The filesystem is not currently accessible.');
+        throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
     }
     return draft;
 };
@@ -64,7 +64,7 @@ LocalRepository.prototype.storeDraft = function(draftId, draft) {
         var filename = this.drafts + draftId;
         fs.writeFileSync(filename, draft, {encoding: 'utf8', mode: 384});
     } catch (e) {
-        throw new Error('REPOSITORY: The filesystem is not currently accessible.');
+        throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
     }
 };
 
@@ -76,7 +76,7 @@ LocalRepository.prototype.deleteDraft = function(draftId) {
             fs.unlinkSync(filename);
         }
     } catch (e) {
-        throw new Error('REPOSITORY: The filesystem is not currently accessible.');
+        throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
     }
 };
 
@@ -86,7 +86,7 @@ LocalRepository.prototype.documentExists = function(documentId) {
         var filename = this.documents + documentId;
         return fs.existsSync(filename);
     } catch (e) {
-        throw new Error('REPOSITORY: The filesystem is not currently accessible.');
+        throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
     }
 };
 
@@ -99,32 +99,48 @@ LocalRepository.prototype.fetchDocument = function(documentId) {
             document = fs.readFileSync(filename).toString();
         }
     } catch (e) {
-        throw new Error('REPOSITORY: The filesystem is not currently accessible.');
+        throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
     }
     return document;
 };
 
 
 LocalRepository.prototype.storeDocument = function(documentId, document) {
+    var filename = this.documents + documentId;
+    var exists;
     try {
-        var filename = this.documents + documentId;
-        if (fs.existsSync(filename)) {
-            throw new Error('REPOSITORY: The following document already exists in the filesystem: ' + documentId);
-        }
+        exists = fs.existsSync(filename);
+    } catch (e) {
+        throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
+    }
+    if (exists) {
+        throw new Error('REPOSITORY: The following document already exists in the filesystem: ' + documentId);
+    }
+    try {
         fs.writeFileSync(filename, document, {encoding: 'utf8', mode: 256});
     } catch (e) {
-        throw new Error('REPOSITORY: The filesystem is not currently accessible.');
+        throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
     }
 };
 
 
 LocalRepository.prototype.queueMessage = function(queueId, messageId, message) {
     var directory = this.queues + queueId + '/';
+    var filename = directory + messageId;
+    var exists;
     try {
         if (!fs.existsSync(directory)) fs.mkdirSync(directory);
-        fs.writeFileSync(directory + messageId, message, {encoding: 'utf8', mode: 384});
+        exists = fs.existsSync(filename);
     } catch (e) {
-        throw new Error('REPOSITORY: The filesystem is not currently accessible.');
+        throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
+    }
+    if (exists) {
+        throw new Error('REPOSITORY: The following message already exists in the queue: ' + messageId);
+    }
+    try {
+        fs.writeFileSync(filename, message, {encoding: 'utf8', mode: 384});
+    } catch (e) {
+        throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
     }
 };
 
@@ -134,7 +150,7 @@ LocalRepository.prototype.dequeueMessage = function(queueId) {
     var message;
     try {
         while (fs.existsSync(directory)) {
-            var messages = fs.readdirSync(directory).toString();
+            var messages = fs.readdirSync(directory);
             var count = messages.length;
             if (count) {
                 var index = 0;
@@ -156,7 +172,7 @@ LocalRepository.prototype.dequeueMessage = function(queueId) {
             }
         }
     } catch (e) {
-        throw new Error('REPOSITORY: The filesystem is not currently accessible.');
+        throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
     }
     return message;
 };
