@@ -18,13 +18,21 @@ var source = 'foobar';
 
 describe('Bali Cloud API™', function() {
 
-    describe('Test draft access.', function() {
+    describe('Test LocalRepository', function() {
 
         it('should perform a draft document lifecycle', function() {
             var draftId = 'draftId';
 
             // store a new draft in the repository
             repository.storeDraft(draftId, source);
+
+            // make sure the new draft exists in the repository
+            var exists = repository.draftExists(draftId);
+            expect(exists).is.true;  // jshint ignore:line
+
+            // make sure the same document does not exist in the repository
+            exists = repository.documentExists(draftId);
+            expect(exists).is.false;  // jshint ignore:line
 
             // fetch the new draft from the repository
             var draft = repository.fetchDraft(draftId);
@@ -34,7 +42,7 @@ describe('Bali Cloud API™', function() {
             repository.deleteDraft(draftId);
 
             // make sure the new draft no longer exists in the repository
-            var exists = repository.draftExists(draftId);
+            exists = repository.draftExists(draftId);
             expect(exists).is.false;  // jshint ignore:line
 
             // delete a non-existent draft from the repository
@@ -47,16 +55,24 @@ describe('Bali Cloud API™', function() {
             // store a new document in the repository
             repository.storeDocument(documentId, source);
 
+            // make sure the same draft does not exist in the repository
+            exists = repository.draftExists(documentId);
+            expect(exists).is.false;  // jshint ignore:line
+
+            // make sure the new document exists in the repository
+            var exists = repository.documentExists(documentId);
+            expect(exists).is.true;  // jshint ignore:line
+
             // fetch the new document from the repository
             var document = repository.fetchDocument(documentId);
             expect(document).to.equal(source);
 
             // make sure the new document still exists in the repository
-            var exists = repository.documentExists(documentId);
+            exists = repository.documentExists(documentId);
             expect(exists).is.true;  // jshint ignore:line
 
             // attempt to store the same document in the repository
-            expect(repository.storeDocument.bind(documentId, source)).to.throw();
+            expect(repository.storeDocument.bind(repository, documentId, source)).to.throw();
         });
 
         it('should perform a message queue lifecycle', function() {
@@ -73,7 +89,7 @@ describe('Bali Cloud API™', function() {
                 repository.queueMessage(queueId, messageId, source);
 
                 // attempt to place the same message on the queue
-                expect(repository.queueMessage.bind(queueId, messageId, source)).to.throw();
+                expect(repository.queueMessage.bind(repository, queueId, messageId, source)).to.throw();
             }
 
             // dequeue the messages

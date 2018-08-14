@@ -18,11 +18,13 @@ var random = require('bali-utilities/RandomUtilities');
 
 
 function LocalRepository(filesystem) {
+    this.certificates = filesystem + '/certificates/';
     this.drafts = filesystem + '/drafts/';
     this.documents = filesystem + '/documents/';
     this.queues = filesystem + '/queues/';
     try {
         if (!fs.existsSync(filesystem)) fs.mkdirSync(filesystem);
+        if (!fs.existsSync(this.certificates)) fs.mkdirSync(this.certificates);
         if (!fs.existsSync(this.drafts)) fs.mkdirSync(this.drafts);
         if (!fs.existsSync(this.documents)) fs.mkdirSync(this.documents);
         if (!fs.existsSync(this.queues)) fs.mkdirSync(this.queues);
@@ -35,9 +37,52 @@ LocalRepository.prototype.constructor = LocalRepository;
 exports.LocalRepository = LocalRepository;
 
 
-LocalRepository.prototype.draftExists = function(draftId) {
+LocalRepository.prototype.certificateExists = function(certificateId) {
+    var filename = this.certificates + certificateId;
     try {
-        var filename = this.drafts + draftId;
+        return fs.existsSync(filename);
+    } catch (e) {
+        throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
+    }
+};
+
+
+LocalRepository.prototype.fetchCertificate = function(certificateId) {
+    var filename = this.certificates + certificateId;
+    var certificate;
+    try {
+        if (fs.existsSync(filename)) {
+            certificate = fs.readFileSync(filename).toString();
+        }
+    } catch (e) {
+        throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
+    }
+    return certificate;
+};
+
+
+LocalRepository.prototype.storeCertificate = function(certificateId, certificate) {
+    var filename = this.certificates + certificateId;
+    var exists;
+    try {
+        exists = fs.existsSync(filename);
+    } catch (e) {
+        throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
+    }
+    if (exists) {
+        throw new Error('REPOSITORY: The following certificate already exists in the filesystem: ' + certificateId);
+    }
+    try {
+        fs.writeFileSync(filename, certificate, {encoding: 'utf8', mode: 256});
+    } catch (e) {
+        throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
+    }
+};
+
+
+LocalRepository.prototype.draftExists = function(draftId) {
+    var filename = this.drafts + draftId;
+    try {
         return fs.existsSync(filename);
     } catch (e) {
         throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
@@ -46,9 +91,9 @@ LocalRepository.prototype.draftExists = function(draftId) {
 
 
 LocalRepository.prototype.fetchDraft = function(draftId) {
+    var filename = this.drafts + draftId;
     var draft;
     try {
-        var filename = this.drafts + draftId;
         if (fs.existsSync(filename)) {
             draft = fs.readFileSync(filename).toString();
         }
@@ -60,8 +105,8 @@ LocalRepository.prototype.fetchDraft = function(draftId) {
 
 
 LocalRepository.prototype.storeDraft = function(draftId, draft) {
+    var filename = this.drafts + draftId;
     try {
-        var filename = this.drafts + draftId;
         fs.writeFileSync(filename, draft, {encoding: 'utf8', mode: 384});
     } catch (e) {
         throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
@@ -70,8 +115,8 @@ LocalRepository.prototype.storeDraft = function(draftId, draft) {
 
 
 LocalRepository.prototype.deleteDraft = function(draftId) {
+    var filename = this.drafts + draftId;
     try {
-        var filename = this.drafts + draftId;
         if (fs.existsSync(filename)) {
             fs.unlinkSync(filename);
         }
@@ -82,8 +127,8 @@ LocalRepository.prototype.deleteDraft = function(draftId) {
 
 
 LocalRepository.prototype.documentExists = function(documentId) {
+    var filename = this.documents + documentId;
     try {
-        var filename = this.documents + documentId;
         return fs.existsSync(filename);
     } catch (e) {
         throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
@@ -92,9 +137,9 @@ LocalRepository.prototype.documentExists = function(documentId) {
 
 
 LocalRepository.prototype.fetchDocument = function(documentId) {
+    var filename = this.documents + documentId;
     var document;
     try {
-        var filename = this.documents + documentId;
         if (fs.existsSync(filename)) {
             document = fs.readFileSync(filename).toString();
         }
