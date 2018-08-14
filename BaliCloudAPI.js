@@ -57,12 +57,12 @@ BaliCloudAPI.prototype.publishCertificate = function(certificate) {
  * This method retrieves a read-only copy of the Bali certificate associated with the
  * specified citation from the Bali Environment™.
  * 
- * @param {DocumentCitation} citation A citation for the certificate to be retrieved.
+ * @param {String} citation A citation for the certificate to be retrieved.
  * @returns {Document} The associated certificate.
  */
 BaliCloudAPI.prototype.retrieveCertificate = function(citation) {
-    var tag = notary.citationTag(citation);
-    var version = notary.citationVersion(citation);
+    var tag = notary.getTag(citation);
+    var version = notary.getVersion(citation);
     var certificateId = tag.slice(1) + version;
     console.log('        retrieveCertificate(' + certificateId + ')');
     var certificate = fetchCertificate(this.repository, certificateId);
@@ -76,13 +76,13 @@ BaliCloudAPI.prototype.retrieveCertificate = function(citation) {
  * of the document may then be modified and saved back to the Bali
  * Environment™ as a draft or committed as a new version.
  * 
- * @param {DocumentCitation} citation A citation for the version of the document being checked out.
+ * @param {String} citation A citation for the version of the document being checked out.
  * @param {String} newVersion The new version for the checked out document.
  * @returns {Document} A new version of the associated document.
  */
 BaliCloudAPI.prototype.checkoutDocument = function(citation, newVersion) {
-    var tag = notary.citationTag(citation);
-    var currentVersion = notary.citationVersion(citation);
+    var tag = notary.getTag(citation);
+    var currentVersion = notary.getVersion(citation);
     var currentId = tag.slice(1) + currentVersion;
     var newId = tag.slice(1) + newVersion;
     console.log('        checkoutDocument(' + currentId + ', ' + newId + ')');
@@ -103,8 +103,8 @@ BaliCloudAPI.prototype.checkoutDocument = function(citation, newVersion) {
         throw new Error('CLOUD: The document being checked does not exist: ' + currentId);
     }
 
-    // store the current version as a draft of the new version
-    var draft = bali.removeSeal(document);  // remove the last seal
+    // store a copy of the current version as a draft of the new version
+    var draft = bali.draftDocument(document);
     bali.setPreviousCitation(draft, citation);  // add previous version citation
     this.repository.storeDraft(newId, draft);
 
@@ -178,7 +178,7 @@ BaliCloudAPI.prototype.discardDraft = function(tag, version) {
  * @param {String} tag The unique tag for the Bali document to be saved.
  * @param {String} version The version string for the Bali document to be saved.
  * @param {Document} document The draft of the new version of the document to be committed.
- * @returns {DocumentCitation} A citation to the commited version of the document.
+ * @returns {String} A citation to the commited version of the document.
  */
 BaliCloudAPI.prototype.commitDocument = function(tag, version, document) {
     var documentId = tag.slice(1) + version;
@@ -204,12 +204,12 @@ BaliCloudAPI.prototype.commitDocument = function(tag, version, document) {
  * This method retrieves a read-only copy of the Bali document associated with the
  * specified citation from the Bali Environment™.
  * 
- * @param {DocumentCitation} citation A citation for the document to be retrieved.
+ * @param {String} citation A citation for the document to be retrieved.
  * @returns {Document} The associated document.
  */
 BaliCloudAPI.prototype.retrieveDocument = function(citation) {
-    var tag = notary.citationTag(citation);
-    var version = notary.citationVersion(citation);
+    var tag = notary.getTag(citation);
+    var version = notary.getVersion(citation);
     var documentId = tag.slice(1) + version;
     console.log('        retrieveDocument(' + documentId + ')');
     var document = fetchDocument(this.repository, documentId);
@@ -225,7 +225,7 @@ var EVENT_QUEUE_ID = '#3RMGDVN7D6HLAPFXQNPF7DV71V3MAL43';
  * This method sends a message to a component in the Bali Environment™. It causes
  * a new Bali Virtual Machine™ to be created to handle the processing of the message.
  * 
- * @param {DocumentCitation} target A citation for the target document that is to process
+ * @param {String} target A citation for the target document that is to process
  * the message.
  * @param {Document} message The message to be sent.
  */
@@ -352,8 +352,8 @@ function validateCertificate(certificateId, certificate) {
     }
     var seal = bali.getSeal(certificate);
     var citation = bali.getCitation(seal).toString();
-    var citationTag = notary.citationTag(citation);
-    var citationVersion = notary.citationVersion(citation);
+    var citationTag = notary.getTag(citation);
+    var citationVersion = notary.getVersion(citation);
     var citationId = citationTag.slice(1) + citationVersion;
     if (citationId !== certificateId) {
         throw new Error('CLOUD: The following certificate has an invalid citation: ' + certificateId + '\n' + certificate);
@@ -395,8 +395,8 @@ function validateDocument(repository, documentId, document) {
     var seal = bali.getSeal(document);
     while (seal) {
         var citation = bali.getCitation(seal).toString();
-        var tag = notary.citationTag(citation);
-        var version = notary.citationVersion(citation);
+        var tag = notary.getTag(citation);
+        var version = notary.getVersion(citation);
         var certificateId = tag.slice(1) + version;
         var certificate = fetchCertificate(repository, certificateId);
         if (!notary.documentIsValid(certificate, document)) {
