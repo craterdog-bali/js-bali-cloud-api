@@ -14,7 +14,7 @@
  * as UTF-8 encoded strings. It can be used with the CloudAPI class for local testing.
  */
 var fs = require('fs');
-var random = require('bali-utilities/RandomUtilities');
+var random = require('bali-language/utilities/RandomUtilities');
 
 
 function LocalRepository(filesystem) {
