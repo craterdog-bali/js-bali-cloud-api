@@ -37,7 +37,8 @@ LocalRepository.prototype.constructor = LocalRepository;
 exports.LocalRepository = LocalRepository;
 
 
-LocalRepository.prototype.certificateExists = function(certificateId) {
+LocalRepository.prototype.certificateExists = function(tag, version) {
+    var certificateId = tag.slice(1) + version;
     var filename = this.certificates + certificateId;
     try {
         return fs.existsSync(filename);
@@ -47,7 +48,8 @@ LocalRepository.prototype.certificateExists = function(certificateId) {
 };
 
 
-LocalRepository.prototype.fetchCertificate = function(certificateId) {
+LocalRepository.prototype.fetchCertificate = function(tag, version) {
+    var certificateId = tag.slice(1) + version;
     var filename = this.certificates + certificateId;
     var certificate;
     try {
@@ -61,7 +63,8 @@ LocalRepository.prototype.fetchCertificate = function(certificateId) {
 };
 
 
-LocalRepository.prototype.storeCertificate = function(certificateId, certificate) {
+LocalRepository.prototype.storeCertificate = function(tag, version, certificate) {
+    var certificateId = tag.slice(1) + version;
     var filename = this.certificates + certificateId;
     var exists;
     try {
@@ -80,7 +83,8 @@ LocalRepository.prototype.storeCertificate = function(certificateId, certificate
 };
 
 
-LocalRepository.prototype.draftExists = function(draftId) {
+LocalRepository.prototype.draftExists = function(tag, version) {
+    var draftId = tag.slice(1) + version;
     var filename = this.drafts + draftId;
     try {
         return fs.existsSync(filename);
@@ -90,7 +94,8 @@ LocalRepository.prototype.draftExists = function(draftId) {
 };
 
 
-LocalRepository.prototype.fetchDraft = function(draftId) {
+LocalRepository.prototype.fetchDraft = function(tag, version) {
+    var draftId = tag.slice(1) + version;
     var filename = this.drafts + draftId;
     var draft;
     try {
@@ -104,7 +109,8 @@ LocalRepository.prototype.fetchDraft = function(draftId) {
 };
 
 
-LocalRepository.prototype.storeDraft = function(draftId, draft) {
+LocalRepository.prototype.storeDraft = function(tag, version, draft) {
+    var draftId = tag.slice(1) + version;
     var filename = this.drafts + draftId;
     try {
         fs.writeFileSync(filename, draft, {encoding: 'utf8', mode: 384});
@@ -114,7 +120,8 @@ LocalRepository.prototype.storeDraft = function(draftId, draft) {
 };
 
 
-LocalRepository.prototype.deleteDraft = function(draftId) {
+LocalRepository.prototype.deleteDraft = function(tag, version) {
+    var draftId = tag.slice(1) + version;
     var filename = this.drafts + draftId;
     try {
         if (fs.existsSync(filename)) {
@@ -126,7 +133,8 @@ LocalRepository.prototype.deleteDraft = function(draftId) {
 };
 
 
-LocalRepository.prototype.documentExists = function(documentId) {
+LocalRepository.prototype.documentExists = function(tag, version) {
+    var documentId = tag.slice(1) + version;
     var filename = this.documents + documentId;
     try {
         return fs.existsSync(filename);
@@ -136,7 +144,8 @@ LocalRepository.prototype.documentExists = function(documentId) {
 };
 
 
-LocalRepository.prototype.fetchDocument = function(documentId) {
+LocalRepository.prototype.fetchDocument = function(tag, version) {
+    var documentId = tag.slice(1) + version;
     var filename = this.documents + documentId;
     var document;
     try {
@@ -150,7 +159,8 @@ LocalRepository.prototype.fetchDocument = function(documentId) {
 };
 
 
-LocalRepository.prototype.storeDocument = function(documentId, document) {
+LocalRepository.prototype.storeDocument = function(tag, version, document) {
+    var documentId = tag.slice(1) + version;
     var filename = this.documents + documentId;
     var exists;
     try {
@@ -169,8 +179,9 @@ LocalRepository.prototype.storeDocument = function(documentId, document) {
 };
 
 
-LocalRepository.prototype.queueMessage = function(queueId, messageId, message) {
-    var directory = this.queues + queueId + '/';
+LocalRepository.prototype.queueMessage = function(queue, tag, message) {
+    var messageId = tag.slice(1);
+    var directory = this.queues + queue + '/';
     var filename = directory + messageId;
     var exists;
     try {
@@ -190,8 +201,8 @@ LocalRepository.prototype.queueMessage = function(queueId, messageId, message) {
 };
 
 
-LocalRepository.prototype.dequeueMessage = function(queueId) {
-    var directory = this.queues + queueId + '/';
+LocalRepository.prototype.dequeueMessage = function(queue) {
+    var directory = this.queues + queue + '/';
     var message;
     try {
         while (fs.existsSync(directory)) {

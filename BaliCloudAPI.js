@@ -41,15 +41,13 @@ exports.BaliCloudAPI = BaliCloudAPI;
 BaliCloudAPI.prototype.publishCertificate = function(certificate) {
     var tag = bali.getStringForKey(certificate, '$tag');
     var version = bali.getStringForKey(certificate, '$version');
-    var certificateId = tag.slice(1) + version;
-    console.log('        publishCertificate(' + certificateId + ')');
     // store the certificate in the repository
-    if (this.repository.certificateExists(certificateId)) {
-        throw new Error('CLOUD: The certificate being saved is already published: ' + certificateId);
+    if (this.repository.certificateExists(tag, version)) {
+        throw new Error('CLOUD: The certificate being saved is already published: ' + tag + version);
     }
-    validateCertificate(certificateId, certificate);
-    this.repository.storeCertificate(certificateId, certificate);
-    CERTIFICATE_CACHE.set(certificateId, certificate);
+    validateCertificate(certificate);
+    this.repository.storeCertificate(tag, version, certificate);
+    CERTIFICATE_CACHE.set(tag + version, certificate);
 };
 
 
@@ -63,9 +61,7 @@ BaliCloudAPI.prototype.publishCertificate = function(certificate) {
 BaliCloudAPI.prototype.retrieveCertificate = function(citation) {
     var tag = notary.getTag(citation);
     var version = notary.getVersion(citation);
-    var certificateId = tag.slice(1) + version;
-    console.log('        retrieveCertificate(' + certificateId + ')');
-    var certificate = fetchCertificate(this.repository, certificateId);
+    var certificate = fetchCertificate(this.repository, tag, version);
     return certificate;
 };
 
@@ -83,9 +79,6 @@ BaliCloudAPI.prototype.retrieveCertificate = function(citation) {
 BaliCloudAPI.prototype.checkoutDocument = function(citation, newVersion) {
     var tag = notary.getTag(citation);
     var currentVersion = notary.getVersion(citation);
-    var currentId = tag.slice(1) + currentVersion;
-    var newId = tag.slice(1) + newVersion;
-    console.log('        checkoutDocument(' + currentId + ', ' + newId + ')');
 
     // validate the new version number
     if (!validNextVersion(currentVersion, newVersion)) {
@@ -93,20 +86,20 @@ BaliCloudAPI.prototype.checkoutDocument = function(citation, newVersion) {
     }
 
     // make sure the new version of the document doesn't already exist
-    if (DOCUMENT_CACHE.has(newId) || this.repository.documentExists(newId) || this.repository.draftExists(newId)) {
-        throw new Error('CLOUD: The new version of the document being checked out already exists: ' + newId);
+    if (DOCUMENT_CACHE.has(tag + newVersion) || this.repository.documentExists(tag, newVersion) || this.repository.draftExists(tag, newVersion)) {
+        throw new Error('CLOUD: The new version of the document being checked out already exists: ' + tag + newVersion);
     }
 
     // fetch the document
-    var document = fetchDocument(this.repository, currentId);
+    var document = fetchDocument(this.repository, tag, currentVersion);
     if (!document) {
-        throw new Error('CLOUD: The document being checked does not exist: ' + currentId);
+        throw new Error('CLOUD: The document being checked does not exist: ' + tag + currentVersion);
     }
 
     // store a copy of the current version as a draft of the new version
     var draft = bali.draftDocument(document);
     bali.setPreviousCitation(draft, citation);  // add previous version citation
-    this.repository.storeDraft(newId, draft);
+    this.repository.storeDraft(tag, newVersion, draft);
 
     return draft;
 };
@@ -121,12 +114,10 @@ BaliCloudAPI.prototype.checkoutDocument = function(citation, newVersion) {
  * @param {Document} draft The draft of the document to be saved.
  */
 BaliCloudAPI.prototype.saveDraft = function(tag, version, draft) {
-    var draftId = tag.slice(1) + version;
-    console.log('        saveDraft(' + draftId + ')');
-    if (this.repository.documentExists(draftId)) {
-        throw new Error('CLOUD: The draft being saved is already committed: ' + draftId);
+    if (DOCUMENT_CACHE.has(tag + version) || this.repository.documentExists(tag, version)) {
+        throw new Error('CLOUD: The draft being saved is already committed: ' + tag + version);
     }
-    this.repository.storeDraft(draftId, draft);
+    this.repository.storeDraft(tag, version, draft);
 };
 
 
@@ -140,17 +131,12 @@ BaliCloudAPI.prototype.saveDraft = function(tag, version, draft) {
  * @returns {Document} The associated document draft.
  */
 BaliCloudAPI.prototype.retrieveDraft = function(tag, version) {
-    var draftId = tag.slice(1) + version;
-    console.log('        retrieveDraft(' + draftId + ')');
     var draft;
-    if (DOCUMENT_CACHE.has(draftId)) {
-        throw new Error('CLOUD: The following committed document already exists: ' + draftId);
-    }
-    var source = this.repository.fetchDraft(draftId);
+    var source = this.repository.fetchDraft(tag, version);
     if (source) {
         // validate the draft
         draft = bali.parseDocument(source);
-        validateDocument(this.repository, draftId, draft);
+        validateDocument(this.repository, draft);
         // don't cache drafts since they are mutable
     }
     return draft;
@@ -165,9 +151,7 @@ BaliCloudAPI.prototype.retrieveDraft = function(tag, version) {
  * @param {String} version The version string for the Bali document draft to be saved.
  */
 BaliCloudAPI.prototype.discardDraft = function(tag, version) {
-    var draftId = tag.slice(1) + version;
-    console.log('        discardDraft(' + draftId + ')');
-    this.repository.deleteDraft(draftId);
+    this.repository.deleteDraft(tag, version);
 };
 
 
@@ -181,20 +165,17 @@ BaliCloudAPI.prototype.discardDraft = function(tag, version) {
  * @returns {String} A citation to the commited version of the document.
  */
 BaliCloudAPI.prototype.commitDocument = function(tag, version, document) {
-    var documentId = tag.slice(1) + version;
-    console.log('        commitDocument(' + documentId + ')');
-
     // store the new version of the document in the repository
-    if (this.repository.documentExists(documentId)) {
-        throw new Error('CLOUD: The document being saved is already committed: ' + documentId);
+    if (this.repository.documentExists(tag, version)) {
+        throw new Error('CLOUD: The document being saved is already committed: ' + tag + version);
     }
     var citation = notary.notarizeDocument(this.notaryKey, tag, version, document);
-    validateDocument(this.repository, documentId, document);
-    this.repository.storeDocument(documentId, document);
-    DOCUMENT_CACHE.set(documentId, document);
+    validateDocument(this.repository, document);
+    this.repository.storeDocument(tag, version, document);
+    DOCUMENT_CACHE.set(tag + version, document);
 
     // delete the stored draft if one exists from the repository
-    if (this.repository.draftExists(documentId)) this.repository.deleteDraft(documentId);
+    if (this.repository.draftExists(tag, version)) this.repository.deleteDraft(tag, version);
 
     return citation;
 };
@@ -210,15 +191,13 @@ BaliCloudAPI.prototype.commitDocument = function(tag, version, document) {
 BaliCloudAPI.prototype.retrieveDocument = function(citation) {
     var tag = notary.getTag(citation);
     var version = notary.getVersion(citation);
-    var documentId = tag.slice(1) + version;
-    console.log('        retrieveDocument(' + documentId + ')');
-    var document = fetchDocument(this.repository, documentId);
+    var document = fetchDocument(this.repository, tag, version);
     return document;
 };
 
 
-var SEND_QUEUE_ID = '#JXT095QY01HBLHPAW04ZR5WSH41MWG4H';
-var EVENT_QUEUE_ID = '#3RMGDVN7D6HLAPFXQNPF7DV71V3MAL43';
+var SEND_QUEUE_ID = 'JXT095QY01HBLHPAW04ZR5WSH41MWG4H';
+var EVENT_QUEUE_ID = '3RMGDVN7D6HLAPFXQNPF7DV71V3MAL43';
 
 
 /**
@@ -230,13 +209,11 @@ var EVENT_QUEUE_ID = '#3RMGDVN7D6HLAPFXQNPF7DV71V3MAL43';
  * @param {Document} message The message to be sent.
  */
 BaliCloudAPI.prototype.sendMessage = function(target, message) {
-    var targetId = target.tag.slice(1) + target.version;
-    console.log('        sendMessage(' + targetId + ', ' +  message + ')');
-    bali.setAttribute(message, '$target', target.toString());
-    var messageId = bali.tag();
-    bali.setAttribute(message, '$tag', messageId);
-    notary.notarizeDocument(this.notaryKey, messageId, 'v1', message);
-    this.repository.queueMessage(SEND_QUEUE_ID, messageId, message);
+    bali.setValueForKey(message, '$target', bali.parseElement(target));
+    var tag = bali.tag();
+    bali.setValueForKey(message, '$tag', tag);
+    notary.notarizeDocument(this.notaryKey, tag, 'v1', message);
+    this.repository.queueMessage(SEND_QUEUE_ID, tag, message);
 };
 
 
@@ -245,15 +222,14 @@ BaliCloudAPI.prototype.sendMessage = function(target, message) {
  * specified identifier in the Bali Environment™. If the queue does not
  * exist it is created.
  * 
- * @param {String} queueId The identifier of the queue on which to place the message.
+ * @param {String} queue The identifier of the queue on which to place the message.
  * @param {Document} message The message to be queued.
  */
-BaliCloudAPI.prototype.queueMessage = function(queueId, message) {
-    console.log('        queueMessage(' + queueId + ', ' +  message + ')');
-    var messageId = bali.tag();
-    bali.setAttribute(message, '$tag', messageId);
-    notary.notarizeDocument(this.notaryKey, messageId, 'v1', message);
-    this.repository.queueMessage(queueId, messageId, message);
+BaliCloudAPI.prototype.queueMessage = function(queue, message) {
+    var tag = bali.tag();
+    //bali.setValueForKey(message, '$tag', tag);
+    notary.notarizeDocument(this.notaryKey, tag, 'v1', message);
+    this.repository.queueMessage(queue, tag, message);
 };
 
 
@@ -262,18 +238,16 @@ BaliCloudAPI.prototype.queueMessage = function(queueId, message) {
  * specified reference in the Bali Environment™. If there are no messages
  * currently on the queue then this method returns <code>undefined</code>.
  * 
- * @param {String} queueId The identifier of the queue from which to retrieve the message.
+ * @param {String} queue The identifier of the queue from which to retrieve the message.
  * @returns {Document} The retrieved message or <code>undefined</code> if the queue is empty.
  */
-BaliCloudAPI.prototype.receiveMessage = function(queueId) {
-    console.log('        receiveMessage(' + queueId + ')');
+BaliCloudAPI.prototype.receiveMessage = function(queue) {
     var message;
-    var source = this.repository.dequeueMessage(queueId);
+    var source = this.repository.dequeueMessage(queue);
     if (source) {
         // validate the document
         message = bali.parseDocument(source);
-        var messageId = bali.getStringForKey(message, '$tag');
-        validateDocument(this.repository, messageId, message);
+        validateDocument(this.repository, message);
     }
     return message;
 };
@@ -286,10 +260,10 @@ BaliCloudAPI.prototype.receiveMessage = function(queueId) {
  * @param {Document} event The event to be published.
  */
 BaliCloudAPI.prototype.publishEvent = function(event) {
-    console.log('        publishEvent(' + event + ')');
-
-    // store the message on the queue
-    queueMessage(this, EVENT_QUEUE_ID, event);
+    var tag = bali.tag();
+    bali.setValueForKey(event, '$tag', tag);
+    notary.notarizeDocument(this.notaryKey, tag, 'v1', event);
+    this.repository.queueMessage(EVENT_QUEUE_ID, tag, event);
 };
 
 
@@ -317,17 +291,17 @@ function validNextVersion(currentVersion, nextVersion) {
 }
 
 
-function fetchCertificate(repository, certificateId) {
+function fetchCertificate(repository, tag, version) {
     // check the cache
-    var certificate = CERTIFICATE_CACHE.get(certificateId);
+    var certificate = CERTIFICATE_CACHE.get(tag + version);
 
     // next check the repository if necessary
     if (!certificate) {
-        var source = repository.fetchCertificate(certificateId);
+        var source = repository.fetchCertificate(tag, version);
         if (source) {
             // validate the certificate
             certificate = bali.parseDocument(source);
-            validateCertificate(certificateId, certificate);
+            validateCertificate(certificate);
 
             // cache the certificate
             if (CERTIFICATE_CACHE.size > MAX_CACHE_SIZE) {
@@ -335,7 +309,7 @@ function fetchCertificate(repository, certificateId) {
                 var key = CERTIFICATE_CACHE.keys().next().value;
                 CERTIFICATE_CACHE.delete(key);
             }
-            CERTIFICATE_CACHE.set(certificateId, certificate);
+            CERTIFICATE_CACHE.set(tag + version, certificate);
         }
     }
 
@@ -343,38 +317,33 @@ function fetchCertificate(repository, certificateId) {
 }
 
 
-function validateCertificate(certificateId, certificate) {
-    console.log('        validateCertificate(' + certificateId + ')');
+function validateCertificate(certificate) {
     var certificateTag = bali.getStringForKey(certificate, '$tag');
     var certificateVersion = bali.getStringForKey(certificate, '$version');
-    if (certificateId !== certificateTag.slice(1) + certificateVersion) {
-        throw new Error('CLOUD: The following certificate has an invalid certificateId: ' + certificateId + '\n' + certificate);
-    }
     var seal = bali.getSeal(certificate);
-    var citation = bali.getCitation(seal).toString();
+    var citation = bali.getCitation(seal);
     var citationTag = notary.getTag(citation);
     var citationVersion = notary.getVersion(citation);
-    var citationId = citationTag.slice(1) + citationVersion;
-    if (citationId !== certificateId) {
-        throw new Error('CLOUD: The following certificate has an invalid citation: ' + certificateId + '\n' + certificate);
+    if (certificateTag !== citationTag || certificateVersion !== citationVersion) {
+        throw new Error('CLOUD: The following certificate has an invalid citation:\n' + certificate);
     }
     if (!notary.documentIsValid(certificate, certificate)) {
-        throw new Error('CLOUD: The following certificate is invalid: ' + certificateId + '\n' + certificate);
+        throw new Error('CLOUD: The following certificate is invalid:\n' + certificate);
     }
 }
 
 
-function fetchDocument(repository, documentId) {
+function fetchDocument(repository, tag, version) {
     // check the cache
-    var document = DOCUMENT_CACHE.get(documentId);
+    var document = DOCUMENT_CACHE.get(tag + version);
 
     // next check the repository if necessary
     if (!document) {
-        var source = repository.fetchDocument(documentId);
+        var source = repository.fetchDocument(tag, version);
         if (source) {
             // validate the document
             document = bali.parseDocument(source);
-            validateDocument(repository, documentId, document);
+            validateDocument(repository, document);
 
             // cache the document
             if (DOCUMENT_CACHE.size > MAX_CACHE_SIZE) {
@@ -382,7 +351,7 @@ function fetchDocument(repository, documentId) {
                 var key = DOCUMENT_CACHE.keys().next().value;
                 DOCUMENT_CACHE.delete(key);
             }
-            DOCUMENT_CACHE.set(documentId, document);
+            DOCUMENT_CACHE.set(tag + version, document);
         }
     }
 
@@ -390,17 +359,15 @@ function fetchDocument(repository, documentId) {
 }
 
 
-function validateDocument(repository, documentId, document) {
-    console.log('        validateDocument(' + documentId + ')');
+function validateDocument(repository, document) {
     var seal = bali.getSeal(document);
     while (seal) {
-        var citation = bali.getCitation(seal).toString();
+        var citation = bali.getCitation(seal);
         var tag = notary.getTag(citation);
         var version = notary.getVersion(citation);
-        var certificateId = tag.slice(1) + version;
-        var certificate = fetchCertificate(repository, certificateId);
+        var certificate = fetchCertificate(repository, tag, version);
         if (!notary.documentIsValid(certificate, document)) {
-            throw new Error('CLOUD: The following document is invalid: ' + documentId + '\n' + document);
+            throw new Error('CLOUD: The following document is invalid:\n' + document);
         }
         document = bali.removeSeal(document);
         seal = bali.getSeal(document);

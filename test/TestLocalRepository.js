@@ -21,58 +21,60 @@ describe('Bali Cloud API™', function() {
     describe('Test LocalRepository', function() {
 
         it('should perform a draft document lifecycle', function() {
-            var draftId = 'draftId';
+            var tag = 'tag';
+            var version = 'v2.3.4';
 
             // store a new draft in the repository
-            repository.storeDraft(draftId, source);
+            repository.storeDraft(tag, version, source);
 
             // make sure the new draft exists in the repository
-            var exists = repository.draftExists(draftId);
+            var exists = repository.draftExists(tag, version);
             expect(exists).is.true;  // jshint ignore:line
 
             // make sure the same document does not exist in the repository
-            exists = repository.documentExists(draftId);
+            exists = repository.documentExists(tag, version);
             expect(exists).is.false;  // jshint ignore:line
 
             // fetch the new draft from the repository
-            var draft = repository.fetchDraft(draftId);
+            var draft = repository.fetchDraft(tag, version);
             expect(draft).to.equal(source);
 
             // delete the new draft from the repository
-            repository.deleteDraft(draftId);
+            repository.deleteDraft(tag, version);
 
             // make sure the new draft no longer exists in the repository
-            exists = repository.draftExists(draftId);
+            exists = repository.draftExists(tag, version);
             expect(exists).is.false;  // jshint ignore:line
 
             // delete a non-existent draft from the repository
-            repository.deleteDraft(draftId);
+            repository.deleteDraft(tag, version);
         });
 
         it('should perform a committed document lifecycle', function() {
-            var documentId = 'documentId';
+            var tag = 'tag';
+            var version = 'v2.3.4';
 
             // store a new document in the repository
-            repository.storeDocument(documentId, source);
+            repository.storeDocument(tag, version, source);
 
             // make sure the same draft does not exist in the repository
-            exists = repository.draftExists(documentId);
+            exists = repository.draftExists(tag, version);
             expect(exists).is.false;  // jshint ignore:line
 
             // make sure the new document exists in the repository
-            var exists = repository.documentExists(documentId);
+            var exists = repository.documentExists(tag, version);
             expect(exists).is.true;  // jshint ignore:line
 
             // fetch the new document from the repository
-            var document = repository.fetchDocument(documentId);
+            var document = repository.fetchDocument(tag, version);
             expect(document).to.equal(source);
 
             // make sure the new document still exists in the repository
-            exists = repository.documentExists(documentId);
+            exists = repository.documentExists(tag, version);
             expect(exists).is.true;  // jshint ignore:line
 
             // attempt to store the same document in the repository
-            expect(repository.storeDocument.bind(repository, documentId, source)).to.throw();
+            expect(repository.storeDocument.bind(repository, tag, version, source)).to.throw();
         });
 
         it('should perform a message queue lifecycle', function() {
@@ -85,11 +87,11 @@ describe('Bali Cloud API™', function() {
             // queue up some messages
             for (var i = 0; i < 3; i++) {
                 // place a new message on the queue
-                var messageId = 'messageId' + i;
-                repository.queueMessage(queueId, messageId, source);
+                var tag = 'tag' + i;
+                repository.queueMessage(queueId, tag, source);
 
                 // attempt to place the same message on the queue
-                expect(repository.queueMessage.bind(repository, queueId, messageId, source)).to.throw();
+                expect(repository.queueMessage.bind(repository, queueId, tag, source)).to.throw();
             }
 
             // dequeue the messages
