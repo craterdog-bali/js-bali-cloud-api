@@ -24,8 +24,12 @@ module.exports = function(grunt) {
 
     // grunt-contrib-clean plugin configuration (clean up files)
     clean: {
-      build: ['dist/*']
+      build: [
+        'dist/*',
+        'test/repository/'
+      ]
     },
+
 
     // grunt-mocha-test plugin configuration (unit testing)
     mochaTest: {
