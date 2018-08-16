@@ -11,7 +11,7 @@
 /*
  * This library provides useful functions for accessing the Bali Environment™.
  */
-var bali = require('bali-language/BaliLanguage');
+var bali = require('bali-document-notation/BaliDocuments');
 var notary = require('bali-digital-notary/BaliNotary');
 
 

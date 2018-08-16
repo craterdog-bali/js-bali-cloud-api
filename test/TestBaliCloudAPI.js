@@ -10,7 +10,7 @@
 
 var BaliCloudAPI = require('../BaliCloudAPI').BaliCloudAPI;
 var LocalRepository = require('../LocalRepository').LocalRepository;
-var bali = require('bali-language/BaliLanguage');
+var bali = require('bali-document-notation/BaliDocuments');
 var notary = require('bali-digital-notary/BaliNotary');
 var mocha = require('mocha');
 var expect = require('chai').expect;
