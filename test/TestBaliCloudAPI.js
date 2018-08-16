@@ -15,102 +15,157 @@ var notary = require('bali-digital-notary/BaliNotary');
 var mocha = require('mocha');
 var expect = require('chai').expect;
 
-var repository;
-var consumerAPI;
-var merchantAPI;
-
-var source =
+describe('Bali Cloud API™', function() {
+    var consumerAPI;
+    var merchantAPI;
+    var source =
         '[\n' +
         '    $foo: "bar"\n' +
         ']\n';
 
-describe('Bali Cloud API™', function() {
+    describe('Initialize Environment', function() {
+        var repository;
+        var consumerKey;
+        var consumerCert;
+        var merchantKey;
+        var merchantCert;
 
-    describe('Test BaliCloudAPI', function() {
-
-        it('should generate notary keys and publish their certificates', function() {
-            // setup the global repository
+        it('should setup a local repository', function() {
             repository = new LocalRepository('test/repository');
-
-            // setup the consumer API
-            var keypair = notary.generateKeys('v1');
-            var consumerKey = keypair.notaryKey;
-            var consumerCert = keypair.certificate;
-            console.log('        consumer certificate: ' + consumerCert);
-            consumerAPI = new BaliCloudAPI(consumerKey, repository);
-            consumerAPI.publishCertificate(consumerCert);
-
-            // setup the merchant API
-            keypair = notary.generateKeys('v1');
-            var merchantKey = keypair.notaryKey;
-            var merchantCert = keypair.certificate;
-            console.log('        merchant certificate: ' + merchantCert);
-            merchantAPI = new BaliCloudAPI(merchantKey, repository);
-            merchantAPI.publishCertificate(merchantCert);
+            expect(repository).to.exist;  // jshint ignore:line
         });
 
-        it('should perform a document lifecycle', function() {
-            var tag = bali.tag();
-            var version = 'v2.3.4';
-            var draft = bali.parseDocument(source);
-            console.log('        initial draft v2.3.4: ' + draft);
+        it('should generate notary key for consumer', function() {
+            var keypair = notary.generateKeys('v1');
+            consumerKey = keypair.notaryKey;
+            consumerAPI = new BaliCloudAPI(consumerKey, repository);
+            expect(consumerAPI).to.exist;  // jshint ignore:line
+            consumerCert = keypair.certificate;
+        });
 
-            // save a new draft document in the repository
+        it('should generate notary key for merchant', function() {
+            var keypair = notary.generateKeys('v1');
+            merchantKey = keypair.notaryKey;
+            merchantAPI = new BaliCloudAPI(merchantKey, repository);
+            expect(merchantAPI).to.exist;  // jshint ignore:line
+            merchantCert = keypair.certificate;
+        });
+
+        it('should publish notary certificate for consumer', function() {
+            consumerAPI.publishCertificate(consumerCert);
+            var certificate = merchantAPI.retrieveCertificate(consumerKey.citation);
+            expect(certificate).to.exist;  // jshint ignore:line
+            expect(certificate.toString()).to.equal(consumerCert.toString());
+        });
+
+        it('should publish notary certificate for merchant', function() {
+            merchantAPI.publishCertificate(merchantCert);
+            certificate = consumerAPI.retrieveCertificate(merchantKey.citation);
+            expect(certificate).to.exist;  // jshint ignore:line
+            expect(certificate.toString()).to.equal(merchantCert.toString());
+        });
+
+    });
+
+    describe('Test Drafts', function() {
+        var tag = bali.tag();
+        var version = 'v1.2';
+        var draft = bali.parseDocument(source);
+
+        it('should save a new draft document in the repository', function() {
+            console.log('        initial draft v1.2: ' + draft);
             consumerAPI.saveDraft(tag, version, draft);
+        });
 
-            // retrieve the new draft document from the repository
+        it('should retrieve the new draft document from the repository', function() {
             draft = consumerAPI.retrieveDraft(tag, version);
             expect(draft).to.exist;  // jshint ignore:line
             expect(draft.toString()).to.equal(source);
+        });
 
-            // update the body of the draft document
+        it('should save an updated draft document in the repository', function() {
             bali.setValueForKey(draft, '$bar', '"baz"');
-            console.log('        updated draft v2.3.4: ' + draft);
+            console.log('        updated draft v1.2: ' + draft);
+            consumerAPI.saveDraft(tag, version, draft);
+            expect(draft.toString()).to.not.equal(source);
+        });
 
-            // commit the new draft to the repository
-            var citation = consumerAPI.commitDocument(tag, version, draft);
+        it('should discard the draft document in the repository', function() {
+            consumerAPI.discardDraft(tag, version);
+        });
 
-            // retrieve the committed document from the repository
-            var document = consumerAPI.retrieveDocument(citation);
+        it('should verify that the draft document no longer exists in the repository', function() {
+            draft = consumerAPI.retrieveDraft(tag, version);
+            expect(draft).to.not.exist;  // jshint ignore:line
+        });
+
+    });
+
+    describe('Test Documents', function() {
+        var tag = bali.tag();
+        var version = 'v2.3.4';
+        var newVersion = 'v2.4';
+        var draft;
+        var document;
+        var citation;
+        var newCitation;
+
+        it('should commit a draft of a new document to the repository', function() {
+            document = bali.parseDocument(source);
+            citation = consumerAPI.commitDocument(tag, version, document);
+        });
+
+        it('should retrieve the committed document from the repository', function() {
+            document = consumerAPI.retrieveDocument(citation);
             expect(document).to.exist;  // jshint ignore:line
             expect(document.toString()).to.not.equal(source);
             console.log('        committed document v2.3.4: ' + document);
+        });
 
-            // checkout a draft of the new document from the repository
-            var newVersion = 'v2.4';
+        it('should checkout a draft of the new document from the repository', function() {
             draft = consumerAPI.checkoutDocument(citation, newVersion);
-            expect(document).to.exist;  // jshint ignore:line
-            expect(document.toString()).to.not.equal(source);
+            expect(draft).to.exist;  // jshint ignore:line
+            expect(draft.toString()).to.not.equal(document.toString());
             console.log('        draft v2.4: ' + draft);
+        });
 
-            // commit a document that has been notarized by two parties
-            notary.notarizeDocument(consumerAPI.notaryKey, tag, newVersion, draft);
-            citation = merchantAPI.commitDocument(tag, newVersion, draft);
+        it('should commit an updated version of the document to the repository', function() {
+            bali.setValueForKey(draft, '$bar', '"baz"');
+            console.log('        updated draft v1.2: ' + draft);
+            newCitation = consumerAPI.commitDocument(tag, newVersion, draft);
+            expect(newCitation).to.not.equal(citation);
+        });
 
-            // retrieve the new committed document from the repository
-            document = consumerAPI.retrieveDocument(citation);
-            expect(document).to.exist;  // jshint ignore:line
-            expect(document.toString()).to.not.equal(source);
-            console.log('        committed document v2.4: ' + document);
-
-            // checkout the latest version
-            newVersion = 'v2.4.1';
-            draft = consumerAPI.checkoutDocument(citation, newVersion);
-            console.log('        draft v2.4.1: ' + draft);
-
-            // delete the latest draft from the repository
-            consumerAPI.discardDraft(tag, newVersion);
-
-            // make sure the draft no longer exists in the repository
-            draft = consumerAPI.retrieveDraft(tag, newVersion);
-            expect(draft).not.to.exist;  // jshint ignore:line
-
-            // make sure the new document still exists in the repository
-            document = consumerAPI.retrieveDocument(citation);
+        it('should retrieve the updated committed document from the repository', function() {
+            document = consumerAPI.retrieveDocument(newCitation);
             expect(document).to.exist;  // jshint ignore:line
             console.log('        committed document v2.4: ' + document);
         });
 
+        it('should checkout the latest version of the document from the repository', function() {
+            newVersion = 'v2.4.1';
+            draft = consumerAPI.checkoutDocument(newCitation, newVersion);
+            console.log('        draft v2.4.1: ' + draft);
+        });
+
+        it('should discard the draft document in the repository', function() {
+            consumerAPI.discardDraft(tag, newVersion);
+        });
+
+        it('should verify that the draft document no longer exists in the repository', function() {
+            draft = consumerAPI.retrieveDraft(tag, newVersion);
+            expect(draft).to.not.exist;  // jshint ignore:line
+        });
+
+        it('should make sure the new document still exists in the repository', function() {
+            document = consumerAPI.retrieveDocument(newCitation);
+            expect(document).to.exist;  // jshint ignore:line
+            console.log('        committed document v2.4: ' + document);
+        });
+
+    });
+
+    describe('Test Messages', function() {
         it('should perform a message lifecycle', function() {
             var queueId = 'queueId';
 
@@ -140,6 +195,10 @@ describe('Bali Cloud API™', function() {
             message = merchantAPI.receiveMessage(queueId);
             expect(message).to.not.exist;  // jshint ignore:line
         });
+
+    });
+
+    describe('Test Events', function() {
 
     });
 

@@ -21,8 +21,8 @@ describe('Bali Cloud API™', function() {
     describe('Test LocalRepository', function() {
 
         it('should perform a draft document lifecycle', function() {
-            var tag = 'tag';
-            var version = 'v2.3.4';
+            var tag = '#NZRRDAB94B4ZH0WDRT5N3TGX2ZTVMSV2';
+            var version = 'v1.2.3';
 
             // store a new draft in the repository
             repository.storeDraft(tag, version, source);
@@ -51,8 +51,8 @@ describe('Bali Cloud API™', function() {
         });
 
         it('should perform a committed document lifecycle', function() {
-            var tag = 'tag';
-            var version = 'v2.3.4';
+            var tag = '#YK4KPZHX2ZPVS0NNK2YH368XP7FR05Y9';
+            var version = 'v3.4';
 
             // store a new document in the repository
             repository.storeDocument(tag, version, source);
@@ -78,31 +78,31 @@ describe('Bali Cloud API™', function() {
         });
 
         it('should perform a message queue lifecycle', function() {
-            var queueId = 'queueId';
+            var queue = 'queueId';
 
             // make sure the message queue is empty
-            var message = repository.dequeueMessage(queueId);
+            var message = repository.dequeueMessage(queue);
             expect(message).to.not.exist;  // jshint ignore:line
 
             // queue up some messages
             for (var i = 0; i < 3; i++) {
                 // place a new message on the queue
-                var tag = 'tag' + i;
-                repository.queueMessage(queueId, tag, source);
+                var tag = '#RCF5A7QYVNXHKSW449QTY3HJB63JG8DP' + i;
+                repository.queueMessage(queue, tag, source);
 
                 // attempt to place the same message on the queue
-                expect(repository.queueMessage.bind(repository, queueId, tag, source)).to.throw();
+                expect(repository.queueMessage.bind(repository, queue, tag, source)).to.throw();
             }
 
             // dequeue the messages
             for (var j = 0; j < 3; j++) {
                 // retrieve a message from the queue
-                message = repository.dequeueMessage(queueId);
+                message = repository.dequeueMessage(queue);
                 expect(message).to.equal(source);
             }
 
             // make sure the message queue is empty
-            message = repository.dequeueMessage(queueId);
+            message = repository.dequeueMessage(queue);
             expect(message).to.not.exist;  // jshint ignore:line
         });
 
