@@ -22,10 +22,6 @@ describe('Bali Cloud API™', function() {
     var merchantClient;
     var merchantKey;
     var merchantCert;
-    var source =
-        '[\n' +
-        '    $foo: "bar"\n' +
-        ']\n';
 
     describe('Initialize Environment', function() {
         var repository;
@@ -66,6 +62,10 @@ describe('Bali Cloud API™', function() {
     describe('Test Drafts', function() {
         var tag = bali.tag();
         var version = 'v1.2';
+        var source =
+            '[\n' +
+            '    $foo: "bar"\n' +
+            ']\n';
         var draft = bali.parseDocument(source);
 
         it('should save a new draft document in the repository', function() {
@@ -112,6 +112,10 @@ describe('Bali Cloud API™', function() {
         var document;
         var citation;
         var newCitation;
+        var source =
+            '[\n' +
+            '    $foo: "bar"\n' +
+            ']\n';
 
         it('should commit a draft of a new document to the repository', function() {
             document = bali.parseDocument(source);
@@ -190,34 +194,55 @@ describe('Bali Cloud API™', function() {
     });
 
     describe('Test Messages', function() {
-        it('should perform a message lifecycle', function() {
-            var queueId = 'queueId';
+        var queue = 'queueId';
+        var source =
+            '[\n' +
+            '    $product: "Snickers Bar"\n' +
+            '    $quantity: 10\n' +
+            '    $price: 1.25(USD)\n' +
+            '    $tax: 1.07(USD)\n' +
+            '    $total: 13.57(USD)\n' +
+            ']\n';
 
-            // make sure the message queue is empty
-            var message = consumerClient.receiveMessage(queueId);
+        it('should allow the merchant to verify that the queue is empty', function() {
+            var message = merchantClient.receiveMessage(queue);
             expect(message).to.not.exist;  // jshint ignore:line
+        });
 
-            // queue up some messages
+        it('should allow the consumer to place some transactions on the queue', function() {
             for (var i = 0; i < 3; i++) {
-                // place a new message on the queue
-                message = bali.parseDocument(source);
-                consumerClient.queueMessage(queueId, message);
-
-                // attempt to place the same message on the queue
-                //expect(consumerClient.queueMessage.bind(consumerClient, queueId, message)).to.throw();
-                //consumerClient.queueMessage(queueId, message);
+                transaction = bali.parseDocument(source);
+                consumerClient.queueMessage(queue, transaction);
+                expect(bali.getPreviousCitation(transaction)).to.not.exist;  // jshint ignore:line
+                expect(bali.getSeals(transaction).length).to.equal(1);
+                var seal = bali.getSeal(transaction);
+                expect(bali.getCitation(seal)).contains(consumerKey.citation);
             }
+        });
 
-            // retrieve the messages
-            for (var j = 0; j < 3; j++) {
-                // retrieve a message from the queue
-                message = merchantClient.receiveMessage(queueId);
-                expect(message).to.exist;  // jshint ignore:line
+        it('should allow the merchant to retrieve the transactions from the queue', function() {
+            var count = 0;
+            var transaction = merchantClient.receiveMessage(queue);
+            while (transaction) {
+                count++;
+                expect(bali.getPreviousCitation(transaction)).to.not.exist;  // jshint ignore:line
+                expect(bali.getSeals(transaction).length).to.equal(1);
+                var seal = bali.getSeal(transaction);
+                expect(bali.getCitation(seal)).contains(consumerKey.citation);
+
+                var tag = bali.getStringForKey(transaction, '$tag');
+                var version = 'v1';
+                var citation = merchantClient.commitDocument(tag, version, transaction);
+                expect(citation).contains(tag);
+                expect(citation).contains(version);
+                expect(bali.getPreviousCitation(transaction)).to.not.exist;  // jshint ignore:line
+                expect(bali.getSeals(transaction).length).to.equal(2);
+                seal = bali.getSeal(transaction);
+                expect(bali.getCitation(seal)).contains(merchantKey.citation);
+
+                transaction = merchantClient.receiveMessage(queue);
             }
-
-            // make sure the message queue is empty
-            message = merchantClient.receiveMessage(queueId);
-            expect(message).to.not.exist;  // jshint ignore:line
+            expect(count).to.equal(3);
         });
 
     });

@@ -262,7 +262,7 @@ BaliAPI.prototype.sendMessage = function(target, message) {
  */
 BaliAPI.prototype.queueMessage = function(queue, message) {
     var tag = bali.tag();
-    //bali.setValueForKey(message, '$tag', tag);
+    bali.setValueForKey(message, '$tag', tag);
     notary.notarizeDocument(this.notaryKey, tag, 'v1', message);
     this.repository.queueMessage(queue, tag, message);
 };
