@@ -17,7 +17,11 @@ var expect = require('chai').expect;
 
 describe('Bali Cloud API™', function() {
     var consumerClient;
+    var consumerKey;
+    var consumerCert;
     var merchantClient;
+    var merchantKey;
+    var merchantCert;
     var source =
         '[\n' +
         '    $foo: "bar"\n' +
@@ -25,10 +29,6 @@ describe('Bali Cloud API™', function() {
 
     describe('Initialize Environment', function() {
         var repository;
-        var consumerKey;
-        var consumerCert;
-        var merchantKey;
-        var merchantCert;
 
         it('should setup the local repository', function() {
             repository = new LocalRepository('test/repository');
@@ -89,6 +89,8 @@ describe('Bali Cloud API™', function() {
             expect(draft.toString()).to.not.equal(source);
             expect(bali.getStringForKey(draft, '$foo')).to.equal('"bar"');
             expect(bali.getStringForKey(draft, '$bar')).to.equal('"baz"');
+            expect(bali.getPreviousCitation(draft)).to.not.exist;  // jshint ignore:line
+            expect(bali.getSeals(draft).length).to.equal(0);
         });
 
         it('should discard the draft document in the repository', function() {
@@ -114,39 +116,59 @@ describe('Bali Cloud API™', function() {
         it('should commit a draft of a new document to the repository', function() {
             document = bali.parseDocument(source);
             citation = consumerClient.commitDocument(tag, version, document);
+            expect(citation).contains(tag);
+            expect(citation).contains(version);
+            expect(bali.getPreviousCitation(document)).to.not.exist;  // jshint ignore:line
+            expect(bali.getBody(document).toString() + '\n').to.equal(source);
+            expect(bali.getSeals(document).length).to.equal(1);
+            var seal = bali.getSeal(document);
+            expect(bali.getCitation(seal)).contains(consumerKey.citation);
         });
 
         it('should retrieve the committed document from the repository', function() {
+            var newSource = document.toString();
             document = consumerClient.retrieveDocument(citation);
             expect(document).to.exist;  // jshint ignore:line
-            expect(document.toString()).to.not.equal(source);
-            console.log('        committed document v2.3.4: ' + document);
+            expect(document.toString()).to.equal(newSource);
         });
 
         it('should checkout a draft of the new document from the repository', function() {
             draft = consumerClient.checkoutDocument(citation, newVersion);
             expect(draft).to.exist;  // jshint ignore:line
-            expect(draft.toString()).to.not.equal(document.toString());
-            console.log('        draft v2.4: ' + draft);
+            expect(draft.toString()).to.equal(citation + '\n' + source);
         });
 
         it('should commit an updated version of the document to the repository', function() {
             bali.setValueForKey(draft, '$bar', '"baz"');
-            console.log('        updated draft v1.2: ' + draft);
             newCitation = consumerClient.commitDocument(tag, newVersion, draft);
             expect(newCitation).to.not.equal(citation);
+            expect(newCitation).contains(tag);
+            expect(newCitation).contains(newVersion);
+            expect(bali.getStringForKey(draft, '$bar')).to.equal('"baz"');
+            expect(bali.getSeals(draft).length).to.equal(1);
+            var seal = bali.getSeal(draft);
+            expect(bali.getCitation(seal)).contains(consumerKey.citation);
         });
 
         it('should retrieve the updated committed document from the repository', function() {
             document = consumerClient.retrieveDocument(newCitation);
             expect(document).to.exist;  // jshint ignore:line
-            console.log('        committed document v2.4: ' + document);
+            var previousCitation = bali.getPreviousCitation(document);
+            expect(previousCitation).to.exist;  // jshint ignore:line
+            expect(previousCitation).to.equal(citation);
+            expect(bali.getStringForKey(document, '$bar')).to.equal('"baz"');
+            expect(bali.getSeals(document).length).to.equal(1);
+            var seal = bali.getSeal(document);
+            expect(bali.getCitation(seal)).contains(consumerKey.citation);
         });
 
         it('should checkout the latest version of the document from the repository', function() {
             newVersion = 'v2.4.1';
             draft = consumerClient.checkoutDocument(newCitation, newVersion);
-            console.log('        draft v2.4.1: ' + draft);
+            var previousCitation = bali.getPreviousCitation(draft);
+            expect(previousCitation).to.exist;  // jshint ignore:line
+            expect(previousCitation).to.equal(newCitation);
+            expect(bali.getSeals(draft).length).to.equal(0);
         });
 
         it('should discard the draft document in the repository', function() {
@@ -159,9 +181,10 @@ describe('Bali Cloud API™', function() {
         });
 
         it('should make sure the new document still exists in the repository', function() {
+            var newSource = document.toString();
             document = consumerClient.retrieveDocument(newCitation);
             expect(document).to.exist;  // jshint ignore:line
-            console.log('        committed document v2.4: ' + document);
+            expect(document.toString()).to.equal(newSource);
         });
 
     });
