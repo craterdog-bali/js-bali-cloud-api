@@ -214,6 +214,7 @@ describe('Bali Cloud API™', function() {
                 transaction = bali.parseDocument(source);
                 consumerClient.queueMessage(queue, transaction);
                 expect(bali.getPreviousCitation(transaction)).to.not.exist;  // jshint ignore:line
+                expect(bali.getBody(transaction).toString()).contains('$tag:');
                 expect(bali.getSeals(transaction).length).to.equal(1);
                 var seal = bali.getSeal(transaction);
                 expect(bali.getCitation(seal)).contains(consumerKey.citation);
@@ -248,6 +249,22 @@ describe('Bali Cloud API™', function() {
     });
 
     describe('Test Events', function() {
+        var source =
+            '[\n' +
+            '    $type: $TransactionPosted\n' +
+            '    $transaction: <bali:[$protocol:v1,$tag:#WTFL0GLK7V5SJBZKCX9NH0KQWH0JYBL9,$version:v1,$hash:\'R5BXA11KMC4W117RNY197MQVJ78VND18FXTXPT1A0PL2TYKYPHZTAAVVA6FHBRZ9N46P7102GSY8PVTQBBFTF3QYS8Q02H9S3ZLP8L8\']>\n' +
+            ']\n';
+
+        it('should allow the merchant to verify that the queue is empty', function() {
+            var event = bali.parseDocument(source);
+            merchantClient.publishEvent(event);
+            expect(bali.getPreviousCitation(event)).to.not.exist;  // jshint ignore:line
+            expect(bali.getBody(event).toString()).contains('$tag:');
+            expect(bali.getSeals(event).length).to.equal(1);
+            var seal = bali.getSeal(event);
+            expect(bali.getCitation(seal)).contains(merchantKey.citation);
+        });
+
 
     });
 
