@@ -43,6 +43,7 @@ BaliAPI.loadClient = function(account, repository) {
     if (!fs.existsSync(config)) fs.mkdirSync(config, 448);  // drwx------ permissions
     var configFile = config + account + '.bali';
 
+    // gather notary key information
     var notaryKey;
     var certificate;
     var exists;
@@ -58,7 +59,7 @@ BaliAPI.loadClient = function(account, repository) {
             var keypair = notary.generateKeys('v1');
             notaryKey = keypair.notaryKey;
             certificate = keypair.certificate;
-            fs.writeFileSync(configFile, notaryKey.toString(), {encoding: 'utf8', mode: 384});
+            fs.writeFileSync(configFile, notaryKey.toString(), {mode: 384});  // -rw------- permissions
         }
     } catch (e) {
         throw new Error('API: The filesystem is not currently accessible:\n' + e);
