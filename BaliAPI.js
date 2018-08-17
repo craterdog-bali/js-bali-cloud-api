@@ -13,6 +13,8 @@
  */
 var bali = require('bali-document-notation/BaliDocuments');
 var notary = require('bali-digital-notary/BaliNotary');
+var config = require('os').homedir() + '/.bali/';
+var fs = require('fs');
 
 
 /**
@@ -21,33 +23,66 @@ var notary = require('bali-digital-notary/BaliNotary');
  * 
  * @param {NotaryKey} notaryKey The key to be used to notarize documents. 
  * @param {Repository} repository The underlying document repository to be used.
- * @returns {BaliCloudAPI} The new cloud API.
+ * @returns {BaliAPI} The new cloud API.
  */
-function BaliCloudAPI(notaryKey, repository) {
+function BaliAPI(notaryKey, repository) {
     this.notaryKey = notaryKey;
     this.repository = repository;
     return this;
 }
-BaliCloudAPI.prototype.constructor = BaliCloudAPI;
-exports.BaliCloudAPI = BaliCloudAPI;
+BaliAPI.prototype.constructor = BaliAPI;
+exports.BaliAPI = BaliAPI;
 
 
-/**
- * This method publishes a read-only copy of a Bali certificate to the Bali
- * Environment™.
- * 
- * @param {Document} certificate The Bali certificate to be published.
- */
-BaliCloudAPI.prototype.publishCertificate = function(certificate) {
-    var tag = bali.getStringForKey(certificate, '$tag');
-    var version = bali.getStringForKey(certificate, '$version');
-    // store the certificate in the repository
-    if (this.repository.certificateExists(tag, version)) {
-        throw new Error('CLOUD: The certificate being saved is already published: ' + tag + version);
+BaliAPI.loadClient = function(account, repository) {
+    // validate the arguments
+    if (!account) account = 'account';
+    if (!repository) repository = new CloudRepository();
+
+    // create the config directory if necessary
+    if (!fs.existsSync(config)) fs.mkdirSync(config, 448);  // drwx------ permissions
+    var configFile = config + account + '.bali';
+
+    var notaryKey;
+    var certificate;
+    var exists;
+    try {
+        exists = fs.existsSync(configFile);
+        if (exists) {
+            // read in the notary key information for the account
+            var source = fs.readFileSync(configFile).toString();
+            var document = bali.parseDocument(source);
+            notaryKey = notary.notaryKey(document);
+        } else {
+            // generate a new notary key for the account and write it out
+            var keypair = notary.generateKeys('v1');
+            notaryKey = keypair.notaryKey;
+            certificate = keypair.certificate;
+            fs.writeFileSync(configFile, notaryKey.toString(), {encoding: 'utf8', mode: 384});
+        }
+    } catch (e) {
+        throw new Error('API: The filesystem is not currently accessible:\n' + e);
     }
-    validateCertificate(certificate);
-    this.repository.storeCertificate(tag, version, certificate);
-    CERTIFICATE_CACHE.set(tag + version, certificate);
+
+    // construct the client
+    var client = new BaliAPI(notaryKey, repository);
+
+    // publish the notary certificate if necessary
+    if (!exists) {
+            validateCertificate(certificate);
+            var tag = bali.getStringForKey(certificate, '$tag');
+            var version = bali.getStringForKey(certificate, '$version');
+            try {
+                if (!repository.certificateExists(tag, version)) {
+                    repository.storeCertificate(tag, version, certificate);
+                }
+            } catch (e) {
+                throw new Error('API: The repository is not currently accessible:\n' + e);
+            }
+            CERTIFICATE_CACHE.set(tag + version, certificate);
+    }
+
+    return client;
 };
 
 
@@ -58,7 +93,7 @@ BaliCloudAPI.prototype.publishCertificate = function(certificate) {
  * @param {String} citation A citation for the certificate to be retrieved.
  * @returns {Document} The associated certificate.
  */
-BaliCloudAPI.prototype.retrieveCertificate = function(citation) {
+BaliAPI.prototype.retrieveCertificate = function(citation) {
     var tag = notary.getTag(citation);
     var version = notary.getVersion(citation);
     var certificate = fetchCertificate(this.repository, tag, version);
@@ -76,24 +111,24 @@ BaliCloudAPI.prototype.retrieveCertificate = function(citation) {
  * @param {String} newVersion The new version for the checked out document.
  * @returns {Document} A new version of the associated document.
  */
-BaliCloudAPI.prototype.checkoutDocument = function(citation, newVersion) {
+BaliAPI.prototype.checkoutDocument = function(citation, newVersion) {
     var tag = notary.getTag(citation);
     var currentVersion = notary.getVersion(citation);
 
     // validate the new version number
     if (!validNextVersion(currentVersion, newVersion)) {
-        throw new Error('CLOUD: The new version (' + newVersion + ') is not a valid next version for: ' + currentVersion);
+        throw new Error('API: The new version (' + newVersion + ') is not a valid next version for: ' + currentVersion);
     }
 
     // make sure the new version of the document doesn't already exist
     if (DOCUMENT_CACHE.has(tag + newVersion) || this.repository.documentExists(tag, newVersion) || this.repository.draftExists(tag, newVersion)) {
-        throw new Error('CLOUD: The new version of the document being checked out already exists: ' + tag + newVersion);
+        throw new Error('API: The new version of the document being checked out already exists: ' + tag + newVersion);
     }
 
     // fetch the document
     var document = fetchDocument(this.repository, tag, currentVersion);
     if (!document) {
-        throw new Error('CLOUD: The document being checked does not exist: ' + tag + currentVersion);
+        throw new Error('API: The document being checked does not exist: ' + tag + currentVersion);
     }
 
     // store a copy of the current version as a draft of the new version
@@ -113,9 +148,9 @@ BaliCloudAPI.prototype.checkoutDocument = function(citation, newVersion) {
  * @param {String} version The version string for the Bali document draft to be saved.
  * @param {Document} draft The draft of the document to be saved.
  */
-BaliCloudAPI.prototype.saveDraft = function(tag, version, draft) {
+BaliAPI.prototype.saveDraft = function(tag, version, draft) {
     if (DOCUMENT_CACHE.has(tag + version) || this.repository.documentExists(tag, version)) {
-        throw new Error('CLOUD: The draft being saved is already committed: ' + tag + version);
+        throw new Error('API: The draft being saved is already committed: ' + tag + version);
     }
     this.repository.storeDraft(tag, version, draft);
 };
@@ -130,7 +165,7 @@ BaliCloudAPI.prototype.saveDraft = function(tag, version, draft) {
  * @param {String} version The version string for the Bali document draft to be saved.
  * @returns {Document} The associated document draft.
  */
-BaliCloudAPI.prototype.retrieveDraft = function(tag, version) {
+BaliAPI.prototype.retrieveDraft = function(tag, version) {
     var draft;
     var source = this.repository.fetchDraft(tag, version);
     if (source) {
@@ -150,7 +185,7 @@ BaliCloudAPI.prototype.retrieveDraft = function(tag, version) {
  * @param {String} tag The unique tag for the Bali document draft to be saved.
  * @param {String} version The version string for the Bali document draft to be saved.
  */
-BaliCloudAPI.prototype.discardDraft = function(tag, version) {
+BaliAPI.prototype.discardDraft = function(tag, version) {
     this.repository.deleteDraft(tag, version);
 };
 
@@ -164,10 +199,10 @@ BaliCloudAPI.prototype.discardDraft = function(tag, version) {
  * @param {Document} document The draft of the new version of the document to be committed.
  * @returns {String} A citation to the commited version of the document.
  */
-BaliCloudAPI.prototype.commitDocument = function(tag, version, document) {
+BaliAPI.prototype.commitDocument = function(tag, version, document) {
     // store the new version of the document in the repository
     if (this.repository.documentExists(tag, version)) {
-        throw new Error('CLOUD: The document being saved is already committed: ' + tag + version);
+        throw new Error('API: The document being saved is already committed: ' + tag + version);
     }
     var citation = notary.notarizeDocument(this.notaryKey, tag, version, document);
     validateDocument(this.repository, document);
@@ -188,7 +223,7 @@ BaliCloudAPI.prototype.commitDocument = function(tag, version, document) {
  * @param {String} citation A citation for the document to be retrieved.
  * @returns {Document} The associated document.
  */
-BaliCloudAPI.prototype.retrieveDocument = function(citation) {
+BaliAPI.prototype.retrieveDocument = function(citation) {
     var tag = notary.getTag(citation);
     var version = notary.getVersion(citation);
     var document = fetchDocument(this.repository, tag, version);
@@ -208,7 +243,7 @@ var EVENT_QUEUE_ID = '3RMGDVN7D6HLAPFXQNPF7DV71V3MAL43';
  * the message.
  * @param {Document} message The message to be sent.
  */
-BaliCloudAPI.prototype.sendMessage = function(target, message) {
+BaliAPI.prototype.sendMessage = function(target, message) {
     bali.setValueForKey(message, '$target', bali.parseElement(target));
     var tag = bali.tag();
     bali.setValueForKey(message, '$tag', tag);
@@ -225,7 +260,7 @@ BaliCloudAPI.prototype.sendMessage = function(target, message) {
  * @param {String} queue The identifier of the queue on which to place the message.
  * @param {Document} message The message to be queued.
  */
-BaliCloudAPI.prototype.queueMessage = function(queue, message) {
+BaliAPI.prototype.queueMessage = function(queue, message) {
     var tag = bali.tag();
     //bali.setValueForKey(message, '$tag', tag);
     notary.notarizeDocument(this.notaryKey, tag, 'v1', message);
@@ -241,7 +276,7 @@ BaliCloudAPI.prototype.queueMessage = function(queue, message) {
  * @param {String} queue The identifier of the queue from which to retrieve the message.
  * @returns {Document} The retrieved message or <code>undefined</code> if the queue is empty.
  */
-BaliCloudAPI.prototype.receiveMessage = function(queue) {
+BaliAPI.prototype.receiveMessage = function(queue) {
     var message;
     var source = this.repository.dequeueMessage(queue);
     if (source) {
@@ -259,7 +294,7 @@ BaliCloudAPI.prototype.receiveMessage = function(queue) {
  * 
  * @param {Document} event The event to be published.
  */
-BaliCloudAPI.prototype.publishEvent = function(event) {
+BaliAPI.prototype.publishEvent = function(event) {
     var tag = bali.tag();
     bali.setValueForKey(event, '$tag', tag);
     notary.notarizeDocument(this.notaryKey, tag, 'v1', event);
@@ -325,10 +360,10 @@ function validateCertificate(certificate) {
     var citationTag = notary.getTag(citation);
     var citationVersion = notary.getVersion(citation);
     if (certificateTag !== citationTag || certificateVersion !== citationVersion) {
-        throw new Error('CLOUD: The following certificate has an invalid citation:\n' + certificate);
+        throw new Error('API: The following certificate has an invalid citation:\n' + certificate);
     }
     if (!notary.documentIsValid(certificate, certificate)) {
-        throw new Error('CLOUD: The following certificate is invalid:\n' + certificate);
+        throw new Error('API: The following certificate is invalid:\n' + certificate);
     }
 }
 
@@ -367,7 +402,7 @@ function validateDocument(repository, document) {
         var version = notary.getVersion(citation);
         var certificate = fetchCertificate(repository, tag, version);
         if (!notary.documentIsValid(certificate, document)) {
-            throw new Error('CLOUD: The following document is invalid:\n' + document);
+            throw new Error('API: The following document is invalid:\n' + document);
         }
         document = bali.removeSeal(document);
         seal = bali.getSeal(document);
