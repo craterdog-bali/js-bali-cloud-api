@@ -13,21 +13,26 @@
  * This class provides a local filesystem based document repository. It treats documents
  * as UTF-8 encoded strings. It can be used with the CloudAPI class for local testing.
  */
+var codex = require('bali-document-notation/utilities/EncodingUtilities');
+var config = require('os').homedir() + '/.bali/';
 var fs = require('fs');
-var random = require('bali-document-notation/utilities/RandomUtilities');
 
 
-function LocalRepository(filesystem) {
-    this.certificates = filesystem + '/certificates/';
-    this.drafts = filesystem + '/drafts/';
-    this.documents = filesystem + '/documents/';
-    this.queues = filesystem + '/queues/';
+function LocalRepository(testDirectory) {
+    if (testDirectory) config = testDirectory;
+    var directory = config + 'repository/';
+    this.certificates = directory + 'certificates/';
+    this.drafts = directory + 'drafts/';
+    this.documents = directory + 'documents/';
+    this.queues = directory + 'queues/';
     try {
-        if (!fs.existsSync(filesystem)) fs.mkdirSync(filesystem);
-        if (!fs.existsSync(this.certificates)) fs.mkdirSync(this.certificates);
-        if (!fs.existsSync(this.drafts)) fs.mkdirSync(this.drafts);
-        if (!fs.existsSync(this.documents)) fs.mkdirSync(this.documents);
-        if (!fs.existsSync(this.queues)) fs.mkdirSync(this.queues);
+        // create the repository directory structure if necessary (with drwx------ permissions)
+        if (!fs.existsSync(config)) fs.mkdirSync(config, 448);
+        if (!fs.existsSync(directory)) fs.mkdirSync(directory, 448);
+        if (!fs.existsSync(this.certificates)) fs.mkdirSync(this.certificates, 448);
+        if (!fs.existsSync(this.drafts)) fs.mkdirSync(this.drafts, 448);
+        if (!fs.existsSync(this.documents)) fs.mkdirSync(this.documents, 448);
+        if (!fs.existsSync(this.queues)) fs.mkdirSync(this.queues, 448);
     } catch (e) {
         throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
     }
@@ -38,7 +43,7 @@ exports.LocalRepository = LocalRepository;
 
 
 LocalRepository.prototype.certificateExists = function(tag, version) {
-    var certificateId = tag.slice(1) + version;
+    var certificateId = tag + version;
     var filename = this.certificates + certificateId;
     try {
         return fs.existsSync(filename);
@@ -49,7 +54,7 @@ LocalRepository.prototype.certificateExists = function(tag, version) {
 
 
 LocalRepository.prototype.fetchCertificate = function(tag, version) {
-    var certificateId = tag.slice(1) + version;
+    var certificateId = tag + version;
     var filename = this.certificates + certificateId;
     var certificate;
     try {
@@ -64,7 +69,7 @@ LocalRepository.prototype.fetchCertificate = function(tag, version) {
 
 
 LocalRepository.prototype.storeCertificate = function(tag, version, certificate) {
-    var certificateId = tag.slice(1) + version;
+    var certificateId = tag + version;
     var filename = this.certificates + certificateId;
     var exists;
     try {
@@ -84,7 +89,7 @@ LocalRepository.prototype.storeCertificate = function(tag, version, certificate)
 
 
 LocalRepository.prototype.draftExists = function(tag, version) {
-    var draftId = tag.slice(1) + version;
+    var draftId = tag + version;
     var filename = this.drafts + draftId;
     try {
         return fs.existsSync(filename);
@@ -95,7 +100,7 @@ LocalRepository.prototype.draftExists = function(tag, version) {
 
 
 LocalRepository.prototype.fetchDraft = function(tag, version) {
-    var draftId = tag.slice(1) + version;
+    var draftId = tag + version;
     var filename = this.drafts + draftId;
     var draft;
     try {
@@ -110,7 +115,7 @@ LocalRepository.prototype.fetchDraft = function(tag, version) {
 
 
 LocalRepository.prototype.storeDraft = function(tag, version, draft) {
-    var draftId = tag.slice(1) + version;
+    var draftId = tag + version;
     var filename = this.drafts + draftId;
     try {
         fs.writeFileSync(filename, draft, {encoding: 'utf8', mode: 384});
@@ -121,7 +126,7 @@ LocalRepository.prototype.storeDraft = function(tag, version, draft) {
 
 
 LocalRepository.prototype.deleteDraft = function(tag, version) {
-    var draftId = tag.slice(1) + version;
+    var draftId = tag + version;
     var filename = this.drafts + draftId;
     try {
         if (fs.existsSync(filename)) {
@@ -134,7 +139,7 @@ LocalRepository.prototype.deleteDraft = function(tag, version) {
 
 
 LocalRepository.prototype.documentExists = function(tag, version) {
-    var documentId = tag.slice(1) + version;
+    var documentId = tag + version;
     var filename = this.documents + documentId;
     try {
         return fs.existsSync(filename);
@@ -145,7 +150,7 @@ LocalRepository.prototype.documentExists = function(tag, version) {
 
 
 LocalRepository.prototype.fetchDocument = function(tag, version) {
-    var documentId = tag.slice(1) + version;
+    var documentId = tag + version;
     var filename = this.documents + documentId;
     var document;
     try {
@@ -160,7 +165,7 @@ LocalRepository.prototype.fetchDocument = function(tag, version) {
 
 
 LocalRepository.prototype.storeDocument = function(tag, version, document) {
-    var documentId = tag.slice(1) + version;
+    var documentId = tag + version;
     var filename = this.documents + documentId;
     var exists;
     try {
@@ -180,7 +185,7 @@ LocalRepository.prototype.storeDocument = function(tag, version, document) {
 
 
 LocalRepository.prototype.queueMessage = function(queue, tag, message) {
-    var messageId = tag.slice(1);
+    var messageId = tag;
     var directory = this.queues + queue + '/';
     var filename = directory + messageId;
     var exists;
@@ -211,7 +216,7 @@ LocalRepository.prototype.dequeueMessage = function(queue) {
             if (count) {
                 var index = 0;
                 if (count > 1) {
-                    index = random.generateRandomIndex(count);
+                    index = codex.randomIndex(count);
                 }
                 var messageId = messages[index];
                 var filename = directory + messageId;

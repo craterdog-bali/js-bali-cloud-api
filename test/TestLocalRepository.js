@@ -12,7 +12,7 @@ var LocalRepository = require('../LocalRepository').LocalRepository;
 var mocha = require('mocha');
 var expect = require('chai').expect;
 
-var repository = new LocalRepository('test/repository');
+var repository = new LocalRepository('test/config/');
 
 var source = 'foobar';
 
