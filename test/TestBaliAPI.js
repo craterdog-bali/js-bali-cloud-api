@@ -9,7 +9,7 @@
  ************************************************************************/
 
 var BaliAPI = require('../BaliAPI');
-var LocalRepository = require('../LocalRepository').LocalRepository;
+var TestRepository = require('../LocalRepository');
 var bali = require('bali-document-notation/BaliDocuments');
 var codex = require('bali-document-notation/utilities/EncodingUtilities');
 var notary = require('bali-digital-notary/BaliNotary');
@@ -18,19 +18,22 @@ var mocha = require('mocha');
 var expect = require('chai').expect;
 
 describe('Bali Cloud API™', function() {
-    var consumerTag = codex.randomTag();
     var consumerClient;
     var consumerCitation;
     var consumerCertificate;
-    var merchantTag = codex.randomTag();
     var merchantClient;
     var merchantCitation;
     var merchantCertificate;
+    var repository;
 
     describe('Initialize Environment', function() {
 
-        it('should setup the client environment for the merchant', function() {
-            consumerClient = BaliAPI.environment(consumerTag, 'test/config/');
+        it('should setup the client environment for the consumer', function() {
+            repository = TestRepository.repository('test/config/');
+        });
+
+        it('should setup the client environment for the consumer', function() {
+            consumerClient = BaliAPI.environment(repository, 'test/config/consumer/');
             expect(consumerClient).to.exist;  // jshint ignore:line
             consumerCitation = consumerClient.retrieveCitation();
             expect(consumerCitation).to.exist;  // jshint ignore:line
@@ -39,7 +42,7 @@ describe('Bali Cloud API™', function() {
         });
 
         it('should setup the client environment for the merchant', function() {
-            merchantClient = BaliAPI.environment(merchantTag, 'test/config/');
+            merchantClient = BaliAPI.environment(repository, 'test/config/merchant/');
             expect(merchantClient).to.exist;  // jshint ignore:line
             merchantCitation = merchantClient.retrieveCitation();
             expect(merchantCitation).to.exist;  // jshint ignore:line

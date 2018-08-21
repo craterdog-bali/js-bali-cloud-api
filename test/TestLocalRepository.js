@@ -8,11 +8,11 @@
  * Source Initiative. (See http://opensource.org/licenses/MIT)          *
  ************************************************************************/
 
-var LocalRepository = require('../LocalRepository').LocalRepository;
+var LocalRepository = require('../LocalRepository');
 var mocha = require('mocha');
 var expect = require('chai').expect;
 
-var repository = new LocalRepository('test/config/');
+var repository = LocalRepository.repository('test/config/');
 
 var source = 'foobar';
 

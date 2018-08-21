@@ -11,13 +11,11 @@
 /*
  * This library provides useful functions for accessing the Bali Environment™.
  */
-var TestRepository = require('./LocalRepository').LocalRepository;
-var CloudRepository = require('./CloudRepository').CloudRepository;
 var BaliNotary = require('bali-digital-notary/BaliNotary');
 var BaliCitation = require('bali-digital-notary/BaliCitation');
 var bali = require('bali-document-notation/BaliDocuments');
 var codex = require('bali-document-notation/utilities/EncodingUtilities');
-var config = require('os').homedir() + '/.bali/';
+var homeDirectory = require('os').homedir() + '/.bali/';
 var fs = require('fs');
 
 
@@ -26,28 +24,28 @@ var fs = require('fs');
  * the local filesystem.  There is no sensitive account information stored in
  * this configuration.
  * 
- * @param {String} accountTag The unique tag for this account.
+ * @param {Object} repository An object that defines the API for the repository.
  * @param {String} testDirectory An optional directory to use for local testing.
  * @returns {BaliAPI} An instance of the Bali Cloud API™ that is configured for the account.
  */
-exports.environment = function(accountTag, testDirectory) {
-    var notary;
-    var repository = (testDirectory ? new TestRepository(testDirectory) : new CloudRepository());
+exports.environment = function(repository, testDirectory) {
     var SEND_QUEUE_ID = 'JXT095QY01HBLHPAW04ZR5WSH41MWG4H';
     var EVENT_QUEUE_ID = '3RMGDVN7D6HLAPFXQNPF7DV71V3MAL43';
         
     // create the config directory if necessary
-    if (testDirectory) config = testDirectory;
-    if (!fs.existsSync(config)) fs.mkdirSync(config, 448);  // drwx------ permissions
+    if (testDirectory) homeDirectory = testDirectory;
+    if (!fs.existsSync(homeDirectory)) fs.mkdirSync(homeDirectory, 448);  // drwx------ permissions
 
     // load the account citation and use it to configure the notary for the account
-    var filename = config + accountTag + '.bali';
+    var notary;
+    var filename = homeDirectory + 'citation.bali';
     if (fs.existsSync(filename)) {
         // load the notary configuration for the account
         var citation = loadAccount(filename);
         notary = BaliNotary.loadNotary(citation.tag, testDirectory);
     } else {
         // create a new the notary configuration for the account
+        var accountTag = codex.randomTag();
         notary = BaliNotary.loadNotary(accountTag, testDirectory);
         createAccount(filename, notary, repository);
     }
