@@ -10,13 +10,15 @@
 'use strict';
 
 /*
- * This module defines a singleton that provides a AWS cloud based document
- * repository. It treats documents as UTF-8 encoded strings.
+ * This module uses the singleton pattern to provide an object that implements the API
+ * that is used to access an AWS cloud based document repository. It treats documents
+ * as UTF-8 encoded strings.
  */
 
 
 /**
- * This function returns a reference to the cloud repository.
+ * This function returns an object that implements the API for the AWS cloud document
+ * repository.
  * 
  * @returns {Object} An object containing the functions that the repository supports.
  */

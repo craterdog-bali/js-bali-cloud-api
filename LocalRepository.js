@@ -9,6 +9,12 @@
  ************************************************************************/
 'use strict';
 
+///////////////////////////////////////////////////////////////////////////////////////
+// This module should be used for LOCAL TESTING ONLY.  It is NOT SECURE and provides //
+// no guarantees on protecting access to the documents.  YOU HAVE BEEN WARNED!!!     //
+///////////////////////////////////////////////////////////////////////////////////////
+
+
 /*
  * This module defines a singleton that implements a local filesystem based document
  * repository. It treats documents as UTF-8 encoded strings. It can be used for local
@@ -23,8 +29,8 @@ var fs = require('fs');
 
 
 /**
- * This function returns a reference to the local repository.  If the repository does
- * not yet exist it is created.
+ * This function returns an object that implements the API for a local TEST document
+ * repository. If the repository does not yet exist it is created.
  * 
  * @param {String} testDirectory The location of the test directory to be used for the
  * repository. If not specified, the location of the repository is in '~/.bali/repository/'.

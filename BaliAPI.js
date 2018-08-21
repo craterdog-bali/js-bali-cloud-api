@@ -8,6 +8,14 @@
  * Source Initiative. (See http://opensource.org/licenses/MIT)          *
  ************************************************************************/
 
+
+/*
+ * This module uses the singleton pattern to provide an object that implements the API
+ * used to by registered accounts to access the Bali Cloud Environment™. The implementation
+ * requires that objects implementing the digital notary API and the document repository API
+ * be passed into the constructor.
+ */
+
 /*
  * This library provides useful functions for accessing the Bali Environment™.
  */
