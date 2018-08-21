@@ -11,50 +11,27 @@
 /*
  * This library provides useful functions for accessing the Bali Environment™.
  */
-var BaliNotary = require('bali-digital-notary/BaliNotary');
 var BaliCitation = require('bali-digital-notary/BaliCitation');
 var bali = require('bali-document-notation/BaliDocuments');
 var codex = require('bali-document-notation/utilities/EncodingUtilities');
-var homeDirectory = require('os').homedir() + '/.bali/';
-var fs = require('fs');
 
 
 /**
- * This function loads the client API using the account configuration stored on
- * the local filesystem.  There is no sensitive account information stored in
- * this configuration.
+ * This function returns an object that implements the API for the Bali Cloud Environment™.
  * 
- * @param {Object} repository An object that defines the API for the repository.
- * @param {String} testDirectory An optional directory to use for local testing.
- * @returns {BaliAPI} An instance of the Bali Cloud API™ that is configured for the account.
+ * @param {Object} notary An object that implements the API for the digital notary.
+ * @param {Object} repository An object that implements the API for the document repository.
+ * @returns {Object} An object that implements the API for the Bali Cloud Environment™.
  */
-exports.environment = function(repository, testDirectory) {
+exports.environment = function(notary, repository) {
     var SEND_QUEUE_ID = 'JXT095QY01HBLHPAW04ZR5WSH41MWG4H';
     var EVENT_QUEUE_ID = '3RMGDVN7D6HLAPFXQNPF7DV71V3MAL43';
         
-    // create the config directory if necessary
-    if (testDirectory) homeDirectory = testDirectory;
-    if (!fs.existsSync(homeDirectory)) fs.mkdirSync(homeDirectory, 448);  // drwx------ permissions
-
-    // load the account citation and use it to configure the notary for the account
-    var notary;
-    var filename = homeDirectory + 'citation.bali';
-    if (fs.existsSync(filename)) {
-        // load the notary configuration for the account
-        var citation = loadAccount(filename);
-        notary = BaliNotary.loadNotary(citation.tag, testDirectory);
-    } else {
-        // create a new the notary configuration for the account
-        var accountTag = codex.randomTag();
-        notary = BaliNotary.loadNotary(accountTag, testDirectory);
-        createAccount(filename, notary, repository);
-    }
-
     // return the client API instance
     return {
 
         retrieveCitation: function() {
-            var citation = loadAccount(filename);
+            var citation = notary.citation();
             return citation;
         },
 
@@ -171,30 +148,6 @@ exports.environment = function(repository, testDirectory) {
 
 // PRIVATE HELPER FUNCTIONS
 
-function loadAccount(filename) {
-    var source = fs.readFileSync(filename).toString();
-    var citation = BaliCitation.fromSource(source);
-    return citation;
-}
-
-
-function createAccount(filename, notary, repository) {
-    var result = notary.generateKeys();
-    var citation = result.citation;
-
-    // store the account certificate in the repository (more likely to fail so do it first)
-    var tag = citation.tag;
-    var version = citation.version;
-    var certificate = result.certificate;
-    var source = certificate.toString();
-    repository.storeCertificate(tag, version, source);
-
-    // store the account citation locally
-    source = citation.toString();
-    fs.writeFileSync(filename, source, {mode: 384});  // -rw------- permissions
-}
-
-
 function validNextVersion(currentVersion, nextVersion) {
     // extract the version numbers
     var currentNumbers = currentVersion.slice(1).split('.');
@@ -288,8 +241,8 @@ function validateDocument(notary, repository, citation, document) {
     }
     var seal = bali.getSeal(document);
     while (seal) {
-        var reference = bali.getReference(seal);
-        var certificateCitation = BaliCitation.fromReference(reference);
+        var certificateReference = bali.getReference(seal);
+        var certificateCitation = BaliCitation.fromReference(certificateReference);
         var certificate = fetchCertificate(notary, repository, certificateCitation);
         if (!notary.documentIsValid(certificate, document)) {
             throw new Error('API: The following document is invalid:\n' + document);

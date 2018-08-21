@@ -12,7 +12,7 @@ var BaliAPI = require('../BaliAPI');
 var TestRepository = require('../LocalRepository');
 var bali = require('bali-document-notation/BaliDocuments');
 var codex = require('bali-document-notation/utilities/EncodingUtilities');
-var notary = require('bali-digital-notary/BaliNotary');
+var BaliNotary = require('bali-digital-notary/BaliNotary');
 var BaliCitation = require('bali-digital-notary/BaliCitation');
 var mocha = require('mocha');
 var expect = require('chai').expect;
@@ -28,12 +28,33 @@ describe('Bali Cloud API™', function() {
 
     describe('Initialize Environment', function() {
 
-        it('should setup the client environment for the consumer', function() {
+        it('should setup the document repository', function() {
             repository = TestRepository.repository('test/config/');
+            expect(repository).to.exist;  // jshint ignore:line
+        });
+
+        it('should setup the digital notary for the consumer', function() {
+            consumerNotary = BaliNotary.notary('test/config/consumer/');
+            expect(consumerNotary).to.exist;  // jshint ignore:line
+            consumerCertificate = consumerNotary.generateKeys();
+            expect(consumerCertificate).to.exist;  // jshint ignore:line
+            consumerCitation = consumerNotary.citation();
+            expect(consumerCitation).to.exist;  // jshint ignore:line
+            repository.storeCertificate(consumerCitation.tag, consumerCitation.version, consumerCertificate);
+        });
+
+        it('should setup the digital notary for the merchant', function() {
+            merchantNotary = BaliNotary.notary('test/config/merchant/');
+            expect(merchantNotary).to.exist;  // jshint ignore:line
+            merchantCertificate = merchantNotary.generateKeys();
+            expect(merchantCertificate).to.exist;  // jshint ignore:line
+            merchantCitation = merchantNotary.citation();
+            expect(merchantCitation).to.exist;  // jshint ignore:line
+            repository.storeCertificate(merchantCitation.tag, merchantCitation.version, merchantCertificate);
         });
 
         it('should setup the client environment for the consumer', function() {
-            consumerClient = BaliAPI.environment(repository, 'test/config/consumer/');
+            consumerClient = BaliAPI.environment(consumerNotary, repository);
             expect(consumerClient).to.exist;  // jshint ignore:line
             consumerCitation = consumerClient.retrieveCitation();
             expect(consumerCitation).to.exist;  // jshint ignore:line
@@ -42,7 +63,7 @@ describe('Bali Cloud API™', function() {
         });
 
         it('should setup the client environment for the merchant', function() {
-            merchantClient = BaliAPI.environment(repository, 'test/config/merchant/');
+            merchantClient = BaliAPI.environment(merchantNotary, repository);
             expect(merchantClient).to.exist;  // jshint ignore:line
             merchantCitation = merchantClient.retrieveCitation();
             expect(merchantCitation).to.exist;  // jshint ignore:line

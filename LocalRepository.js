@@ -10,7 +10,7 @@
 'use strict';
 
 /*
- * This module defines a singleton that provides a local filesystem based document
+ * This module defines a singleton that implements a local filesystem based document
  * repository. It treats documents as UTF-8 encoded strings. It can be used for local
  * testing of the Bali Cloud Environment™. If a test directory is specified, it will
  * be created and used as the repository. Otherwise, a repository directory will be
