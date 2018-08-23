@@ -78,9 +78,8 @@ exports.environment = function(notary, repository) {
                 throw new Error('API: The document being checked does not exist: ' + tag + currentVersion);
             }
 
-            // store a copy of the current version as a draft of the new version
-            var draft = bali.draftDocument(document);
-            bali.setPreviousReference(draft, citation.toReference());  // add previous version reference
+            // store a stripped copy of the current version as a draft of the new version
+            var draft = bali.draftDocument(citation.toReference(), document);
             repository.storeDraft(tag, newVersion, draft);
 
             return draft;
