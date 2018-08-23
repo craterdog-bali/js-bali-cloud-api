@@ -26,7 +26,7 @@ var codex = require('bali-document-notation/utilities/EncodingUtilities');
 
 /**
  * This function returns an object that implements the API for the Bali Cloud Environment™.
- * 
+ *
  * @param {Object} notary An object that implements the API for the digital notary.
  * @param {Object} repository An object that implements the API for the document repository.
  * @returns {Object} An object that implements the API for the Bali Cloud Environment™.
@@ -34,7 +34,7 @@ var codex = require('bali-document-notation/utilities/EncodingUtilities');
 exports.environment = function(notary, repository) {
     var SEND_QUEUE_ID = 'JXT095QY01HBLHPAW04ZR5WSH41MWG4H';
     var EVENT_QUEUE_ID = '3RMGDVN7D6HLAPFXQNPF7DV71V3MAL43';
-        
+
     // return the client API instance
     return {
 
@@ -43,11 +43,20 @@ exports.environment = function(notary, repository) {
             return citation;
         },
 
+        nextVersion: function(citation) {
+            // calculate the next logical version string
+            var numbers = citation.version.slice(1).split('.');
+            var last = numbers.length - 1;
+            var newValue = Number(numbers[last]) + 1;
+            numbers[last] = newValue.toString();
+            return 'v' + numbers.join('.');
+        },
+
         retrieveCertificate: function(citation) {
             var certificate = fetchCertificate(notary, repository, citation);
             return certificate;
         },
-        
+
         checkoutDocument: function(citation, newVersion) {
             var tag = citation.tag;
             var currentVersion = citation.version;
@@ -56,34 +65,34 @@ exports.environment = function(notary, repository) {
             if (!validNextVersion(currentVersion, newVersion)) {
                 throw new Error('API: The new version (' + newVersion + ') is not a valid next version for: ' + currentVersion);
             }
-        
+
             // make sure the new version of the document doesn't already exist
             if (fetchDocumentFromCache(tag, newVersion) || repository.documentExists(tag, newVersion) ||
                     repository.draftExists(tag, newVersion)) {
                 throw new Error('API: The new version of the document being checked out already exists: ' + tag + newVersion);
             }
-        
+
             // fetch the document
             var document = fetchDocument(notary, repository, citation);
             if (!document) {
                 throw new Error('API: The document being checked does not exist: ' + tag + currentVersion);
             }
-        
+
             // store a copy of the current version as a draft of the new version
             var draft = bali.draftDocument(document);
             bali.setPreviousReference(draft, citation.toReference());  // add previous version reference
             repository.storeDraft(tag, newVersion, draft);
-        
+
             return draft;
         },
-        
+
         saveDraft: function(tag, version, draft) {
             if (fetchDocumentFromCache(tag, version) || repository.documentExists(tag, version)) {
                 throw new Error('API: The draft being saved is already committed: ' + tag + version);
             }
             repository.storeDraft(tag, version, draft);
         },
-        
+
         retrieveDraft: function(tag, version) {
             var draft;
             var source = repository.fetchDraft(tag, version);
@@ -94,11 +103,11 @@ exports.environment = function(notary, repository) {
             }
             return draft;
         },
-        
+
         discardDraft: function(tag, version) {
             repository.deleteDraft(tag, version);
         },
-        
+
         commitDocument: function(tag, version, document) {
             // store the new version of the document in the repository
             if (repository.documentExists(tag, version)) {
@@ -108,13 +117,13 @@ exports.environment = function(notary, repository) {
             validateDocument(notary, repository, citation, document);
             repository.storeDocument(tag, version, document);
             storeDocumentInCache(tag, version, document);
-        
+
             // delete the stored draft if one exists from the repository
             if (repository.draftExists(tag, version)) repository.deleteDraft(tag, version);
-        
+
             return citation;
         },
-        
+
         retrieveDocument: function(citation) {
             var document = fetchDocument(notary, repository, citation);
             return document;
@@ -127,14 +136,14 @@ exports.environment = function(notary, repository) {
             notary.notarizeDocument(tag, 'v1', message);
             repository.queueMessage(SEND_QUEUE_ID, tag, message);
         },
-        
+
         queueMessage: function(queue, message) {
             var tag = codex.randomTag();
             bali.setValueForKey(message, '$tag', tag);
             notary.notarizeDocument(tag, 'v1', message);
             repository.queueMessage(queue, tag, message);
         },
-        
+
         receiveMessage: function(queue) {
             var message;
             var source = repository.dequeueMessage(queue);
@@ -144,7 +153,7 @@ exports.environment = function(notary, repository) {
             }
             return message;
         },
-        
+
         publishEvent: function(event) {
             var tag = codex.randomTag();
             bali.setValueForKey(event, '$tag', tag);

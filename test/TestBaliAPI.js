@@ -164,6 +164,7 @@ describe('Bali Cloud API™', function() {
             expect(newCitation.toString()).to.not.equal(citation.toString());
             expect(newCitation.tag).to.equal(tag);
             expect(newCitation.version).to.equal(newVersion);
+            expect(consumerClient.nextVersion(newCitation)).to.equal('v2.5');
             expect(bali.getStringForKey(draft, '$bar')).to.equal('"baz"');
             expect(bali.getSeals(draft).length).to.equal(1);
             var seal = bali.getSeal(draft);
