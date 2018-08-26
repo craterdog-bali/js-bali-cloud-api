@@ -99,7 +99,7 @@ exports.repository = function(testDirectory) {
                 throw new Error('REPOSITORY: The following certificate already exists in the filesystem: ' + certificateId);
             }
             try {
-                fs.writeFileSync(filename, certificate, {encoding: 'utf8', mode: 256});
+                fs.writeFileSync(filename, certificate.toString(), {encoding: 'utf8', mode: 256});
             } catch (e) {
                 throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
             }
@@ -133,7 +133,7 @@ exports.repository = function(testDirectory) {
             var draftId = tag + version;
             var filename = drafts + draftId;
             try {
-                fs.writeFileSync(filename, draft, {encoding: 'utf8', mode: 384});
+                fs.writeFileSync(filename, draft.toString(), {encoding: 'utf8', mode: 384});
             } catch (e) {
                 throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
             }
@@ -188,7 +188,7 @@ exports.repository = function(testDirectory) {
                 throw new Error('REPOSITORY: The following document already exists in the filesystem: ' + documentId);
             }
             try {
-                fs.writeFileSync(filename, document, {encoding: 'utf8', mode: 256});
+                fs.writeFileSync(filename, document.toString(), {encoding: 'utf8', mode: 256});
             } catch (e) {
                 throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
             }
@@ -209,7 +209,7 @@ exports.repository = function(testDirectory) {
                 throw new Error('REPOSITORY: The following message already exists in the queue: ' + messageId);
             }
             try {
-                fs.writeFileSync(filename, message, {encoding: 'utf8', mode: 384});
+                fs.writeFileSync(filename, message.toString(), {encoding: 'utf8', mode: 384});
             } catch (e) {
                 throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
             }
