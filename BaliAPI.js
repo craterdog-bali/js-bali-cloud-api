@@ -129,16 +129,16 @@ exports.environment = function(notary, repository) {
         },
 
         sendMessage: function(target, message) {
-            message.setValueForKey('$target', target);
+            message.setValue('$target', target);
             var tag = codex.randomTag();
-            message.setValueForKey('$tag', tag);
+            message.setValue('$tag', tag);
             notary.notarizeDocument(tag, 'v1', message);
             repository.queueMessage(SEND_QUEUE_ID, tag, message);
         },
 
         queueMessage: function(queue, message) {
             var tag = codex.randomTag();
-            message.setValueForKey('$tag', tag);
+            message.setValue('$tag', tag);
             notary.notarizeDocument(tag, 'v1', message);
             repository.queueMessage(queue, tag, message);
         },
@@ -155,7 +155,7 @@ exports.environment = function(notary, repository) {
 
         publishEvent: function(event) {
             var tag = codex.randomTag();
-            event.setValueForKey('$tag', tag);
+            event.setValue('$tag', tag);
             notary.notarizeDocument(tag, 'v1', event);
             repository.queueMessage(EVENT_QUEUE_ID, tag, event);
         }
@@ -210,8 +210,8 @@ function fetchCertificate(notary, repository, citation) {
 
 
 function validateCertificate(notary, citation, certificate) {
-    var certificateTag = certificate.getStringForKey('$tag');
-    var certificateVersion = certificate.getStringForKey('$version');
+    var certificateTag = certificate.getString('$tag');
+    var certificateVersion = certificate.getString('$version');
     var seal = certificate.getLastSeal();
     var sealCitation = BaliCitation.fromReference(seal.certificateReference);
     var sealTag = sealCitation.tag;

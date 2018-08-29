@@ -98,11 +98,11 @@ describe('Bali Cloud API™', function() {
         });
 
         it('should save an updated draft document in the repository', function() {
-            draft.setValueForKey('$bar', '"baz"');
+            draft.setValue('$bar', '"baz"');
             consumerClient.saveDraft(tag, version, draft);
             expect(draft.toString()).to.not.equal(source);
-            expect(draft.getStringForKey('$foo')).to.equal('"bar"');
-            expect(draft.getStringForKey('$bar')).to.equal('"baz"');
+            expect(draft.getString('$foo')).to.equal('"bar"');
+            expect(draft.getString('$bar')).to.equal('"baz"');
             expect(draft.previousReference).to.not.exist;  // jshint ignore:line
             expect(draft.getSeals().length).to.equal(0);
         });
@@ -159,13 +159,13 @@ describe('Bali Cloud API™', function() {
         });
 
         it('should commit an updated version of the document to the repository', function() {
-            draft.setValueForKey('$bar', '"baz"');
+            draft.setValue('$bar', '"baz"');
             newCitation = consumerClient.commitDocument(tag, newVersion, draft);
             expect(newCitation.toString()).to.not.equal(citation.toString());
             expect(newCitation.tag).to.equal(tag);
             expect(newCitation.version).to.equal(newVersion);
             expect(consumerClient.nextVersion(newCitation)).to.equal('v2.5');
-            expect(draft.getStringForKey('$bar')).to.equal('"baz"');
+            expect(draft.getString('$bar')).to.equal('"baz"');
             expect(draft.getSeals().length).to.equal(1);
             var seal = draft.getLastSeal();
             var sealReference = seal.certificateReference;
@@ -180,7 +180,7 @@ describe('Bali Cloud API™', function() {
             expect(previousReference).to.exist;  // jshint ignore:line
             var previousCitation = BaliCitation.fromReference(previousReference);
             expect(previousCitation.toString()).to.equal(citation.toString());
-            expect(document.getStringForKey('$bar')).to.equal('"baz"');
+            expect(document.getString('$bar')).to.equal('"baz"');
             expect(document.getSeals().length).to.equal(1);
             var seal = document.getLastSeal();
             var sealReference = seal.certificateReference;
@@ -258,7 +258,7 @@ describe('Bali Cloud API™', function() {
                 var sealCitation = BaliCitation.fromReference(sealReference);
                 expect(sealCitation.toString()).to.equal(consumerCitation.toString());
 
-                var tag = transaction.getStringForKey('$tag');
+                var tag = transaction.getString('$tag');
                 var version = 'v1';
                 var citation = merchantClient.commitDocument(tag, version, transaction);
                 expect(citation.tag).to.equal(tag);
