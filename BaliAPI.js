@@ -20,7 +20,7 @@
  * This library provides useful functions for accessing the Bali Environment™.
  */
 var BaliCitation = require('bali-digital-notary/BaliCitation');
-var bali = require('bali-document-notation/BaliDocuments');
+var BaliDocument = require('bali-document-notation/BaliDocument');
 var codex = require('bali-document-notation/utilities/EncodingUtilities');
 
 
@@ -79,7 +79,7 @@ exports.environment = function(notary, repository) {
             }
 
             // store a stripped copy of the current version as a draft of the new version
-            var draft = bali.draftDocument(citation.toReference(), document);
+            var draft = document.draft(citation.toReference());
             repository.storeDraft(tag, newVersion, draft);
 
             return draft;
@@ -97,7 +97,7 @@ exports.environment = function(notary, repository) {
             var source = repository.fetchDraft(tag, version);
             if (source) {
                 // validate the draft
-                draft = bali.parseDocument(source);
+                draft = BaliDocument.fromSource(source);
                 // don't cache drafts since they are mutable
             }
             return draft;
@@ -129,16 +129,16 @@ exports.environment = function(notary, repository) {
         },
 
         sendMessage: function(target, message) {
-            bali.setValueForKey(message, '$target', bali.parseElement(target));
+            message.setValueForKey('$target', target);
             var tag = codex.randomTag();
-            bali.setValueForKey(message, '$tag', tag);
+            message.setValueForKey('$tag', tag);
             notary.notarizeDocument(tag, 'v1', message);
             repository.queueMessage(SEND_QUEUE_ID, tag, message);
         },
 
         queueMessage: function(queue, message) {
             var tag = codex.randomTag();
-            bali.setValueForKey(message, '$tag', tag);
+            message.setValueForKey('$tag', tag);
             notary.notarizeDocument(tag, 'v1', message);
             repository.queueMessage(queue, tag, message);
         },
@@ -148,14 +148,14 @@ exports.environment = function(notary, repository) {
             var source = repository.dequeueMessage(queue);
             if (source) {
                 // validate the document
-                message = bali.parseDocument(source);
+                message = BaliDocument.fromSource(source);
             }
             return message;
         },
 
         publishEvent: function(event) {
             var tag = codex.randomTag();
-            bali.setValueForKey(event, '$tag', tag);
+            event.setValueForKey('$tag', tag);
             notary.notarizeDocument(tag, 'v1', event);
             repository.queueMessage(EVENT_QUEUE_ID, tag, event);
         }
@@ -197,7 +197,7 @@ function fetchCertificate(notary, repository, citation) {
         var source = repository.fetchCertificate(tag, version);
         if (source) {
             // validate the certificate
-            certificate = bali.parseDocument(source);
+            certificate = BaliDocument.fromSource(source);
             validateCertificate(notary, citation, certificate);
 
             // cache the certificate
@@ -210,11 +210,10 @@ function fetchCertificate(notary, repository, citation) {
 
 
 function validateCertificate(notary, citation, certificate) {
-    var certificateTag = bali.getStringForKey(certificate, '$tag');
-    var certificateVersion = bali.getStringForKey(certificate, '$version');
-    var seal = bali.getSeal(certificate);
-    var sealReference = bali.getReference(seal);
-    var sealCitation = BaliCitation.fromReference(sealReference);
+    var certificateTag = certificate.getStringForKey('$tag');
+    var certificateVersion = certificate.getStringForKey('$version');
+    var seal = certificate.getLastSeal();
+    var sealCitation = BaliCitation.fromReference(seal.certificateReference);
     var sealTag = sealCitation.tag;
     var sealVersion = sealCitation.version;
     if (!notary.documentMatches(citation, certificate) ||
@@ -239,7 +238,7 @@ function fetchDocument(notary, repository, citation) {
         var source = repository.fetchDocument(tag, version);
         if (source) {
             // validate the document
-            document = bali.parseDocument(source);
+            document = BaliDocument.fromSource(source);
             validateDocument(notary, repository, citation, document);
 
             // cache the document
@@ -255,16 +254,15 @@ function validateDocument(notary, repository, citation, document) {
     if (!notary.documentMatches(citation, document)) {
         throw new Error('API: The following are incompatible:\ncitation: ' + citation + '\ndocument: ' + document);
     }
-    var seal = bali.getSeal(document);
+    var seal = document.getLastSeal();
     while (seal) {
-        var certificateReference = bali.getReference(seal);
-        var certificateCitation = BaliCitation.fromReference(certificateReference);
+        var certificateCitation = BaliCitation.fromReference(seal.certificateReference);
         var certificate = fetchCertificate(notary, repository, certificateCitation);
         if (!notary.documentIsValid(certificate, document)) {
             throw new Error('API: The following document is invalid:\n' + document);
         }
-        document = bali.removeSeal(document);
-        seal = bali.getSeal(document);
+        document = document.unsealed();
+        seal = document.getLastSeal();
     }
 }
 
