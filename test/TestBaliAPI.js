@@ -76,10 +76,7 @@ describe('Bali Cloud API™', function() {
     describe('Test Drafts', function() {
         var tag = codex.randomTag();
         var version = 'v1.2';
-        var source =
-            '[\n' +
-            '    $foo: "bar"\n' +
-            ']\n';
+        var source = '[$foo: "bar"]\n';
         var draft = BaliDocument.fromSource(source);
 
         it('should save a new draft document in the repository', function() {
@@ -126,11 +123,7 @@ describe('Bali Cloud API™', function() {
         var document;
         var citation;
         var newCitation;
-        var source =
-            '[\n' +
-            '    $foo: "bar"\n' +
-            ']\n';
-
+        var source = '[$foo: "bar"]\n';
         it('should commit a draft of a new document to the repository', function() {
             document = BaliDocument.fromSource(source);
             citation = consumerClient.commitDocument(tag, version, document);
@@ -220,6 +213,7 @@ describe('Bali Cloud API™', function() {
         var queue = 'queueId';
         var source =
             '[\n' +
+            '    $date: <2018-04-01>\n' +
             '    $product: "Snickers Bar"\n' +
             '    $quantity: 10\n' +
             '    $price: 1.25(USD)\n' +
