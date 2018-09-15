@@ -29,5 +29,8 @@
     "grunt-mocha-test": "^0.13.3",
     "mocha": "^5.2.0"
   },
-  "dependencies": {}
+  "dependencies": {
+    "bali-document-notation": "file:../js-bali-document-notation",
+    "bali-digital-notary": "file:../js-bali-digital-notary"
+  }
 }
