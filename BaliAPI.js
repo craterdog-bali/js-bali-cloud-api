@@ -20,7 +20,7 @@
  * This library provides useful functions for accessing the Bali Environment™.
  */
 var BaliCitation = require('bali-digital-notary/BaliCitation');
-var BaliDocument = require('bali-document-notation/BaliDocument');
+var parser = require('bali-document-notation/transformers/DocumentParser');
 var codex = require('bali-document-notation/utilities/EncodingUtilities');
 
 
@@ -97,7 +97,7 @@ exports.environment = function(notary, repository) {
             var source = repository.fetchDraft(tag, version);
             if (source) {
                 // validate the draft
-                draft = BaliDocument.fromSource(source);
+                draft = parser.parseDocument(source);
                 // don't cache drafts since they are mutable
             }
             return draft;
@@ -148,7 +148,7 @@ exports.environment = function(notary, repository) {
             var source = repository.dequeueMessage(queue);
             if (source) {
                 // validate the document
-                message = BaliDocument.fromSource(source);
+                message = parser.parseDocument(source);
             }
             return message;
         },
@@ -197,7 +197,7 @@ function fetchCertificate(notary, repository, citation) {
         var source = repository.fetchCertificate(tag, version);
         if (source) {
             // validate the certificate
-            certificate = BaliDocument.fromSource(source);
+            certificate = parser.parseDocument(source);
             validateCertificate(notary, citation, certificate);
 
             // cache the certificate
@@ -238,7 +238,7 @@ function fetchDocument(notary, repository, citation) {
         var source = repository.fetchDocument(tag, version);
         if (source) {
             // validate the document
-            document = BaliDocument.fromSource(source);
+            document = parser.parseDocument(source);
             validateDocument(notary, repository, citation, document);
 
             // cache the document

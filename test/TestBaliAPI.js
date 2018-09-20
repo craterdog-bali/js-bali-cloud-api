@@ -10,7 +10,7 @@
 
 var BaliAPI = require('../BaliAPI');
 var TestRepository = require('../LocalRepository');
-var BaliDocument = require('bali-document-notation/BaliDocument');
+var parser = require('bali-document-notation/transformers/DocumentParser');
 var codex = require('bali-document-notation/utilities/EncodingUtilities');
 var BaliNotary = require('bali-digital-notary/BaliNotary');
 var BaliCitation = require('bali-digital-notary/BaliCitation');
@@ -77,7 +77,7 @@ describe('Bali Cloud API™', function() {
         var tag = codex.randomTag();
         var version = 'v1.2';
         var source = '[$foo: "bar"]\n';
-        var draft = BaliDocument.fromSource(source);
+        var draft = parser.parseDocument(source);
 
         it('should save a new draft document in the repository', function() {
             consumerClient.saveDraft(tag, version, draft);
@@ -125,7 +125,7 @@ describe('Bali Cloud API™', function() {
         var newCitation;
         var source = '[$foo: "bar"]\n';
         it('should commit a draft of a new document to the repository', function() {
-            document = BaliDocument.fromSource(source);
+            document = parser.parseDocument(source);
             citation = consumerClient.commitDocument(tag, version, document);
             expect(citation.tag).to.equal(tag);
             expect(citation.version).to.equal(version);
@@ -228,7 +228,7 @@ describe('Bali Cloud API™', function() {
 
         it('should allow the consumer to place some transactions on the queue', function() {
             for (var i = 0; i < 3; i++) {
-                transaction = BaliDocument.fromSource(source);
+                transaction = parser.parseDocument(source);
                 consumerClient.queueMessage(queue, transaction);
                 expect(transaction.previousReference).to.not.exist;  // jshint ignore:line
                 expect(transaction.documentContent.toString()).contains('$tag:');
@@ -279,7 +279,7 @@ describe('Bali Cloud API™', function() {
             ']\n';
 
         it('should allow the merchant to verify that the queue is empty', function() {
-            var event = BaliDocument.fromSource(source);
+            var event = parser.parseDocument(source);
             merchantClient.publishEvent(event);
             expect(event.previousReference).to.not.exist;  // jshint ignore:line
             expect(event.documentContent.toString()).contains('$tag:');
