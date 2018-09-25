@@ -19,9 +19,9 @@
 /*
  * This library provides useful functions for accessing the Bali Environment™.
  */
-var BaliCitation = require('bali-digital-notary/BaliCitation');
-var parser = require('bali-document-notation/transformers/DocumentParser');
+var BaliDocument = require('bali-document-notation/BaliDocument');
 var codex = require('bali-document-notation/utilities/EncodingUtilities');
+var BaliCitation = require('bali-digital-notary/BaliCitation');
 
 
 /**
@@ -97,7 +97,7 @@ exports.environment = function(notary, repository) {
             var source = repository.fetchDraft(tag, version);
             if (source) {
                 // validate the draft
-                draft = parser.parseDocument(source);
+                draft = BaliDocument.fromSource(source);
                 // don't cache drafts since they are mutable
             }
             return draft;
@@ -148,7 +148,7 @@ exports.environment = function(notary, repository) {
             var source = repository.dequeueMessage(queue);
             if (source) {
                 // validate the document
-                message = parser.parseDocument(source);
+                message = BaliDocument.fromSource(source);
             }
             return message;
         },
@@ -197,7 +197,7 @@ function fetchCertificate(notary, repository, citation) {
         var source = repository.fetchCertificate(tag, version);
         if (source) {
             // validate the certificate
-            certificate = parser.parseDocument(source);
+            certificate = BaliDocument.fromSource(source);
             validateCertificate(notary, citation, certificate);
 
             // cache the certificate
@@ -213,7 +213,7 @@ function validateCertificate(notary, citation, certificate) {
     var certificateTag = certificate.getString('$tag');
     var certificateVersion = certificate.getString('$version');
     var seal = certificate.getLastSeal();
-    var sealCitation = BaliCitation.fromReference(seal.certificateReference);
+    var sealCitation = BaliCitation.fromReference(seal.children[0]);
     var sealTag = sealCitation.tag;
     var sealVersion = sealCitation.version;
     if (!notary.documentMatches(citation, certificate) ||
@@ -238,7 +238,7 @@ function fetchDocument(notary, repository, citation) {
         var source = repository.fetchDocument(tag, version);
         if (source) {
             // validate the document
-            document = parser.parseDocument(source);
+            document = BaliDocument.fromSource(source);
             validateDocument(notary, repository, citation, document);
 
             // cache the document
@@ -256,7 +256,7 @@ function validateDocument(notary, repository, citation, document) {
     }
     var seal = document.getLastSeal();
     while (seal) {
-        var certificateCitation = BaliCitation.fromReference(seal.certificateReference);
+        var certificateCitation = BaliCitation.fromReference(seal.children[0]);
         var certificate = fetchCertificate(notary, repository, certificateCitation);
         if (!notary.documentIsValid(certificate, document)) {
             throw new Error('API: The following document is invalid:\n' + document);
