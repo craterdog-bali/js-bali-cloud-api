@@ -21,7 +21,7 @@
  */
 var BaliDocument = require('bali-document-notation/BaliDocument');
 var codex = require('bali-document-notation/utilities/EncodingUtilities');
-var BaliCitation = require('bali-digital-notary/BaliCitation');
+var Citation = require('bali-digital-notary/BaliNotary').Citation;
 
 
 /**
@@ -45,7 +45,8 @@ exports.environment = function(notary, repository) {
 
         nextVersion: function(citation) {
             // calculate the next logical version string
-            var numbers = citation.version.slice(1).split('.');
+            var object = Citation.fromReference(citation);
+            var numbers = object.version.slice(1).split('.');
             var last = numbers.length - 1;
             var newValue = Number(numbers[last]) + 1;
             numbers[last] = newValue.toString();
@@ -58,8 +59,9 @@ exports.environment = function(notary, repository) {
         },
 
         checkoutDocument: function(citation, newVersion) {
-            var tag = citation.tag;
-            var currentVersion = citation.version;
+            var object = Citation.fromReference(citation);
+            var tag = object.tag;
+            var currentVersion = object.version;
         
             // validate the new version number
             if (!validNextVersion(currentVersion, newVersion)) {
@@ -79,7 +81,7 @@ exports.environment = function(notary, repository) {
             }
 
             // store a stripped copy of the current version as a draft of the new version
-            var draft = document.draft(citation.toReference());
+            var draft = document.draft(citation);
             repository.storeDraft(tag, newVersion, draft);
 
             return draft;
@@ -188,8 +190,9 @@ function validNextVersion(currentVersion, nextVersion) {
 
 function fetchCertificate(notary, repository, citation) {
     // check the cache
-    var tag = citation.tag;
-    var version = citation.version;
+    var object = Citation.fromReference(citation);
+    var tag = object.tag;
+    var version = object.version;
     var certificate = fetchCertificateFromCache(tag, version);
 
     // next check the repository if necessary
@@ -213,12 +216,13 @@ function validateCertificate(notary, citation, certificate) {
     var certificateTag = certificate.getString('$tag');
     var certificateVersion = certificate.getString('$version');
     var seal = certificate.getLastSeal();
-    var sealCitation = BaliCitation.fromReference(seal.children[0]);
+    var sealCitation = Citation.fromReference(seal.children[0]);
     var sealTag = sealCitation.tag;
     var sealVersion = sealCitation.version;
+    var object = Citation.fromReference(citation);
     if (!notary.documentMatches(citation, certificate) ||
-        citation.tag !== certificateTag || certificateTag !== sealTag ||
-        citation.version !== certificateVersion || certificateVersion !== sealVersion) {
+        object.tag !== certificateTag || certificateTag !== sealTag ||
+        object.version !== certificateVersion || certificateVersion !== sealVersion) {
         throw new Error('API: The following are incompatible:\ncitation: ' + citation + '\ncertificate: ' + certificate);
     }
     if (!notary.documentIsValid(certificate, certificate)) {
@@ -229,8 +233,9 @@ function validateCertificate(notary, citation, certificate) {
 
 function fetchDocument(notary, repository, citation) {
     // check the cache
-    var tag = citation.tag;
-    var version = citation.version;
+    var object = Citation.fromReference(citation);
+    var tag = object.tag;
+    var version = object.version;
     var document = fetchDocumentFromCache(tag, version);
 
     // next check the repository if necessary
@@ -256,7 +261,7 @@ function validateDocument(notary, repository, citation, document) {
     }
     var seal = document.getLastSeal();
     while (seal) {
-        var certificateCitation = BaliCitation.fromReference(seal.children[0]);
+        var certificateCitation = seal.children[0];
         var certificate = fetchCertificate(notary, repository, certificateCitation);
         if (!notary.documentIsValid(certificate, document)) {
             throw new Error('API: The following document is invalid:\n' + document);

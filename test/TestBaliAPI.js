@@ -13,7 +13,7 @@ var TestRepository = require('../LocalRepository');
 var BaliDocument = require('bali-document-notation/BaliDocument');
 var codex = require('bali-document-notation/utilities/EncodingUtilities');
 var BaliNotary = require('bali-digital-notary/BaliNotary');
-var BaliCitation = require('bali-digital-notary/BaliCitation');
+var Citation = require('bali-digital-notary/BaliNotary').Citation;
 var mocha = require('mocha');
 var expect = require('chai').expect;
 
@@ -40,7 +40,8 @@ describe('Bali Cloud API™', function() {
             expect(consumerCertificate).to.exist;  // jshint ignore:line
             consumerCitation = consumerNotary.citation();
             expect(consumerCitation).to.exist;  // jshint ignore:line
-            repository.storeCertificate(consumerCitation.tag, consumerCitation.version, consumerCertificate);
+            var object = Citation.fromReference(consumerCitation);
+            repository.storeCertificate(object.tag, object.version, consumerCertificate);
         });
 
         it('should setup the digital notary for the merchant', function() {
@@ -50,14 +51,16 @@ describe('Bali Cloud API™', function() {
             expect(merchantCertificate).to.exist;  // jshint ignore:line
             merchantCitation = merchantNotary.citation();
             expect(merchantCitation).to.exist;  // jshint ignore:line
-            repository.storeCertificate(merchantCitation.tag, merchantCitation.version, merchantCertificate);
+            var object = Citation.fromReference(merchantCitation);
+            repository.storeCertificate(object.tag, object.version, merchantCertificate);
         });
 
         it('should setup the client environment for the consumer', function() {
             consumerClient = BaliAPI.environment(consumerNotary, repository);
             expect(consumerClient).to.exist;  // jshint ignore:line
-            consumerCitation = consumerClient.retrieveCitation();
-            expect(consumerCitation).to.exist;  // jshint ignore:line
+            var citation = consumerClient.retrieveCitation();
+            expect(citation).to.exist;  // jshint ignore:line
+            expect(citation).to.equal(consumerCitation);
             consumerCertificate = consumerClient.retrieveCertificate(consumerCitation);
             expect(consumerCertificate).to.exist;  // jshint ignore:line
         });
@@ -65,8 +68,9 @@ describe('Bali Cloud API™', function() {
         it('should setup the client environment for the merchant', function() {
             merchantClient = BaliAPI.environment(merchantNotary, repository);
             expect(merchantClient).to.exist;  // jshint ignore:line
-            merchantCitation = merchantClient.retrieveCitation();
-            expect(merchantCitation).to.exist;  // jshint ignore:line
+            var citation = merchantClient.retrieveCitation();
+            expect(citation).to.exist;  // jshint ignore:line
+            expect(citation).to.equal(merchantCitation);
             merchantCertificate = merchantClient.retrieveCertificate(merchantCitation);
             expect(merchantCertificate).to.exist;  // jshint ignore:line
         });
@@ -127,14 +131,14 @@ describe('Bali Cloud API™', function() {
         it('should commit a draft of a new document to the repository', function() {
             document = BaliDocument.fromSource(source);
             citation = consumerClient.commitDocument(tag, version, document);
-            expect(citation.tag).to.equal(tag);
-            expect(citation.version).to.equal(version);
+            var object = Citation.fromReference(citation);
+            expect(object.tag).to.equal(tag);
+            expect(object.version).to.equal(version);
             expect(document.getPreviousReference()).to.not.exist;  // jshint ignore:line
             expect(document.getDocumentContent().toString() + '\n').to.equal(source);
             expect(document.getNotarySeals().length).to.equal(1);
             var seal = document.getLastSeal();
-            var sealReference = seal.children[0];
-            var sealCitation = BaliCitation.fromReference(sealReference);
+            var sealCitation = seal.children[0];
             expect(sealCitation.toString()).to.equal(consumerCitation.toString());
         });
 
@@ -148,45 +152,42 @@ describe('Bali Cloud API™', function() {
         it('should checkout a draft of the new document from the repository', function() {
             draft = consumerClient.checkoutDocument(citation, newVersion);
             expect(draft).to.exist;  // jshint ignore:line
-            expect(draft.toString()).to.equal(citation.toReference() + '\n' + source);
+            expect(draft.toString()).to.equal(citation + '\n' + source);
         });
 
         it('should commit an updated version of the document to the repository', function() {
             draft.setValue('$bar', '"baz"');
             newCitation = consumerClient.commitDocument(tag, newVersion, draft);
             expect(newCitation.toString()).to.not.equal(citation.toString());
-            expect(newCitation.tag).to.equal(tag);
-            expect(newCitation.version).to.equal(newVersion);
+            var object = Citation.fromReference(newCitation);
+            expect(object.tag).to.equal(tag);
+            expect(object.version).to.equal(newVersion);
             expect(consumerClient.nextVersion(newCitation)).to.equal('v2.5');
             expect(draft.getString('$bar')).to.equal('"baz"');
             expect(draft.getNotarySeals().length).to.equal(1);
             var seal = draft.getLastSeal();
-            var sealReference = seal.children[0];
-            var sealCitation = BaliCitation.fromReference(sealReference);
+            var sealCitation = seal.children[0];
             expect(sealCitation.toString()).to.equal(consumerCitation.toString());
         });
 
         it('should retrieve the updated committed document from the repository', function() {
             document = consumerClient.retrieveDocument(newCitation);
             expect(document).to.exist;  // jshint ignore:line
-            var previousReference = document.getPreviousReference();
-            expect(previousReference).to.exist;  // jshint ignore:line
-            var previousCitation = BaliCitation.fromReference(previousReference);
+            var previousCitation = document.getPreviousReference();
+            expect(previousCitation).to.exist;  // jshint ignore:line
             expect(previousCitation.toString()).to.equal(citation.toString());
             expect(document.getString('$bar')).to.equal('"baz"');
             expect(document.getNotarySeals().length).to.equal(1);
             var seal = document.getLastSeal();
-            var sealReference = seal.children[0];
-            var sealCitation = BaliCitation.fromReference(sealReference);
+            var sealCitation = seal.children[0];
             expect(sealCitation.toString()).to.equal(consumerCitation.toString());
         });
 
         it('should checkout the latest version of the document from the repository', function() {
             newVersion = 'v2.4.1';
             draft = consumerClient.checkoutDocument(newCitation, newVersion);
-            var previousReference = draft.getPreviousReference();
-            expect(previousReference).to.exist;  // jshint ignore:line
-            var previousCitation = BaliCitation.fromReference(previousReference);
+            var previousCitation = draft.getPreviousReference();
+            expect(previousCitation).to.exist;  // jshint ignore:line
             expect(previousCitation.toString()).to.equal(newCitation.toString());
             expect(draft.getNotarySeals().length).to.equal(0);
         });
@@ -234,8 +235,7 @@ describe('Bali Cloud API™', function() {
                 expect(transaction.getDocumentContent().toString()).contains('$tag:');
                 expect(transaction.getNotarySeals().length).to.equal(1);
                 var seal = transaction.getLastSeal();
-                var sealReference = seal.children[0];
-                var sealCitation = BaliCitation.fromReference(sealReference);
+                var sealCitation = seal.children[0];
                 expect(sealCitation.toString()).to.equal(consumerCitation.toString());
             }
         });
@@ -248,20 +248,19 @@ describe('Bali Cloud API™', function() {
                 expect(transaction.getPreviousReference()).to.not.exist;  // jshint ignore:line
                 expect(transaction.getNotarySeals().length).to.equal(1);
                 var seal = transaction.getLastSeal();
-                var sealReference = seal.children[0];
-                var sealCitation = BaliCitation.fromReference(sealReference);
+                var sealCitation = seal.children[0];
                 expect(sealCitation.toString()).to.equal(consumerCitation.toString());
 
                 var tag = transaction.getString('$tag');
                 var version = 'v1';
                 var citation = merchantClient.commitDocument(tag, version, transaction);
-                expect(citation.tag).to.equal(tag);
-                expect(citation.version).to.equal(version);
+                var object = Citation.fromReference(citation);
+                expect(object.tag).to.equal(tag);
+                expect(object.version).to.equal(version);
                 expect(transaction.getPreviousReference()).to.not.exist;  // jshint ignore:line
                 expect(transaction.getNotarySeals().length).to.equal(2);
                 seal = transaction.getLastSeal();
-                sealReference = seal.children[0];
-                sealCitation = BaliCitation.fromReference(sealReference);
+                sealCitation = seal.children[0];
                 expect(sealCitation.toString()).to.equal(merchantCitation.toString());
 
                 transaction = merchantClient.receiveMessage(queue);
@@ -285,8 +284,7 @@ describe('Bali Cloud API™', function() {
             expect(event.getDocumentContent().toString()).contains('$tag:');
             expect(event.getNotarySeals().length).to.equal(1);
             var seal = event.getLastSeal();
-            var sealReference = seal.children[0];
-            var sealCitation = BaliCitation.fromReference(sealReference);
+            var sealCitation = seal.children[0];
             expect(sealCitation.toString()).to.equal(merchantCitation.toString());
         });
 
