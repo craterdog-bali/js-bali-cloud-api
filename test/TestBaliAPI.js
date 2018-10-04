@@ -75,18 +75,19 @@ describe('Bali Cloud API™', function() {
     describe('Test Drafts', function() {
         var tag = codex.randomTag();
         var version = 'v1.2';
+        var reference = api.getReference(tag, version);
         var source = '[$foo: "bar"]\n';
         var draft = documents.fromSource(source);
 
         it('should save a new draft document in the repository', function() {
-            consumerClient.saveDraft(tag, version, draft);
+            consumerClient.saveDraft(reference, draft);
             expect(draft.toString()).to.equal(source);
             expect(draft.getPreviousCitation()).to.not.exist;  // jshint ignore:line
             expect(draft.getNotarySeals().length).to.equal(0);
         });
 
         it('should retrieve the new draft document from the repository', function() {
-            draft = consumerClient.retrieveDraft(tag, version);
+            draft = consumerClient.retrieveDraft(reference);
             expect(draft).to.exist;  // jshint ignore:line
             expect(draft.toString()).to.equal(source);
             expect(draft.getPreviousCitation()).to.not.exist;  // jshint ignore:line
@@ -95,7 +96,7 @@ describe('Bali Cloud API™', function() {
 
         it('should save an updated draft document in the repository', function() {
             draft.setValue('$bar', '"baz"');
-            consumerClient.saveDraft(tag, version, draft);
+            consumerClient.saveDraft(reference, draft);
             expect(draft.toString()).to.not.equal(source);
             expect(draft.getString('$foo')).to.equal('"bar"');
             expect(draft.getString('$bar')).to.equal('"baz"');
@@ -104,11 +105,11 @@ describe('Bali Cloud API™', function() {
         });
 
         it('should discard the draft document in the repository', function() {
-            consumerClient.discardDraft(tag, version);
+            consumerClient.discardDraft(reference);
         });
 
         it('should verify that the draft document no longer exists in the repository', function() {
-            draft = consumerClient.retrieveDraft(tag, version);
+            draft = consumerClient.retrieveDraft(reference);
             expect(draft).to.not.exist;  // jshint ignore:line
         });
 
@@ -118,6 +119,8 @@ describe('Bali Cloud API™', function() {
         var tag = codex.randomTag();
         var version = 'v2.3.4';
         var newVersion = 'v2.4';
+        var reference = api.getReference(tag, version);
+        var newReference = api.getReference(tag, newVersion);
         var draft;
         var document;
         var documentCitation;
@@ -125,9 +128,9 @@ describe('Bali Cloud API™', function() {
         var source = '[$foo: "bar"]\n';
         it('should commit a draft of a new document to the repository', function() {
             document = documents.fromSource(source);
-            documentCitation = consumerClient.commitDocument(tag, version, document);
-            expect(consumerClient.getTag(documentCitation)).to.equal(tag);
-            expect(consumerClient.getVersion(documentCitation)).to.equal(version);
+            documentCitation = consumerClient.commitDocument(reference, document);
+            expect(api.getTag(documentCitation)).to.equal(tag);
+            expect(api.getVersion(documentCitation)).to.equal(version);
             expect(document.getPreviousCitation()).to.not.exist;  // jshint ignore:line
             expect(document.getDocumentContent().toString() + '\n').to.equal(source);
             expect(document.getNotarySeals().length).to.equal(1);
@@ -151,11 +154,11 @@ describe('Bali Cloud API™', function() {
 
         it('should commit an updated version of the document to the repository', function() {
             draft.setValue('$bar', '"baz"');
-            newCitation = consumerClient.commitDocument(tag, newVersion, draft);
+            newCitation = consumerClient.commitDocument(newReference, draft);
             expect(newCitation.toString()).to.not.equal(documentCitation.toString());
-            expect(consumerClient.getTag(newCitation)).to.equal(tag);
-            expect(consumerClient.getVersion(newCitation)).to.equal(newVersion);
-            expect(consumerClient.nextVersion(newVersion)).to.equal('v2.5');
+            expect(api.getTag(newCitation)).to.equal(tag);
+            expect(api.getVersion(newCitation)).to.equal(newVersion);
+            expect(api.nextVersion(newVersion)).to.equal('v2.5');
             expect(draft.getString('$bar')).to.equal('"baz"');
             expect(draft.getNotarySeals().length).to.equal(1);
             var seal = draft.getLastSeal();
@@ -186,11 +189,11 @@ describe('Bali Cloud API™', function() {
         });
 
         it('should discard the draft document in the repository', function() {
-            consumerClient.discardDraft(tag, newVersion);
+            consumerClient.discardDraft(newReference);
         });
 
         it('should verify that the draft document no longer exists in the repository', function() {
-            draft = consumerClient.retrieveDraft(tag, newVersion);
+            draft = consumerClient.retrieveDraft(newReference);
             expect(draft).to.not.exist;  // jshint ignore:line
         });
 
@@ -246,9 +249,10 @@ describe('Bali Cloud API™', function() {
 
                 var tag = transaction.getString('$tag');
                 var version = 'v1';
-                var documentCitation = merchantClient.commitDocument(tag, version, transaction);
-                expect(merchantClient.getTag(documentCitation)).to.equal(tag);
-                expect(merchantClient.getVersion(documentCitation)).to.equal(version);
+                var reference = api.getReference(tag, version);
+                var documentCitation = merchantClient.commitDocument(reference, transaction);
+                expect(api.getTag(documentCitation)).to.equal(tag);
+                expect(api.getVersion(documentCitation)).to.equal(version);
                 expect(transaction.getPreviousCitation()).to.not.exist;  // jshint ignore:line
                 expect(transaction.getNotarySeals().length).to.equal(2);
                 seal = transaction.getLastSeal();

@@ -42,26 +42,14 @@ exports.environment = function(notary, repository) {
             return citation;
         },
 
-        getTag: function(citation) {
-            return getTag(citation);
-        },
-
-        getVersion: function(citation) {
-            return getVersion(citation);
-        },
-
-        nextVersion: function(version) {
-            return nextVersion(version);
-        },
-
         retrieveCertificate: function(citation) {
             var certificate = fetchCertificate(notary, repository, citation);
             return certificate;
         },
 
         checkoutDocument: function(citation, newVersion) {
-            var tag = getTag(citation);
-            var currentVersion = getVersion(citation);
+            var tag = exports.getTag(citation);
+            var currentVersion = exports.getVersion(citation);
         
             // validate the new version number
             if (!validNextVersion(currentVersion, newVersion)) {
@@ -87,14 +75,18 @@ exports.environment = function(notary, repository) {
             return draft;
         },
 
-        saveDraft: function(tag, version, draft) {
+        saveDraft: function(reference, draft) {
+            var tag = exports.getTag(reference);
+            var version = exports.getVersion(reference);
             if (fetchDocumentFromCache(tag, version) || repository.documentExists(tag, version)) {
                 throw new Error('API: The draft being saved is already committed: ' + tag + version);
             }
             repository.storeDraft(tag, version, draft);
         },
 
-        retrieveDraft: function(tag, version) {
+        retrieveDraft: function(reference) {
+            var tag = exports.getTag(reference);
+            var version = exports.getVersion(reference);
             var draft;
             var source = repository.fetchDraft(tag, version);
             if (source) {
@@ -105,11 +97,16 @@ exports.environment = function(notary, repository) {
             return draft;
         },
 
-        discardDraft: function(tag, version) {
+        discardDraft: function(reference) {
+            var tag = exports.getTag(reference);
+            var version = exports.getVersion(reference);
             repository.deleteDraft(tag, version);
         },
 
-        commitDocument: function(tag, version, document) {
+        commitDocument: function(reference, document) {
+            var tag = exports.getTag(reference);
+            var version = exports.getVersion(reference);
+
             // store the new version of the document in the repository
             if (repository.documentExists(tag, version)) {
                 throw new Error('API: The document being saved is already committed: ' + tag + version);
@@ -165,30 +162,44 @@ exports.environment = function(notary, repository) {
 };
 
 
-// PRIVATE HELPER FUNCTIONS
-
-function getTag(citation) {
-    var tokens = citation.split(',');
-    tokens = tokens[1].split(':');
-    return tokens[1];
-}
+exports.getReference = function(tag, version) {
+    var reference = '<bali:[$tag:' + tag + ',$version:' + version + ']>';
+    return reference;
+};
 
 
-function getVersion(citation) {
-    var tokens = citation.split(',');
-    tokens = tokens[2].split(':');
-    return tokens[1];
-}
+exports.getTag = function(reference) {
+    var associations = reference.slice(6, -2);
+    var tokens = associations.split(',');
+    var association = tokens.find(function(token) {
+        return token.includes('$tag:');
+    });
+    tokens = association.split(':');
+    return tokens[1];  // the tag value
+};
 
 
-function nextVersion(version) {
+exports.getVersion = function(reference) {
+    var associations = reference.slice(6, -2);
+    var tokens = associations.split(',');
+    var association = tokens.find(function(token) {
+        return token.includes('$version:');
+    });
+    tokens = association.split(':');
+    return tokens[1];  // the version value
+};
+
+
+exports.nextVersion = function(version) {
     var numbers = version.slice(1).split('.');
     var last = numbers.length - 1;
     var newValue = Number(numbers[last]) + 1;
     numbers[last] = newValue.toString();
     return 'v' + numbers.join('.');
-}
+};
 
+
+// PRIVATE HELPER FUNCTIONS
 
 function validNextVersion(currentVersion, nextVersion) {
     // extract the version numbers
@@ -214,8 +225,8 @@ function validNextVersion(currentVersion, nextVersion) {
 
 function fetchCertificate(notary, repository, citation) {
     // check the cache
-    var tag = getTag(citation);
-    var version = getVersion(citation);
+    var tag = exports.getTag(citation);
+    var version = exports.getVersion(citation);
     var certificate = fetchCertificateFromCache(tag, version);
 
     // next check the repository if necessary
@@ -240,11 +251,11 @@ function validateCertificate(notary, citation, certificate) {
     var certificateVersion = certificate.getString('$version');
     var seal = certificate.getLastSeal();
     var sealCitation = seal.children[0];
-    var sealTag = getTag(sealCitation.toString());
-    var sealVersion = getVersion(sealCitation.toString());
+    var sealTag = exports.getTag(sealCitation.toString());
+    var sealVersion = exports.getVersion(sealCitation.toString());
     if (!notary.documentMatches(citation, certificate) ||
-        getTag(citation) !== certificateTag || certificateTag !== sealTag ||
-        getVersion(citation) !== certificateVersion || certificateVersion !== sealVersion) {
+        exports.getTag(citation) !== certificateTag || certificateTag !== sealTag ||
+        exports.getVersion(citation) !== certificateVersion || certificateVersion !== sealVersion) {
         throw new Error('API: The following are incompatible:\ncitation: ' + citation + '\ncertificate: ' + certificate);
     }
     if (!notary.documentIsValid(certificate, certificate)) {
@@ -255,8 +266,8 @@ function validateCertificate(notary, citation, certificate) {
 
 function fetchDocument(notary, repository, citation) {
     // check the cache
-    var tag = getTag(citation);
-    var version = getVersion(citation);
+    var tag = exports.getTag(citation);
+    var version = exports.getVersion(citation);
     var document = fetchDocumentFromCache(tag, version);
 
     // next check the repository if necessary
