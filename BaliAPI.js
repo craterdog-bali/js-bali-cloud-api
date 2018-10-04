@@ -19,9 +19,8 @@
 /*
  * This library provides useful functions for accessing the Bali Environment™.
  */
-var BaliDocument = require('bali-document-notation/BaliDocument');
+var documents = require('bali-document-notation/BaliDocument');
 var codex = require('bali-document-notation/utilities/EncodingUtilities');
-var Citation = require('bali-digital-notary/BaliNotary').Citation;
 
 
 /**
@@ -32,25 +31,27 @@ var Citation = require('bali-digital-notary/BaliNotary').Citation;
  * @returns {Object} An object that implements the API for the Bali Cloud Environment™.
  */
 exports.environment = function(notary, repository) {
-    var SEND_QUEUE_ID = 'JXT095QY01HBLHPAW04ZR5WSH41MWG4H';
-    var EVENT_QUEUE_ID = '3RMGDVN7D6HLAPFXQNPF7DV71V3MAL43';
+    var SEND_QUEUE_ID = '#JXT095QY01HBLHPAW04ZR5WSH41MWG4H';
+    var EVENT_QUEUE_ID = '#3RMGDVN7D6HLAPFXQNPF7DV71V3MAL43';
 
     // return the client API instance
     return {
 
         retrieveCitation: function() {
-            var citation = notary.citation();
+            var citation = notary.certificateCitation();
             return citation;
         },
 
-        nextVersion: function(citation) {
-            // calculate the next logical version string
-            var object = Citation.fromReference(citation);
-            var numbers = object.version.slice(1).split('.');
-            var last = numbers.length - 1;
-            var newValue = Number(numbers[last]) + 1;
-            numbers[last] = newValue.toString();
-            return 'v' + numbers.join('.');
+        getTag: function(citation) {
+            return getTag(citation);
+        },
+
+        getVersion: function(citation) {
+            return getVersion(citation);
+        },
+
+        nextVersion: function(version) {
+            return nextVersion(version);
         },
 
         retrieveCertificate: function(citation) {
@@ -59,9 +60,8 @@ exports.environment = function(notary, repository) {
         },
 
         checkoutDocument: function(citation, newVersion) {
-            var object = Citation.fromReference(citation);
-            var tag = object.tag;
-            var currentVersion = object.version;
+            var tag = getTag(citation);
+            var currentVersion = getVersion(citation);
         
             // validate the new version number
             if (!validNextVersion(currentVersion, newVersion)) {
@@ -99,7 +99,7 @@ exports.environment = function(notary, repository) {
             var source = repository.fetchDraft(tag, version);
             if (source) {
                 // validate the draft
-                draft = BaliDocument.fromSource(source);
+                draft = documents.fromSource(source);
                 // don't cache drafts since they are mutable
             }
             return draft;
@@ -150,7 +150,7 @@ exports.environment = function(notary, repository) {
             var source = repository.dequeueMessage(queue);
             if (source) {
                 // validate the document
-                message = BaliDocument.fromSource(source);
+                message = documents.fromSource(source);
             }
             return message;
         },
@@ -164,7 +164,31 @@ exports.environment = function(notary, repository) {
     };
 };
 
+
 // PRIVATE HELPER FUNCTIONS
+
+function getTag(citation) {
+    var tokens = citation.split(',');
+    tokens = tokens[1].split(':');
+    return tokens[1];
+}
+
+
+function getVersion(citation) {
+    var tokens = citation.split(',');
+    tokens = tokens[2].split(':');
+    return tokens[1];
+}
+
+
+function nextVersion(version) {
+    var numbers = version.slice(1).split('.');
+    var last = numbers.length - 1;
+    var newValue = Number(numbers[last]) + 1;
+    numbers[last] = newValue.toString();
+    return 'v' + numbers.join('.');
+}
+
 
 function validNextVersion(currentVersion, nextVersion) {
     // extract the version numbers
@@ -190,9 +214,8 @@ function validNextVersion(currentVersion, nextVersion) {
 
 function fetchCertificate(notary, repository, citation) {
     // check the cache
-    var object = Citation.fromReference(citation);
-    var tag = object.tag;
-    var version = object.version;
+    var tag = getTag(citation);
+    var version = getVersion(citation);
     var certificate = fetchCertificateFromCache(tag, version);
 
     // next check the repository if necessary
@@ -200,7 +223,7 @@ function fetchCertificate(notary, repository, citation) {
         var source = repository.fetchCertificate(tag, version);
         if (source) {
             // validate the certificate
-            certificate = BaliDocument.fromSource(source);
+            certificate = documents.fromSource(source);
             validateCertificate(notary, citation, certificate);
 
             // cache the certificate
@@ -216,13 +239,12 @@ function validateCertificate(notary, citation, certificate) {
     var certificateTag = certificate.getString('$tag');
     var certificateVersion = certificate.getString('$version');
     var seal = certificate.getLastSeal();
-    var sealCitation = Citation.fromReference(seal.children[0]);
-    var sealTag = sealCitation.tag;
-    var sealVersion = sealCitation.version;
-    var object = Citation.fromReference(citation);
+    var sealCitation = seal.children[0];
+    var sealTag = getTag(sealCitation.toString());
+    var sealVersion = getVersion(sealCitation.toString());
     if (!notary.documentMatches(citation, certificate) ||
-        object.tag !== certificateTag || certificateTag !== sealTag ||
-        object.version !== certificateVersion || certificateVersion !== sealVersion) {
+        getTag(citation) !== certificateTag || certificateTag !== sealTag ||
+        getVersion(citation) !== certificateVersion || certificateVersion !== sealVersion) {
         throw new Error('API: The following are incompatible:\ncitation: ' + citation + '\ncertificate: ' + certificate);
     }
     if (!notary.documentIsValid(certificate, certificate)) {
@@ -233,9 +255,8 @@ function validateCertificate(notary, citation, certificate) {
 
 function fetchDocument(notary, repository, citation) {
     // check the cache
-    var object = Citation.fromReference(citation);
-    var tag = object.tag;
-    var version = object.version;
+    var tag = getTag(citation);
+    var version = getVersion(citation);
     var document = fetchDocumentFromCache(tag, version);
 
     // next check the repository if necessary
@@ -243,7 +264,7 @@ function fetchDocument(notary, repository, citation) {
         var source = repository.fetchDocument(tag, version);
         if (source) {
             // validate the document
-            document = BaliDocument.fromSource(source);
+            document = documents.fromSource(source);
             validateDocument(notary, repository, citation, document);
 
             // cache the document
@@ -261,7 +282,7 @@ function validateDocument(notary, repository, citation, document) {
     }
     var seal = document.getLastSeal();
     while (seal) {
-        var certificateCitation = seal.children[0];
+        var certificateCitation = seal.children[0].toString();
         var certificate = fetchCertificate(notary, repository, certificateCitation);
         if (!notary.documentIsValid(certificate, document)) {
             throw new Error('API: The following document is invalid:\n' + document);

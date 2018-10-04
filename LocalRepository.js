@@ -23,9 +23,9 @@
  * created and used within a '.bali/' directory in the home directory for the running
  * process.
  */
-var codex = require('bali-document-notation/utilities/EncodingUtilities');
-var homeDirectory = require('os').homedir() + '/.bali/';
 var fs = require('fs');
+var homeDirectory = require('os').homedir() + '/.bali/';
+var codex = require('bali-document-notation/utilities/EncodingUtilities');
 
 
 /**
@@ -64,7 +64,7 @@ exports.repository = function(testDirectory) {
 
         certificateExists: function(tag, version) {
             var certificateId = tag + version;
-            var filename = certificates + certificateId;
+            var filename = certificates + certificateId + '.bali';
             try {
                 return fs.existsSync(filename);
             } catch (e) {
@@ -74,7 +74,7 @@ exports.repository = function(testDirectory) {
 
         fetchCertificate: function(tag, version) {
             var certificateId = tag + version;
-            var filename = certificates + certificateId;
+            var filename = certificates + certificateId + '.bali';
             var certificate;
             try {
                 if (fs.existsSync(filename)) {
@@ -86,9 +86,11 @@ exports.repository = function(testDirectory) {
             return certificate;
         },
 
-        storeCertificate: function(tag, version, certificate) {
+        storeCertificate: function(certificate) {
+            var tag = certificate.getString('$tag');
+            var version = certificate.getString('$version');
             var certificateId = tag + version;
-            var filename = certificates + certificateId;
+            var filename = certificates + certificateId + '.bali';
             var exists;
             try {
                 exists = fs.existsSync(filename);
@@ -107,7 +109,7 @@ exports.repository = function(testDirectory) {
 
         draftExists: function(tag, version) {
             var draftId = tag + version;
-            var filename = drafts + draftId;
+            var filename = drafts + draftId + '.bali';
             try {
                 return fs.existsSync(filename);
             } catch (e) {
@@ -117,7 +119,7 @@ exports.repository = function(testDirectory) {
 
         fetchDraft: function(tag, version) {
             var draftId = tag + version;
-            var filename = drafts + draftId;
+            var filename = drafts + draftId + '.bali';
             var draft;
             try {
                 if (fs.existsSync(filename)) {
@@ -131,7 +133,7 @@ exports.repository = function(testDirectory) {
 
         storeDraft: function(tag, version, draft) {
             var draftId = tag + version;
-            var filename = drafts + draftId;
+            var filename = drafts + draftId + '.bali';
             try {
                 fs.writeFileSync(filename, draft.toString(), {encoding: 'utf8', mode: 384});
             } catch (e) {
@@ -141,7 +143,7 @@ exports.repository = function(testDirectory) {
 
         deleteDraft: function(tag, version) {
             var draftId = tag + version;
-            var filename = drafts + draftId;
+            var filename = drafts + draftId + '.bali';
             try {
                 if (fs.existsSync(filename)) {
                     fs.unlinkSync(filename);
@@ -153,7 +155,7 @@ exports.repository = function(testDirectory) {
 
         documentExists: function(tag, version) {
             var documentId = tag + version;
-            var filename = documents + documentId;
+            var filename = documents + documentId + '.bali';
             try {
                 return fs.existsSync(filename);
             } catch (e) {
@@ -163,7 +165,7 @@ exports.repository = function(testDirectory) {
 
         fetchDocument: function(tag, version) {
             var documentId = tag + version;
-            var filename = documents + documentId;
+            var filename = documents + documentId + '.bali';
             var document;
             try {
                 if (fs.existsSync(filename)) {
@@ -177,7 +179,7 @@ exports.repository = function(testDirectory) {
 
         storeDocument: function(tag, version, document) {
             var documentId = tag + version;
-            var filename = documents + documentId;
+            var filename = documents + documentId + '.bali';
             var exists;
             try {
                 exists = fs.existsSync(filename);
@@ -197,7 +199,7 @@ exports.repository = function(testDirectory) {
         queueMessage: function(queue, tag, message) {
             var messageId = tag;
             var directory = queues + queue + '/';
-            var filename = directory + messageId;
+            var filename = directory + messageId + '.bali';
             var exists;
             try {
                 if (!fs.existsSync(directory)) fs.mkdirSync(directory);

@@ -78,7 +78,7 @@ describe('Bali Cloud API™', function() {
         });
 
         it('should perform a message queue lifecycle', function() {
-            var queue = 'queueId';
+            var queue = '#QSZNT8ABGSF75XR8FWHMYQCKTVK2WCPY';
 
             // make sure the message queue is empty
             var message = repository.dequeueMessage(queue);
