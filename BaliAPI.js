@@ -43,11 +43,13 @@ exports.environment = function(notary, repository) {
         },
 
         retrieveCertificate: function(citation) {
+            citation = citation.toString();
             var certificate = fetchCertificate(notary, repository, citation);
             return certificate;
         },
 
         checkoutDocument: function(citation, newVersion) {
+            citation = citation.toString();
             var tag = exports.getTag(citation);
             var currentVersion = exports.getVersion(citation);
         
@@ -76,6 +78,7 @@ exports.environment = function(notary, repository) {
         },
 
         saveDraft: function(reference, draft) {
+            reference = reference.toString();
             var tag = exports.getTag(reference);
             var version = exports.getVersion(reference);
             if (fetchDocumentFromCache(tag, version) || repository.documentExists(tag, version)) {
@@ -85,6 +88,7 @@ exports.environment = function(notary, repository) {
         },
 
         retrieveDraft: function(reference) {
+            reference = reference.toString();
             var tag = exports.getTag(reference);
             var version = exports.getVersion(reference);
             var draft;
@@ -98,12 +102,14 @@ exports.environment = function(notary, repository) {
         },
 
         discardDraft: function(reference) {
+            reference = reference.toString();
             var tag = exports.getTag(reference);
             var version = exports.getVersion(reference);
             repository.deleteDraft(tag, version);
         },
 
         commitDocument: function(reference, document) {
+            reference = reference.toString();
             var tag = exports.getTag(reference);
             var version = exports.getVersion(reference);
 
@@ -123,6 +129,7 @@ exports.environment = function(notary, repository) {
         },
 
         retrieveDocument: function(citation) {
+            citation = citation.toString();
             var document = fetchDocument(notary, repository, citation);
             return document;
         },
@@ -136,6 +143,7 @@ exports.environment = function(notary, repository) {
         },
 
         queueMessage: function(queue, message) {
+            queue = queue.toString();
             var tag = codex.randomTag();
             message.setValue('$tag', tag);
             notary.notarizeDocument(tag, 'v1', message);
@@ -143,6 +151,7 @@ exports.environment = function(notary, repository) {
         },
 
         receiveMessage: function(queue) {
+            queue = queue.toString();
             var message;
             var source = repository.dequeueMessage(queue);
             if (source) {
@@ -169,7 +178,7 @@ exports.getReference = function(tag, version) {
 
 
 exports.getTag = function(reference) {
-    var associations = reference.slice(6, -2);
+    var associations = reference.toString().slice(6, -2);
     var tokens = associations.split(',');
     var association = tokens.find(function(token) {
         return token.includes('$tag:');
@@ -180,7 +189,7 @@ exports.getTag = function(reference) {
 
 
 exports.getVersion = function(reference) {
-    var associations = reference.slice(6, -2);
+    var associations = reference.toString().slice(6, -2);
     var tokens = associations.split(',');
     var association = tokens.find(function(token) {
         return token.includes('$version:');
@@ -191,7 +200,7 @@ exports.getVersion = function(reference) {
 
 
 exports.nextVersion = function(version) {
-    var numbers = version.slice(1).split('.');
+    var numbers = version.toString().slice(1).split('.');
     var last = numbers.length - 1;
     var newValue = Number(numbers[last]) + 1;
     numbers[last] = newValue.toString();
@@ -250,9 +259,9 @@ function validateCertificate(notary, citation, certificate) {
     var certificateTag = certificate.getString('$tag');
     var certificateVersion = certificate.getString('$version');
     var seal = certificate.getLastSeal();
-    var sealCitation = seal.children[0];
-    var sealTag = exports.getTag(sealCitation.toString());
-    var sealVersion = exports.getVersion(sealCitation.toString());
+    var sealCitation = seal.children[0].toString();
+    var sealTag = exports.getTag(sealCitation);
+    var sealVersion = exports.getVersion(sealCitation);
     if (!notary.documentMatches(citation, certificate) ||
         exports.getTag(citation) !== certificateTag || certificateTag !== sealTag ||
         exports.getVersion(citation) !== certificateVersion || certificateVersion !== sealVersion) {
