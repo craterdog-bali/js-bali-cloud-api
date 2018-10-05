@@ -51,7 +51,7 @@ describe('Bali Cloud API™', function() {
         });
 
         it('should setup the client environment for the consumer', function() {
-            consumerClient = api.environment(consumerNotary, repository);
+            consumerClient = api.cloud(consumerNotary, repository);
             expect(consumerClient).to.exist;  // jshint ignore:line
             var citation = consumerClient.retrieveCitation();
             expect(citation).to.exist;  // jshint ignore:line
@@ -61,7 +61,7 @@ describe('Bali Cloud API™', function() {
         });
 
         it('should setup the client environment for the merchant', function() {
-            merchantClient = api.environment(merchantNotary, repository);
+            merchantClient = api.cloud(merchantNotary, repository);
             expect(merchantClient).to.exist;  // jshint ignore:line
             var citation = merchantClient.retrieveCitation();
             expect(citation).to.exist;  // jshint ignore:line
