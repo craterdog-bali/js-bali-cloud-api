@@ -42,6 +42,7 @@ exports.repository = function(testDirectory) {
     var certificates = repositoryDirectory + 'certificates/';
     var drafts = repositoryDirectory + 'drafts/';
     var documents = repositoryDirectory + 'documents/';
+    var types = repositoryDirectory + 'types/';
     var queues = repositoryDirectory + 'queues/';
     try {
         // create the repository directory structure if necessary (with drwx------ permissions)
@@ -50,6 +51,7 @@ exports.repository = function(testDirectory) {
         if (!fs.existsSync(certificates)) fs.mkdirSync(certificates, 448);
         if (!fs.existsSync(drafts)) fs.mkdirSync(drafts, 448);
         if (!fs.existsSync(documents)) fs.mkdirSync(documents, 448);
+        if (!fs.existsSync(types)) fs.mkdirSync(types, 448);
         if (!fs.existsSync(queues)) fs.mkdirSync(queues, 448);
     } catch (e) {
         throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
@@ -191,6 +193,49 @@ exports.repository = function(testDirectory) {
             }
             try {
                 fs.writeFileSync(filename, document.toString(), {encoding: 'utf8', mode: 256});
+            } catch (e) {
+                throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
+            }
+        },
+
+        typeExists: function(tag, version) {
+            var typeId = tag + version;
+            var filename = types + typeId + '.bali';
+            try {
+                return fs.existsSync(filename);
+            } catch (e) {
+                throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
+            }
+        },
+
+        fetchType: function(tag, version) {
+            var typeId = tag + version;
+            var filename = types + typeId + '.bali';
+            var type;
+            try {
+                if (fs.existsSync(filename)) {
+                    type = fs.readFileSync(filename).toString();
+                }
+            } catch (e) {
+                throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
+            }
+            return type;
+        },
+
+        storeType: function(tag, version, type) {
+            var typeId = tag + version;
+            var filename = types + typeId + '.bali';
+            var exists;
+            try {
+                exists = fs.existsSync(filename);
+            } catch (e) {
+                throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
+            }
+            if (exists) {
+                throw new Error('REPOSITORY: The following type already exists in the filesystem: ' + typeId);
+            }
+            try {
+                fs.writeFileSync(filename, type.toString(), {encoding: 'utf8', mode: 256});
             } catch (e) {
                 throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
             }

@@ -71,6 +71,18 @@ exports.repository = function() {
             throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
         },
 
+        typeExists: function(tag, version) {
+            throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
+        },
+
+        fetchType: function(tag, version) {
+            throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
+        },
+
+        storeType: function(tag, version, type) {
+            throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
+        },
+
         queueMessage: function(queue, tag, message) {
             throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
         },
