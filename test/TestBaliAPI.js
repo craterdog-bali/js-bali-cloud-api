@@ -73,11 +73,19 @@ describe('Bali Cloud API™', function() {
     });
 
     describe('Test Drafts', function() {
-        var tag = codex.randomTag();
-        var version = 'v1.2';
-        var reference = api.getReference(tag, version);
-        var source = '[$foo: "bar"]\n';
-        var draft = documents.fromSource(source);
+        var tag;
+        var version;
+        var reference;
+        var source;
+        var draft;
+
+        it('should create a new draft document', function() {
+            tag = codex.randomTag();
+            version = 'v1.2';
+            reference = consumerClient.getReference(tag, version);
+            source = '[$foo: "bar"]\n';
+            draft = documents.fromSource(source);
+        });
 
         it('should save a new draft document in the repository', function() {
             consumerClient.saveDraft(reference, draft);
@@ -116,21 +124,32 @@ describe('Bali Cloud API™', function() {
     });
 
     describe('Test Documents', function() {
-        var tag = codex.randomTag();
-        var version = 'v2.3.4';
-        var newVersion = 'v2.4';
-        var reference = api.getReference(tag, version);
-        var newReference = api.getReference(tag, newVersion);
+        var tag;
+        var version;
+        var newVersion;
+        var reference;
+        var newReference;
+        var source;
         var draft;
         var document;
         var documentCitation;
         var newCitation;
-        var source = '[$foo: "bar"]\n';
+
+        it('should create a new document', function() {
+            tag = codex.randomTag();
+            version = 'v2.3.4';
+            newVersion = 'v2.4';
+            reference = consumerClient.getReference(tag, version);
+            newReference = consumerClient.getReference(tag, newVersion);
+            source = '[$foo: "bar"]\n';
+            draft = documents.fromSource(source);
+        });
+
         it('should commit a draft of a new document to the repository', function() {
             document = documents.fromSource(source);
             documentCitation = consumerClient.commitDocument(reference, document);
-            expect(api.getTag(documentCitation)).to.equal(tag);
-            expect(api.getVersion(documentCitation)).to.equal(version);
+            expect(consumerClient.getTag(documentCitation)).to.equal(tag);
+            expect(consumerClient.getVersion(documentCitation)).to.equal(version);
             expect(document.getPreviousCitation()).to.not.exist;  // jshint ignore:line
             expect(document.getDocumentContent().toString() + '\n').to.equal(source);
             expect(document.getNotarySeals().length).to.equal(1);
@@ -156,9 +175,9 @@ describe('Bali Cloud API™', function() {
             draft.setValue('$bar', '"baz"');
             newCitation = consumerClient.commitDocument(newReference, draft);
             expect(newCitation.toString()).to.not.equal(documentCitation.toString());
-            expect(api.getTag(newCitation)).to.equal(tag);
-            expect(api.getVersion(newCitation)).to.equal(newVersion);
-            expect(api.nextVersion(newVersion)).to.equal('v2.5');
+            expect(consumerClient.getTag(newCitation)).to.equal(tag);
+            expect(consumerClient.getVersion(newCitation)).to.equal(newVersion);
+            expect(consumerClient.nextVersion(newVersion)).to.equal('v2.5');
             expect(draft.getString('$bar')).to.equal('"baz"');
             expect(draft.getNotarySeals().length).to.equal(1);
             var seal = draft.getLastSeal();
@@ -249,10 +268,10 @@ describe('Bali Cloud API™', function() {
 
                 var tag = transaction.getString('$tag');
                 var version = 'v1';
-                var reference = api.getReference(tag, version);
+                var reference = merchantClient.getReference(tag, version);
                 var documentCitation = merchantClient.commitDocument(reference, transaction);
-                expect(api.getTag(documentCitation)).to.equal(tag);
-                expect(api.getVersion(documentCitation)).to.equal(version);
+                expect(merchantClient.getTag(documentCitation)).to.equal(tag);
+                expect(merchantClient.getVersion(documentCitation)).to.equal(version);
                 expect(transaction.getPreviousCitation()).to.not.exist;  // jshint ignore:line
                 expect(transaction.getNotarySeals().length).to.equal(2);
                 seal = transaction.getLastSeal();

@@ -37,11 +37,27 @@ exports.cloud = function(notary, repository) {
     // return the client API instance
     return {
 
+        getReference: function(tag, version) {
+            return exports.getReference(tag, version);
+        },
+
+        getTag: function(reference) {
+            return exports.getTag(reference);
+        },
+        
+        getVersion: function(reference) {
+            return exports.getVersion(reference);
+        },
+        
+        nextVersion: function(version) {
+            return exports.nextVersion(version);
+        },
+
         retrieveCitation: function() {
             var citation = notary.certificateCitation();
             return citation;
         },
-
+        
         retrieveCertificate: function(citation) {
             citation = citation.toString();
             var certificate = fetchCertificate(notary, repository, citation);
