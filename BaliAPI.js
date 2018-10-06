@@ -48,6 +48,35 @@ exports.cloud = function(notary, repository) {
             return certificate;
         },
 
+        retrieveType: function(citation) {
+            citation = citation.toString();
+            var type = fetchType(notary, repository, citation);
+            return type;
+        },
+
+        commitType: function(reference, type) {
+            reference = reference.toString();
+            var tag = exports.getTag(reference);
+            var version = exports.getVersion(reference);
+
+            // store the new version of the type in the repository
+            if (repository.typeExists(tag, version)) {
+                throw new Error('API: The type being saved is already committed: ' + tag + version);
+            }
+            var citation = notary.notarizeDocument(tag, version, type);
+            validateDocument(notary, repository, citation, type);
+            repository.storeType(tag, version, type);
+            storeTypeInCache(tag, version, type);
+
+            return citation;
+        },
+
+        retrieveDocument: function(citation) {
+            citation = citation.toString();
+            var document = fetchDocument(notary, repository, citation);
+            return document;
+        },
+
         checkoutDocument: function(citation, newVersion) {
             citation = citation.toString();
             var tag = exports.getTag(citation);
@@ -126,12 +155,6 @@ exports.cloud = function(notary, repository) {
             if (repository.draftExists(tag, version)) repository.deleteDraft(tag, version);
 
             return citation;
-        },
-
-        retrieveDocument: function(citation) {
-            citation = citation.toString();
-            var document = fetchDocument(notary, repository, citation);
-            return document;
         },
 
         sendMessage: function(target, message) {
@@ -273,6 +296,29 @@ function validateCertificate(notary, citation, certificate) {
 }
 
 
+function fetchType(notary, repository, citation) {
+    // check the cache
+    var tag = exports.getTag(citation);
+    var version = exports.getVersion(citation);
+    var type = fetchTypeFromCache(tag, version);
+
+    // next check the repository if necessary
+    if (!type) {
+        var source = repository.fetchType(tag, version);
+        if (source) {
+            // validate the type
+            type = documents.fromSource(source);
+            validateDocument(notary, citation, type);
+
+            // cache the type
+            storeTypeInCache(tag, version, type);
+        }
+    }
+
+    return type;
+}
+
+
 function fetchDocument(notary, repository, citation) {
     // check the cache
     var tag = exports.getTag(citation);
@@ -321,7 +367,23 @@ function validateDocument(notary, repository, citation, document) {
 // 3) A validated document is always cached locally.
 // 4) The cache will delete the oldest document when it is full.
 
-var MAX_DOCUMENT_CACHE_SIZE = 64;
+var MAX_CERTIFICATE_CACHE_SIZE = 64;
+var CERTIFICATE_CACHE = new Map();
+function storeCertificateInCache(tag, version, certificate) {
+    if (CERTIFICATE_CACHE.size > MAX_CERTIFICATE_CACHE_SIZE) {
+        // delete the first (oldest) cached certificate
+        var key = CERTIFICATE_CACHE.keys().next().value;
+        CERTIFICATE_CACHE.delete(key);
+    }
+    CERTIFICATE_CACHE.set(tag + version, certificate);
+}
+function fetchCertificateFromCache(tag, version) {
+    var certificate = CERTIFICATE_CACHE.get(tag + version);
+    return certificate;
+}
+
+
+var MAX_DOCUMENT_CACHE_SIZE = 128;
 var DOCUMENT_CACHE = new Map();
 function storeDocumentInCache(tag, version, document) {
     if (DOCUMENT_CACHE.size > MAX_DOCUMENT_CACHE_SIZE) {
@@ -336,17 +398,18 @@ function fetchDocumentFromCache(tag, version) {
     return document;
 }
 
-var MAX_CERTIFICATE_CACHE_SIZE = 64;
-var CERTIFICATE_CACHE = new Map();
-function storeCertificateInCache(tag, version, certificate) {
-    if (CERTIFICATE_CACHE.size > MAX_CERTIFICATE_CACHE_SIZE) {
-        // delete the first (oldest) cached certificate
-        var key = CERTIFICATE_CACHE.keys().next().value;
-        CERTIFICATE_CACHE.delete(key);
+
+var MAX_TYPE_CACHE_SIZE = 256;
+var TYPE_CACHE = new Map();
+function storeTypeInCache(tag, version, type) {
+    if (TYPE_CACHE.size > MAX_TYPE_CACHE_SIZE) {
+        // delete the first (oldest) cached type
+        var key = TYPE_CACHE.keys().next().value;
+        TYPE_CACHE.delete(key);
     }
-    CERTIFICATE_CACHE.set(tag + version, certificate);
+    TYPE_CACHE.set(tag + version, type);
 }
-function fetchCertificateFromCache(tag, version) {
-    var certificate = CERTIFICATE_CACHE.get(tag + version);
-    return certificate;
+function fetchTypeFromCache(tag, version) {
+    var type = TYPE_CACHE.get(tag + version);
+    return type;
 }
