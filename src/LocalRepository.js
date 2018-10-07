@@ -25,7 +25,7 @@
  */
 var fs = require('fs');
 var homeDirectory = require('os').homedir() + '/.bali/';
-var codex = require('bali-document-notation/utilities/EncodingUtilities');
+var bali = require('bali-document-notation');
 
 
 /**
@@ -272,7 +272,7 @@ exports.repository = function(testDirectory) {
                     if (count) {
                         var index = 0;
                         if (count > 1) {
-                            index = codex.randomIndex(count);
+                            index = bali.codex.randomIndex(count);
                         }
                         var messageId = messages[index];
                         var filename = directory + messageId;

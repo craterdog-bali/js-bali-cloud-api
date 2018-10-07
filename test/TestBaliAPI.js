@@ -10,11 +10,10 @@
 
 var mocha = require('mocha');
 var expect = require('chai').expect;
-var documents = require('bali-document-notation/BaliDocument');
-var codex = require('bali-document-notation/utilities/EncodingUtilities');
-var notary = require('bali-digital-notary/BaliNotary');
-var api = require('../BaliAPI');
-var repository = require('../LocalRepository').repository('test/config/');
+var bali = require('bali-document-notation');
+var notary = require('bali-digital-notary');
+var api = require('../src/BaliAPI');
+var repository = require('../src/LocalRepository').repository('test/config/');
 
 describe('Bali Cloud API™', function() {
     var consumerClient;
@@ -80,11 +79,11 @@ describe('Bali Cloud API™', function() {
         var draft;
 
         it('should create a new draft document', function() {
-            tag = codex.randomTag();
+            tag = bali.codex.randomTag();
             version = 'v1.2';
             reference = consumerClient.getReference(tag, version);
             source = '[$foo: "bar"]\n';
-            draft = documents.fromSource(source);
+            draft = bali.document.fromSource(source);
         });
 
         it('should save a new draft document in the repository', function() {
@@ -136,17 +135,17 @@ describe('Bali Cloud API™', function() {
         var newCitation;
 
         it('should create a new document', function() {
-            tag = codex.randomTag();
+            tag = bali.codex.randomTag();
             version = 'v2.3.4';
             newVersion = 'v2.4';
             reference = consumerClient.getReference(tag, version);
             newReference = consumerClient.getReference(tag, newVersion);
             source = '[$foo: "bar"]\n';
-            draft = documents.fromSource(source);
+            draft = bali.document.fromSource(source);
         });
 
         it('should commit a draft of a new document to the repository', function() {
-            document = documents.fromSource(source);
+            document = bali.document.fromSource(source);
             documentCitation = consumerClient.commitDocument(reference, document);
             expect(consumerClient.getTag(documentCitation)).to.equal(tag);
             expect(consumerClient.getVersion(documentCitation)).to.equal(version);
@@ -244,7 +243,7 @@ describe('Bali Cloud API™', function() {
 
         it('should allow the consumer to place some transactions on the queue', function() {
             for (var i = 0; i < 3; i++) {
-                transaction = documents.fromSource(source);
+                transaction = bali.document.fromSource(source);
                 consumerClient.queueMessage(queue, transaction);
                 expect(transaction.getPreviousCitation()).to.not.exist;  // jshint ignore:line
                 expect(transaction.getDocumentContent().toString()).contains('$tag:');
@@ -293,7 +292,7 @@ describe('Bali Cloud API™', function() {
             ']\n';
 
         it('should allow the merchant to verify that the queue is empty', function() {
-            var event = documents.fromSource(source);
+            var event = bali.document.fromSource(source);
             merchantClient.publishEvent(event);
             expect(event.getPreviousCitation()).to.not.exist;  // jshint ignore:line
             expect(event.getDocumentContent().toString()).contains('$tag:');

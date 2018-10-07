@@ -19,8 +19,7 @@
 /*
  * This library provides useful functions for accessing the Bali Environment™.
  */
-var documents = require('bali-document-notation/BaliDocument');
-var codex = require('bali-document-notation/utilities/EncodingUtilities');
+var bali = require('bali-document-notation');
 
 
 /**
@@ -140,7 +139,7 @@ exports.cloud = function(notary, repository) {
             var source = repository.fetchDraft(tag, version);
             if (source) {
                 // validate the draft
-                draft = documents.fromSource(source);
+                draft = bali.document.fromSource(source);
                 // don't cache drafts since they are mutable
             }
             return draft;
@@ -175,7 +174,7 @@ exports.cloud = function(notary, repository) {
 
         sendMessage: function(target, message) {
             message.setValue('$target', target);
-            var tag = codex.randomTag();
+            var tag = bali.codex.randomTag();
             message.setValue('$tag', tag);
             notary.notarizeDocument(tag, 'v1', message);
             repository.queueMessage(SEND_QUEUE_ID, tag, message);
@@ -183,7 +182,7 @@ exports.cloud = function(notary, repository) {
 
         queueMessage: function(queue, message) {
             queue = queue.toString();
-            var tag = codex.randomTag();
+            var tag = bali.codex.randomTag();
             message.setValue('$tag', tag);
             notary.notarizeDocument(tag, 'v1', message);
             repository.queueMessage(queue, tag, message);
@@ -195,13 +194,13 @@ exports.cloud = function(notary, repository) {
             var source = repository.dequeueMessage(queue);
             if (source) {
                 // validate the document
-                message = documents.fromSource(source);
+                message = bali.document.fromSource(source);
             }
             return message;
         },
 
         publishEvent: function(event) {
-            var tag = codex.randomTag();
+            var tag = bali.codex.randomTag();
             event.setValue('$tag', tag);
             notary.notarizeDocument(tag, 'v1', event);
             repository.queueMessage(EVENT_QUEUE_ID, tag, event);
@@ -282,7 +281,7 @@ function fetchCertificate(notary, repository, citation) {
         var source = repository.fetchCertificate(tag, version);
         if (source) {
             // validate the certificate
-            certificate = documents.fromSource(source);
+            certificate = bali.document.fromSource(source);
             validateCertificate(notary, citation, certificate);
 
             // cache the certificate
@@ -323,7 +322,7 @@ function fetchType(notary, repository, citation) {
         var source = repository.fetchType(tag, version);
         if (source) {
             // validate the type
-            type = documents.fromSource(source);
+            type = bali.document.fromSource(source);
             validateDocument(notary, citation, type);
 
             // cache the type
@@ -346,7 +345,7 @@ function fetchDocument(notary, repository, citation) {
         var source = repository.fetchDocument(tag, version);
         if (source) {
             // validate the document
-            document = documents.fromSource(source);
+            document = bali.document.fromSource(source);
             validateDocument(notary, repository, citation, document);
 
             // cache the document

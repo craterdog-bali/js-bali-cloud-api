@@ -2,7 +2,6 @@
   "name": "bali-cloud-api",
   "version": "1.0.0",
   "description": "This library provides a JavaScript based parser and formatter for the Bali Instruction Set.",
-  "main": "Gruntfile.js",
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/craterdog-bali/js-bali-cloud-api.git"
