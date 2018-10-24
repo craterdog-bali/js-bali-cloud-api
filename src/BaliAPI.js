@@ -138,7 +138,6 @@ exports.cloud = function(notaryKey, repository) {
             var draft;
             var source = repository.fetchDraft(draftId);
             if (source) {
-                console.log('source: ' + source);
                 draft = bali.parser.parseDocument(source);
                 // don't cache drafts since they are mutable
             }
@@ -320,7 +319,7 @@ exports.cloud = function(notaryKey, repository) {
          * @returns {Document} The message received from the queue.
          */
         receiveMessage: function(queue) {
-            var message = bali.Template.NONE;
+            var message;
             var source = repository.dequeueMessage(queue);
             if (source) {
                 // validate the document
