@@ -25,11 +25,11 @@ var bali = require('bali-document-notation');
 /**
  * This function returns an object that implements the API for the Bali Cloud Environment™.
  *
- * @param {Object} notary An object that implements the API for the digital notary.
+ * @param {Object} notaryKey An object that implements the API for the digital notary.
  * @param {Object} repository An object that implements the API for the document repository.
  * @returns {Object} An object that implements the API for the Bali Cloud Environment™.
  */
-exports.cloud = function(notary, repository) {
+exports.cloud = function(notaryKey, repository) {
     var SEND_QUEUE_TAG = new bali.Tag('#JXT095QY01HBLHPAW04ZR5WSH41MWG4H');
     var EVENT_QUEUE_TAG = new bali.Tag('#3RMGDVN7D6HLAPFXQNPF7DV71V3MAL43');
 
@@ -43,7 +43,7 @@ exports.cloud = function(notary, repository) {
          * @returns {Catalog} The certificate citation for this client.
          */
         retrieveCitation: function() {
-            var citation = notary.getNotaryCitation();
+            var citation = notaryKey.getNotaryCitation();
             return citation;
         },
         
@@ -61,7 +61,7 @@ exports.cloud = function(notary, repository) {
                 var source = repository.fetchCertificate(certificateId);
                 if (source) {
                     certificate = bali.parser.parseDocument(source);
-                    validateCertificate(notary, citation, certificate);
+                    validateCertificate(notaryKey, citation, certificate);
                     cache.storeCertificate(certificate);
                 }
             }
@@ -82,7 +82,7 @@ exports.cloud = function(notary, repository) {
                 var source = repository.fetchType(typeId);
                 if (source) {
                     type = bali.parser.parseDocument(source);
-                    validateDocument(notary, citation, type);
+                    validateDocument(notaryKey, citation, type);
                     cache.storeType(typeId, type);
                 }
             }
@@ -103,8 +103,8 @@ exports.cloud = function(notary, repository) {
             if (repository.typeExists(typeId)) {
                 throw new Error('API: The type being committed is already committed: ' + typeId);
             }
-            citation = notary.notarizeDocument(citation, type);
-            validateDocument(notary, repository, citation, type);
+            citation = notaryKey.notarizeDocument(citation, type);
+            validateDocument(notaryKey, repository, citation, type);
             repository.storeType(typeId, type);
             cache.storeType(typeId, type);
 
@@ -118,7 +118,7 @@ exports.cloud = function(notary, repository) {
          */
         createDraft: function() {
             var tag = new bali.Tag();
-            var draftCitation = notary.createCitation(tag);
+            var draftCitation = notaryKey.createCitation(tag);
             var draftId = extractId(draftCitation);
             var empty = new bali.Catalog();
             var draft = new bali.Document(undefined, empty);
@@ -138,6 +138,7 @@ exports.cloud = function(notary, repository) {
             var draft;
             var source = repository.fetchDraft(draftId);
             if (source) {
+                console.log('source: ' + source);
                 draft = bali.parser.parseDocument(source);
                 // don't cache drafts since they are mutable
             }
@@ -183,8 +184,8 @@ exports.cloud = function(notary, repository) {
             if (cache.documentExists(documentId) || repository.documentExists(documentId)) {
                 throw new Error('API: The draft document being committed has already been committed: ' + documentId);
             }
-            citation = notary.notarizeDocument(citation, document);
-            validateDocument(notary, repository, citation, document);
+            citation = notaryKey.notarizeDocument(citation, document);
+            validateDocument(notaryKey, repository, citation, document);
             repository.storeDocument(documentId, document);
             cache.storeDocument(documentId, document);
             if (repository.draftExists(documentId)) repository.deleteDraft(documentId);
@@ -205,7 +206,7 @@ exports.cloud = function(notary, repository) {
                 var source = repository.fetchDocument(documentId);
                 if (source) {
                     document = bali.parser.parseDocument(source);
-                    validateDocument(notary, repository, citation, document);
+                    validateDocument(notaryKey, repository, citation, document);
                     cache.storeDocument(documentId, document);
                 }
             }
@@ -214,24 +215,49 @@ exports.cloud = function(notary, repository) {
 
         /**
          * This method checks out from the Bali Cloud Environment™ a new draft of the
-         * committed document for the specified document citation. A document citation
-         * for the new draft is also specified.
+         * committed document for the specified document citation. The version string
+         * for the new draft is calculated based on the specified level.
+         * <pre>
+         *      level     current            draft
+         *     level 1:    v5.7              v6         (interface/symantic changes)
+         *     level 2:    v5.7              v5.8       (optimization/bug fixes)
+         *     level 2:    v5.7              v5.7.1     (changes being tested)
+         * </pre>
          * 
          * @param {Catalog} documentCitation The document citation for the committed document.
-         * @param {Catalog} draftCitation The document citation for the new draft document.
-         * @returns {Document} A new draft document.
+         * @param {Number} level The (optional) version level that should be incremented. If no
+         * level is specified, the last number in the document version string is incremented.
+         * @returns {Catalog} The document citation to the new draft document.
          */
-        checkoutDocument: function(documentCitation, draftCitation) {
-            var documentId = extractId(documentCitation);
+        checkoutDocument: function(documentCitation, level) {
+            // create the draft citation
+            var documentVersion = documentCitation.getValue('$version');
+            var draftVersion = bali.Version.nextVersion(documentVersion, level);
+            var draftCitation = new bali.Catalog();
+            draftCitation.setValue('$protocol', documentCitation.getValue('$protocol'));
+            draftCitation.setValue('$tag', documentCitation.getValue('$tag'));
+            draftCitation.setValue('$version', draftVersion);
+            draftCitation.setValue('$digest', bali.Template.NONE);
+
+            // make sure that there is no document already referenced by the draft citation
             var draftId = extractId(draftCitation);
-            validateNextCitation(repository, documentCitation, draftCitation);
-            var document = this.retrieveDocument(notary, repository, documentCitation);
+            if (cache.documentExists(draftId) || repository.documentExists(draftId) || repository.draftExists(draftCitation)) {
+                throw new Error('API: A version of the document referenced by the draft citation already exists: ' + draftId);
+            }
+
+            // retrieve the document to be checked out
+            var documentId = extractId(documentCitation);
+            var document = this.retrieveDocument(documentCitation);
             if (!document) {
                 throw new Error('API: The document being checked does not exist: ' + documentId);
             }
-            var draft = document.draft(documentCitation);
+
+            // store a draft copy of the document in the repository (NOTE: drafts are not cached)
+            var documentReference = notaryKey.createReference(documentCitation);
+            var draft = document.draft(documentReference);
             repository.storeDraft(draftId, draft);
-            return draft;
+
+            return draftCitation;
         },
 
         /**
@@ -244,8 +270,8 @@ exports.cloud = function(notary, repository) {
         publishEvent: function(event) {
             var tag = new bali.Tag();
             event.setValue('$tag', tag);
-            var eventCitation = notary.createCitation(tag);
-            notary.notarizeDocument(eventCitation, event);
+            var eventCitation = notaryKey.createCitation(tag);
+            notaryKey.notarizeDocument(eventCitation, event);
             repository.queueMessage(EVENT_QUEUE_TAG, event);
         },
 
@@ -254,15 +280,15 @@ exports.cloud = function(notary, repository) {
          * Cloud Environment™ that is referenced by the specified target document citation.
          * The message is sent asynchronously so there is no response.
          * 
-         * @param {Catalog} target A document citation referencing the target of the message.
+         * @param {Catalog} targetCitation A document citation referencing the target of the message.
          * @param {Document} message The message to be sent to the target component.
          */
         sendMessage: function(targetCitation, message) {
             var tag = new bali.Tag();
             message.setValue('$target', targetCitation);
             message.setValue('$tag', tag);
-            var messageCitation = notary.createCitation(tag);
-            notary.notarizeDocument(messageCitation, message);
+            var messageCitation = notaryKey.createCitation(tag);
+            notaryKey.notarizeDocument(messageCitation, message);
             repository.queueMessage(SEND_QUEUE_TAG, message);
         },
 
@@ -278,8 +304,8 @@ exports.cloud = function(notary, repository) {
         queueMessage: function(queue, message) {
             var tag = new bali.Tag();
             message.setValue('$tag', tag);
-            var messageCitation = notary.createCitation(tag);
-            notary.notarizeDocument(messageCitation, message);
+            var messageCitation = notaryKey.createCitation(tag);
+            notaryKey.notarizeDocument(messageCitation, message);
             repository.queueMessage(queue, message);
         },
 
@@ -306,43 +332,6 @@ exports.cloud = function(notary, repository) {
 };
 
 
-exports.getReference = function(tag, version) {
-    var reference = new bali.Reference('<bali:[$tag:' + tag + ',$version:' + version + ']>');
-    return reference;
-};
-
-
-/**
- * This function generates the next version of a document citation based on the
- * specified version level:
- * <pre>
- *     current version:  v5.7.2
- *     level 1:          v6
- *     level 2:          v5.8
- *     level 3:          v5.7.3
- *    no level:          v5.7.3
- * </pre>
- * The $digest attribute on the new document citation is set to Template.NONE since
- * the document that the citation references does not yet exist.
- * 
- * @param {Catalog} citation A document citation referencing the current version of a
- * document.
- * @param {Number} level The (optional) version level that should be incremented. If no
- * level is specified, the last number in the version string is incremented.
- * @returns {Catalog} The new document citation for the next version of the document.
- */
-exports.nextCitation = function(citation, level) {
-    var currentVersion = citation.getValue('$version');
-    var nextVersion = bali.Version.nextVersion(currentVersion, level);
-    var nextCitation = new bali.Catalog();
-    nextCitation.setValue('$protocol', citation.getValue('$protocol'));
-    nextCitation.setValue('$tag', citation.getValue('$tag'));
-    nextCitation.setValue('$version', nextVersion);
-    nextCitation.setValue('$digest', bali.Template.NONE);
-    return nextCitation;
-};
-
-
 // PRIVATE HELPER FUNCTIONS
 
 /**
@@ -359,79 +348,67 @@ function extractId(citation) {
 
 
 /**
- * This function determines whether or not a proposed next version of a document citation
- * is valid. In order for the next version to be valid the last number in the next version
- * must be one more than the corresponding number in the current version, or it must be
- * '1' and the length of the next version must be one longer than the current version.
- * <pre>
- *    current             next
- *     v5.7              v6         (interface/symantic changes)
- *     v5.7              v5.8       (optimization/bug fixes)
- *     v5.7              v5.7.1     (changes being tested)
- * </pre>
+ * This function validates a self-notarized certificate. It makes sure that the specified
+ * document citation references the certificate; and it makes sure that the notary seal
+ * on the certificate was generated by the private notary key associated with the public
+ * key that is embedded in the certificate. If either condition is not true an exception
+ * is thrown.
  * 
- * @param {Object} repository The document repository containing the committed documents.
- * @param {Catalog} currentCitation The document citation to the current version of a document. 
- * @param {Catalog} nextCitation The proposed document citation to a next version of the document. 
+ * @param {Object} notaryKey The notary key to be used for validating the certificate.
+ * @param {Catalog} citation A document citation to the notary certificate that is
+ * specified.
+ * @param {Document} certificate A self-notarized document containing the public key
+ * associated with the private notary key that notarized the certificate.
  */
-function validateNextCitation(repository, currentCitation, nextCitation) {
-    var nextId = extractId(nextCitation);
-
-    // extract the versions
-    var currentVersion = currentCitation.getValue('$version');
-    var nextVersion = nextCitation.getValue('$version');
-
-    // validate the version numbers
-    if (!bali.Version.validNextVersion(currentVersion, nextVersion)) {
-        throw new Error('API: The proposed next citation does not have a valid next version: ' + nextVersion);
-    }
-
-    // make sure that there is no document already referenced by the next citation
-    if (cache.documentExists(nextId) || repository.documentExists(nextId) ||
-            repository.draftExists(nextCitation)) {
-        throw new Error('API: A version of the document referenced by the next citation already exists: ' + nextId);
-    }
-}
-
-
-function validateCertificate(notary, citation, certificate) {
+function validateCertificate(notaryKey, citation, certificate) {
     var citationTag = citation.getValue('$tag');
     var citationVersion = citation.getValue('$version');
     var certificateTag = certificate.getValue('$tag');
     var certificateVersion = certificate.getValue('$version');
     var seal = certificate.getLastSeal();
-    var sealCitation = notary.extractCitation(seal.certificateReference);
+    var sealCitation = notaryKey.extractCitation(seal.certificateReference);
     var sealTag = sealCitation.getValue('$tag');
     var sealVersion = sealCitation.getValue('$version');
-    if (!notary.documentMatches(citation, certificate) ||
+    if (!notaryKey.documentMatches(citation, certificate) ||
         !citationTag.equalTo(certificateTag) || !citationTag.equalTo(sealTag) ||
         !citationVersion.equalTo(certificateVersion) || !citationVersion.equalTo(sealVersion)) {
         throw new Error('API: The following are incompatible:\ncitation: ' + citation + '\ncertificate: ' + certificate);
     }
-    if (!notary.documentIsValid(certificate, certificate)) {
+    if (!notaryKey.documentIsValid(certificate, certificate)) {
         throw new Error('API: The following certificate is invalid:\n' + certificate);
     }
 }
 
 
-function validateDocument(notary, repository, citation, document) {
-    if (!notary.documentMatches(citation, document)) {
+/**
+ * This function validates a notarized document. It makes sure that the specified
+ * document citation references the document; and it makes sure that the all notary seals
+ * attached to the document are valid. If either condition is not true an exception
+ * is thrown.
+ * 
+ * @param {Object} notaryKey The notary key to be used for validating the document.
+ * @param {Object} repository The document repository containing the certificates.
+ * @param {Catalog} citation A document citation to the document that is specified.
+ * @param {Document} document The notarized document to be validated.
+ */
+function validateDocument(notaryKey, repository, citation, document) {
+    if (!notaryKey.documentMatches(citation, document)) {
         throw new Error('API: The following are incompatible:\ncitation: ' + citation + '\ndocument: ' + document);
     }
     var seal = document.getLastSeal();
     while (seal) {
-        var sealCitation = notary.extractCitation(seal.certificateReference);
+        var sealCitation = notaryKey.extractCitation(seal.certificateReference);
         var sealCitationId = extractId(sealCitation);
         var certificate = cache.fetchCertificate(sealCitationId);
         if (!certificate) {
             var source = repository.fetchCertificate(sealCitationId);
             if (source) {
                 certificate = bali.parser.parseDocument(source);
-                validateCertificate(notary, sealCitation, certificate);
+                validateCertificate(notaryKey, sealCitation, certificate);
                 cache.storeCertificate(certificate);
             }
         }
-        if (!notary.documentIsValid(certificate, document)) {
+        if (!notaryKey.documentIsValid(certificate, document)) {
             throw new Error('API: The following document is invalid:\n' + document);
         }
         document = document.unsealed();
@@ -440,13 +417,17 @@ function validateDocument(notary, repository, citation, document) {
 }
 
 
-// This section defines the caches for the client side API.
-// Since all documents are immutable, there are no cache consistency issues.
-// The caching rules are as follows:
-// 1) The cache is always checked before downloading a document.
-// 2) A downloaded document is always validated before use.
-// 3) A validated document is always cached locally.
-// 4) The cache will delete the oldest document when it is full.
+/*
+ * This section defines the caches for the client side API.
+ * Since all documents are immutable, there are no cache consistency issues.
+ * The caching rules are as follows:
+ * <pre>
+ * 1) The cache is always checked before downloading a document.
+ * 2) A downloaded document is always validated before use.
+ * 3) A validated document is always cached locally.
+ * 4) The cache will delete the oldest document when it is full.
+ * </pre>
+ */
 
 var cache = {
 

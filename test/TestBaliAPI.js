@@ -160,9 +160,11 @@ describe('Bali Cloud API™', function() {
         });
 
         it('should checkout a draft of the new document from the repository', function() {
-            draft = consumerClient.checkoutDocument(documentCitation, newVersion);
+            draftCitation = consumerClient.checkoutDocument(documentCitation);
+            draft = consumerClient.retrieveDraft(draftCitation);
             expect(draft).to.exist;  // jshint ignore:line
-            expect(draft.toString()).to.equal(documentCitation + '\n' + draftSource);
+            var documentReference = consumerNotary.createReference(documentCitation);
+            expect(draft.toString()).to.equal(documentReference + '\n' + draftSource);
         });
 
         it('should commit an updated version of the document to the repository', function() {
