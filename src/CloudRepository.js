@@ -31,59 +31,61 @@ exports.repository = function() {
             throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
         },
 
-        certificateExists: function(tag, version) {
+        certificateExists: function(certificateId) {
             throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
         },
 
-        fetchCertificate: function(tag, version) {
+        fetchCertificate: function(certificateId) {
             throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
         },
 
-        storeCertificate: function(tag, version, certificate) {
+        storeCertificate: function(certificate) {
+            var certificateId = certificate.getValue('$tag').toString() + certificate.getValue('$version');
             throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
         },
 
-        draftExists: function(tag, version) {
+        draftExists: function(draftId) {
             throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
         },
 
-        fetchDraft: function(tag, version) {
+        fetchDraft: function(draftId) {
             throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
         },
 
-        storeDraft: function(tag, version, draft) {
+        storeDraft: function(draftId, draft) {
             throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
         },
 
-        deleteDraft: function(tag, version) {
+        deleteDraft: function(draftId) {
             throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
         },
 
-        documentExists: function(tag, version) {
+        documentExists: function(documentId) {
             throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
         },
 
-        fetchDocument: function(tag, version) {
+        fetchDocument: function(documentId) {
             throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
         },
 
-        storeDocument: function(tag, version, document) {
+        storeDocument: function(documentId, document) {
             throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
         },
 
-        typeExists: function(tag, version) {
+        typeExists: function(typeId) {
             throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
         },
 
-        fetchType: function(tag, version) {
+        fetchType: function(typeId) {
             throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
         },
 
-        storeType: function(tag, version, type) {
+        storeType: function(typeId, type) {
             throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
         },
 
-        queueMessage: function(queue, tag, message) {
+        queueMessage: function(queue, message) {
+            var messageId = message.getValue('$tag').toString();
             throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
         },
 

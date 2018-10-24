@@ -64,8 +64,7 @@ exports.repository = function(testDirectory) {
             throw new Error('REPOSITORY: The toString() method is not yet implemented.');
         },
 
-        certificateExists: function(tag, version) {
-            var certificateId = tag + version;
+        certificateExists: function(certificateId) {
             var filename = certificates + certificateId + '.bali';
             try {
                 return fs.existsSync(filename);
@@ -74,8 +73,7 @@ exports.repository = function(testDirectory) {
             }
         },
 
-        fetchCertificate: function(tag, version) {
-            var certificateId = tag + version;
+        fetchCertificate: function(certificateId) {
             var filename = certificates + certificateId + '.bali';
             var certificate;
             try {
@@ -89,9 +87,7 @@ exports.repository = function(testDirectory) {
         },
 
         storeCertificate: function(certificate) {
-            var tag = certificate.getString('$tag');
-            var version = certificate.getString('$version');
-            var certificateId = tag + version;
+            var certificateId = certificate.getValue('$tag').toString() + certificate.getValue('$version');
             var filename = certificates + certificateId + '.bali';
             var exists;
             try {
@@ -109,8 +105,7 @@ exports.repository = function(testDirectory) {
             }
         },
 
-        draftExists: function(tag, version) {
-            var draftId = tag + version;
+        draftExists: function(draftId) {
             var filename = drafts + draftId + '.bali';
             try {
                 return fs.existsSync(filename);
@@ -119,8 +114,7 @@ exports.repository = function(testDirectory) {
             }
         },
 
-        fetchDraft: function(tag, version) {
-            var draftId = tag + version;
+        fetchDraft: function(draftId) {
             var filename = drafts + draftId + '.bali';
             var draft;
             try {
@@ -133,8 +127,7 @@ exports.repository = function(testDirectory) {
             return draft;
         },
 
-        storeDraft: function(tag, version, draft) {
-            var draftId = tag + version;
+        storeDraft: function(draftId, draft) {
             var filename = drafts + draftId + '.bali';
             try {
                 fs.writeFileSync(filename, draft.toString(), {encoding: 'utf8', mode: 384});
@@ -143,8 +136,7 @@ exports.repository = function(testDirectory) {
             }
         },
 
-        deleteDraft: function(tag, version) {
-            var draftId = tag + version;
+        deleteDraft: function(draftId) {
             var filename = drafts + draftId + '.bali';
             try {
                 if (fs.existsSync(filename)) {
@@ -155,8 +147,7 @@ exports.repository = function(testDirectory) {
             }
         },
 
-        documentExists: function(tag, version) {
-            var documentId = tag + version;
+        documentExists: function(documentId) {
             var filename = documents + documentId + '.bali';
             try {
                 return fs.existsSync(filename);
@@ -165,8 +156,7 @@ exports.repository = function(testDirectory) {
             }
         },
 
-        fetchDocument: function(tag, version) {
-            var documentId = tag + version;
+        fetchDocument: function(documentId) {
             var filename = documents + documentId + '.bali';
             var document;
             try {
@@ -179,8 +169,7 @@ exports.repository = function(testDirectory) {
             return document;
         },
 
-        storeDocument: function(tag, version, document) {
-            var documentId = tag + version;
+        storeDocument: function(documentId, document) {
             var filename = documents + documentId + '.bali';
             var exists;
             try {
@@ -198,8 +187,7 @@ exports.repository = function(testDirectory) {
             }
         },
 
-        typeExists: function(tag, version) {
-            var typeId = tag + version;
+        typeExists: function(typeId) {
             var filename = types + typeId + '.bali';
             try {
                 return fs.existsSync(filename);
@@ -208,8 +196,7 @@ exports.repository = function(testDirectory) {
             }
         },
 
-        fetchType: function(tag, version) {
-            var typeId = tag + version;
+        fetchType: function(typeId) {
             var filename = types + typeId + '.bali';
             var type;
             try {
@@ -222,8 +209,7 @@ exports.repository = function(testDirectory) {
             return type;
         },
 
-        storeType: function(tag, version, type) {
-            var typeId = tag + version;
+        storeType: function(typeId, type) {
             var filename = types + typeId + '.bali';
             var exists;
             try {
@@ -241,8 +227,8 @@ exports.repository = function(testDirectory) {
             }
         },
 
-        queueMessage: function(queue, tag, message) {
-            var messageId = tag;
+        queueMessage: function(queue, message) {
+            var messageId = message.getValue('$tag');
             var directory = queues + queue + '/';
             var filename = directory + messageId + '.bali';
             var exists;
