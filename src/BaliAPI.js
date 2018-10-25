@@ -29,7 +29,7 @@ var bali = require('bali-document-notation');
  * @param {Object} repository An object that implements the API for the document repository.
  * @returns {Object} An object that implements the API for the Bali Cloud Environment™.
  */
-exports.cloud = function(notaryKey, repository) {
+exports.api = function(notaryKey, repository) {
     var SEND_QUEUE_TAG = new bali.Tag('#JXT095QY01HBLHPAW04ZR5WSH41MWG4H');
     var EVENT_QUEUE_TAG = new bali.Tag('#3RMGDVN7D6HLAPFXQNPF7DV71V3MAL43');
 

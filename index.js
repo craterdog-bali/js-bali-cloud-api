@@ -9,6 +9,6 @@
  ************************************************************************/
 'use strict';
 
-exports.client = require('./src/BaliAPI');
-exports.local = require('./src/LocalRepository');
-exports.cloud = require('./src/CloudRepository');
+exports.api = require('./src/BaliAPI').api;
+exports.local = require('./src/LocalRepository').repository;
+exports.repository = require('./src/CloudRepository').repository;
