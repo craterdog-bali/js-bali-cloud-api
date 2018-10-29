@@ -25,7 +25,7 @@
  */
 var fs = require('fs');
 var homeDirectory = require('os').homedir() + '/.bali/';
-var bali = require('bali-document-notation');
+var bali = require('bali-document-framework');
 
 
 /**

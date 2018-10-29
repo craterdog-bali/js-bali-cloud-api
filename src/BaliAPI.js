@@ -19,7 +19,7 @@
 /*
  * This library provides useful functions for accessing the Bali Environment™.
  */
-var bali = require('bali-document-notation');
+var bali = require('bali-document-framework');
 
 
 /**

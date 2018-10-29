@@ -10,7 +10,7 @@
 
 var mocha = require('mocha');
 var expect = require('chai').expect;
-var bali = require('bali-document-notation');
+var bali = require('bali-document-framework');
 var notary = require('bali-digital-notary');
 var cloud = require('../src/BaliAPI');
 var repository = require('../src/LocalRepository').repository('test/config/');
