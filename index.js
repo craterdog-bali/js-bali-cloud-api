@@ -10,5 +10,5 @@
 'use strict';
 
 exports.api = require('./src/BaliAPI').api;
-exports.local = require('./src/LocalRepository').repository;
-exports.repository = require('./src/CloudRepository').repository;
+exports.local = require('./src/LocalRepository').api;
+exports.repository = require('./src/CloudRepository').api;

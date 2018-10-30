@@ -12,7 +12,7 @@ var mocha = require('mocha');
 var expect = require('chai').expect;
 var bali = require('bali-document-framework');
 var LocalRepository = require('../src/LocalRepository');
-var repository = LocalRepository.repository('test/config/');
+var repository = LocalRepository.api('test/config/');
 
 var source =
     '[\n' +

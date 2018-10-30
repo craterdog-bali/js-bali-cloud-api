@@ -22,7 +22,7 @@
  * 
  * @returns {Object} An object containing the functions that the repository supports.
  */
-exports.repository = function() {
+exports.api = function() {
 
     return {
 

@@ -13,7 +13,7 @@ var expect = require('chai').expect;
 var bali = require('bali-document-framework');
 var notary = require('bali-digital-notary');
 var cloud = require('../src/BaliAPI');
-var repository = require('../src/LocalRepository').repository('test/config/');
+var repository = require('../src/LocalRepository').api('test/config/');
 
 describe('Bali Cloud API™', function() {
     var consumerNotary;
@@ -32,7 +32,7 @@ describe('Bali Cloud API™', function() {
         });
 
         it('should setup the digital notary for the consumer', function() {
-            consumerNotary = notary.notaryKey('test/config/consumer/');
+            consumerNotary = notary.api('test/config/consumer/');
             expect(consumerNotary).to.exist;  // jshint ignore:line
             consumerCertificate = consumerNotary.generateKeys();
             expect(consumerCertificate).to.exist;  // jshint ignore:line
@@ -42,7 +42,7 @@ describe('Bali Cloud API™', function() {
         });
 
         it('should setup the digital notary for the merchant', function() {
-            merchantNotary = notary.notaryKey('test/config/merchant/');
+            merchantNotary = notary.api('test/config/merchant/');
             expect(merchantNotary).to.exist;  // jshint ignore:line
             merchantCertificate = merchantNotary.generateKeys();
             expect(merchantCertificate).to.exist;  // jshint ignore:line

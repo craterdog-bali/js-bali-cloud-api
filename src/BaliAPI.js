@@ -25,11 +25,11 @@ var bali = require('bali-document-framework');
 /**
  * This function returns an object that implements the API for the Bali Cloud Environment™.
  *
- * @param {Object} notaryKey An object that implements the API for the digital notary.
+ * @param {Object} notary An object that implements the API for the digital notary.
  * @param {Object} repository An object that implements the API for the document repository.
  * @returns {Object} An object that implements the API for the Bali Cloud Environment™.
  */
-exports.api = function(notaryKey, repository) {
+exports.api = function(notary, repository) {
     var SEND_QUEUE_TAG = new bali.Tag('#JXT095QY01HBLHPAW04ZR5WSH41MWG4H');
     var EVENT_QUEUE_TAG = new bali.Tag('#3RMGDVN7D6HLAPFXQNPF7DV71V3MAL43');
 
@@ -43,7 +43,7 @@ exports.api = function(notaryKey, repository) {
          * @returns {Catalog} The certificate citation for this client.
          */
         retrieveCitation: function() {
-            var citation = notaryKey.getNotaryCitation();
+            var citation = notary.getNotaryCitation();
             return citation;
         },
         
@@ -61,7 +61,7 @@ exports.api = function(notaryKey, repository) {
                 var source = repository.fetchCertificate(certificateId);
                 if (source) {
                     certificate = bali.parser.parseDocument(source);
-                    validateCertificate(notaryKey, citation, certificate);
+                    validateCertificate(notary, citation, certificate);
                     cache.storeCertificate(certificate);
                 }
             }
@@ -82,7 +82,7 @@ exports.api = function(notaryKey, repository) {
                 var source = repository.fetchType(typeId);
                 if (source) {
                     type = bali.parser.parseDocument(source);
-                    validateDocument(notaryKey, citation, type);
+                    validateDocument(notary, citation, type);
                     cache.storeType(typeId, type);
                 }
             }
@@ -103,8 +103,8 @@ exports.api = function(notaryKey, repository) {
             if (repository.typeExists(typeId)) {
                 throw new Error('API: The type being committed is already committed: ' + typeId);
             }
-            citation = notaryKey.notarizeDocument(citation, type);
-            validateDocument(notaryKey, repository, citation, type);
+            citation = notary.notarizeDocument(citation, type);
+            validateDocument(notary, repository, citation, type);
             repository.storeType(typeId, type);
             cache.storeType(typeId, type);
 
@@ -118,7 +118,7 @@ exports.api = function(notaryKey, repository) {
          */
         createDraft: function() {
             var tag = new bali.Tag();
-            var draftCitation = notaryKey.createCitation(tag);
+            var draftCitation = notary.createCitation(tag);
             var draftId = extractId(draftCitation);
             var empty = new bali.Catalog();
             var draft = new bali.Document(undefined, empty);
@@ -183,8 +183,8 @@ exports.api = function(notaryKey, repository) {
             if (cache.documentExists(documentId) || repository.documentExists(documentId)) {
                 throw new Error('API: The draft document being committed has already been committed: ' + documentId);
             }
-            citation = notaryKey.notarizeDocument(citation, document);
-            validateDocument(notaryKey, repository, citation, document);
+            citation = notary.notarizeDocument(citation, document);
+            validateDocument(notary, repository, citation, document);
             repository.storeDocument(documentId, document);
             cache.storeDocument(documentId, document);
             if (repository.draftExists(documentId)) repository.deleteDraft(documentId);
@@ -205,7 +205,7 @@ exports.api = function(notaryKey, repository) {
                 var source = repository.fetchDocument(documentId);
                 if (source) {
                     document = bali.parser.parseDocument(source);
-                    validateDocument(notaryKey, repository, citation, document);
+                    validateDocument(notary, repository, citation, document);
                     cache.storeDocument(documentId, document);
                 }
             }
@@ -252,7 +252,7 @@ exports.api = function(notaryKey, repository) {
             }
 
             // store a draft copy of the document in the repository (NOTE: drafts are not cached)
-            var documentReference = notaryKey.createReference(documentCitation);
+            var documentReference = notary.createReference(documentCitation);
             var draft = document.draft(documentReference);
             repository.storeDraft(draftId, draft);
 
@@ -269,8 +269,8 @@ exports.api = function(notaryKey, repository) {
         publishEvent: function(event) {
             var tag = new bali.Tag();
             event.setValue('$tag', tag);
-            var eventCitation = notaryKey.createCitation(tag);
-            notaryKey.notarizeDocument(eventCitation, event);
+            var eventCitation = notary.createCitation(tag);
+            notary.notarizeDocument(eventCitation, event);
             repository.queueMessage(EVENT_QUEUE_TAG, event);
         },
 
@@ -286,8 +286,8 @@ exports.api = function(notaryKey, repository) {
             var tag = new bali.Tag();
             message.setValue('$target', targetCitation);
             message.setValue('$tag', tag);
-            var messageCitation = notaryKey.createCitation(tag);
-            notaryKey.notarizeDocument(messageCitation, message);
+            var messageCitation = notary.createCitation(tag);
+            notary.notarizeDocument(messageCitation, message);
             repository.queueMessage(SEND_QUEUE_TAG, message);
         },
 
@@ -303,8 +303,8 @@ exports.api = function(notaryKey, repository) {
         queueMessage: function(queue, message) {
             var tag = new bali.Tag();
             message.setValue('$tag', tag);
-            var messageCitation = notaryKey.createCitation(tag);
-            notaryKey.notarizeDocument(messageCitation, message);
+            var messageCitation = notary.createCitation(tag);
+            notary.notarizeDocument(messageCitation, message);
             repository.queueMessage(queue, message);
         },
 
@@ -353,27 +353,27 @@ function extractId(citation) {
  * key that is embedded in the certificate. If either condition is not true an exception
  * is thrown.
  * 
- * @param {Object} notaryKey The notary key to be used for validating the certificate.
+ * @param {Object} notary The notary to be used for validating the certificate.
  * @param {Catalog} citation A document citation to the notary certificate that is
  * specified.
  * @param {Document} certificate A self-notarized document containing the public key
  * associated with the private notary key that notarized the certificate.
  */
-function validateCertificate(notaryKey, citation, certificate) {
+function validateCertificate(notary, citation, certificate) {
     var citationTag = citation.getValue('$tag');
     var citationVersion = citation.getValue('$version');
     var certificateTag = certificate.getValue('$tag');
     var certificateVersion = certificate.getValue('$version');
     var seal = certificate.getLastSeal();
-    var sealCitation = notaryKey.extractCitation(seal.certificateReference);
+    var sealCitation = notary.extractCitation(seal.certificateReference);
     var sealTag = sealCitation.getValue('$tag');
     var sealVersion = sealCitation.getValue('$version');
-    if (!notaryKey.documentMatches(citation, certificate) ||
+    if (!notary.documentMatches(citation, certificate) ||
         !citationTag.equalTo(certificateTag) || !citationTag.equalTo(sealTag) ||
         !citationVersion.equalTo(certificateVersion) || !citationVersion.equalTo(sealVersion)) {
         throw new Error('API: The following are incompatible:\ncitation: ' + citation + '\ncertificate: ' + certificate);
     }
-    if (!notaryKey.documentIsValid(certificate, certificate)) {
+    if (!notary.documentIsValid(certificate, certificate)) {
         throw new Error('API: The following certificate is invalid:\n' + certificate);
     }
 }
@@ -385,29 +385,29 @@ function validateCertificate(notaryKey, citation, certificate) {
  * attached to the document are valid. If either condition is not true an exception
  * is thrown.
  * 
- * @param {Object} notaryKey The notary key to be used for validating the document.
+ * @param {Object} notary The notary to be used for validating the document.
  * @param {Object} repository The document repository containing the certificates.
  * @param {Catalog} citation A document citation to the document that is specified.
  * @param {Document} document The notarized document to be validated.
  */
-function validateDocument(notaryKey, repository, citation, document) {
-    if (!notaryKey.documentMatches(citation, document)) {
+function validateDocument(notary, repository, citation, document) {
+    if (!notary.documentMatches(citation, document)) {
         throw new Error('API: The following are incompatible:\ncitation: ' + citation + '\ndocument: ' + document);
     }
     var seal = document.getLastSeal();
     while (seal) {
-        var sealCitation = notaryKey.extractCitation(seal.certificateReference);
+        var sealCitation = notary.extractCitation(seal.certificateReference);
         var sealCitationId = extractId(sealCitation);
         var certificate = cache.fetchCertificate(sealCitationId);
         if (!certificate) {
             var source = repository.fetchCertificate(sealCitationId);
             if (source) {
                 certificate = bali.parser.parseDocument(source);
-                validateCertificate(notaryKey, sealCitation, certificate);
+                validateCertificate(notary, sealCitation, certificate);
                 cache.storeCertificate(certificate);
             }
         }
-        if (!notaryKey.documentIsValid(certificate, document)) {
+        if (!notary.documentIsValid(certificate, document)) {
             throw new Error('API: The following document is invalid:\n' + document);
         }
         document = document.unsealed();

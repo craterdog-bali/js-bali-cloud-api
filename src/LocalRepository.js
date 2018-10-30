@@ -36,7 +36,7 @@ var bali = require('bali-document-framework');
  * repository. If not specified, the location of the repository is in '~/.bali/repository/'.
  * @returns {Object} An object containing the functions that the repository supports.
  */
-exports.repository = function(testDirectory) {
+exports.api = function(testDirectory) {
     if (testDirectory) homeDirectory = testDirectory;
     var repositoryDirectory = homeDirectory + 'repository/';
     var certificates = repositoryDirectory + 'certificates/';
