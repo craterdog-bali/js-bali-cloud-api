@@ -10,7 +10,7 @@
 
 var mocha = require('mocha');
 var expect = require('chai').expect;
-var bali = require('bali-document-framework');
+var bali = require('bali-component-framework');
 var notary = require('bali-digital-notary');
 var cloud = require('../src/BaliAPI');
 var repository = require('../src/LocalRepository').api('test/config/');
@@ -56,7 +56,7 @@ describe('Bali Cloud API™', function() {
             expect(consumerClient).to.exist;  // jshint ignore:line
             var citation = consumerClient.retrieveCitation();
             expect(citation).to.exist;  // jshint ignore:line
-            expect(citation.equalTo(consumerCitation)).to.equal(true);
+            expect(citation.isEqualTo(consumerCitation)).to.equal(true);
             consumerCertificate = consumerClient.retrieveCertificate(consumerCitation);
             expect(consumerCertificate).to.exist;  // jshint ignore:line
         });
@@ -66,7 +66,7 @@ describe('Bali Cloud API™', function() {
             expect(merchantClient).to.exist;  // jshint ignore:line
             var citation = merchantClient.retrieveCitation();
             expect(citation).to.exist;  // jshint ignore:line
-            expect(citation.equalTo(merchantCitation)).to.equal(true);
+            expect(citation.isEqualTo(merchantCitation)).to.equal(true);
             merchantCertificate = merchantClient.retrieveCertificate(merchantCitation);
             expect(merchantCertificate).to.exist;  // jshint ignore:line
         });
@@ -82,32 +82,32 @@ describe('Bali Cloud API™', function() {
             draftCitation = consumerClient.createDraft();
             draft = consumerClient.retrieveDraft(draftCitation);
             draft.setValue('$foo', '"bar"');
-            draftSource = draft.toSource();
+            draftSource = draft.toString();
         });
 
         it('should save a new draft document in the repository', function() {
             consumerClient.saveDraft(draftCitation, draft);
             expect(draft.toString()).to.equal(draftSource);
-            expect(draft.previousReference).to.not.exist;  // jshint ignore:line
-            expect(draft.notarySeals.length).to.equal(0);
+            expect(draft.previousReference.isEqualTo(bali.Template.NONE)).to.equal(true);
+            expect(draft.notarySeals.getSize()).to.equal(0);
         });
 
         it('should retrieve the new draft document from the repository', function() {
             draft = consumerClient.retrieveDraft(draftCitation);
             expect(draft).to.exist;  // jshint ignore:line
             expect(draft.toString()).to.equal(draftSource);
-            expect(draft.previousReference).to.not.exist;  // jshint ignore:line
-            expect(draft.notarySeals.length).to.equal(0);
+            expect(draft.previousReference.isEqualTo(bali.Template.NONE)).to.equal(true);
+            expect(draft.notarySeals.getSize()).to.equal(0);
         });
 
         it('should save an updated draft document in the repository', function() {
             draft.setValue('$bar', '"baz"');
             consumerClient.saveDraft(draftCitation, draft);
             expect(draft.toString()).to.not.equal(draftSource);
-            expect(draft.getString('$foo')).to.equal('"bar"');
-            expect(draft.getString('$bar')).to.equal('"baz"');
-            expect(draft.previousReference).to.not.exist;  // jshint ignore:line
-            expect(draft.notarySeals.length).to.equal(0);
+            expect(draft.getValue('$foo').toString()).to.equal('"bar"');
+            expect(draft.getValue('$bar').toString()).to.equal('"baz"');
+            expect(draft.previousReference.isEqualTo(bali.Template.NONE)).to.equal(true);
+            expect(draft.notarySeals.getSize()).to.equal(0);
         });
 
         it('should discard the draft document in the repository', function() {
@@ -122,33 +122,31 @@ describe('Bali Cloud API™', function() {
     });
 
     describe('Test Documents', function() {
-        var newVersion;
         var draft;
         var draftCitation;
         var draftSource;
         var document;
         var documentCitation;
-        var newCitation;
 
         it('should create a new draft document', function() {
             draftCitation = consumerClient.createDraft();
             draft = consumerClient.retrieveDraft(draftCitation);
             draft.setValue('$foo', '"bar"');
-            draftSource = draft.toSource();
+            draftSource = draft.toString();
         });
 
 
         it('should commit a draft of a new document to the repository', function() {
             documentCitation = consumerClient.commitDraft(draftCitation, draft);
-            expect(documentCitation.getValue('$tag').equalTo(draftCitation.getValue('$tag'))).to.equal(true);
-            expect(documentCitation.getValue('$version').equalTo(draftCitation.getValue('$version'))).to.equal(true);
+            expect(documentCitation.getValue('$tag').isEqualTo(draftCitation.getValue('$tag'))).to.equal(true);
+            expect(documentCitation.getValue('$version').isEqualTo(draftCitation.getValue('$version'))).to.equal(true);
             document = consumerClient.retrieveDocument(documentCitation);
-            expect(document.previousReference).to.not.exist;  // jshint ignore:line
-            expect(document.documentContent.toString() + '\n').to.equal(draftSource);
-            expect(document.notarySeals.length).to.equal(1);
+            expect(document.previousReference.isEqualTo(bali.Template.NONE)).to.equal(true);
+            expect(document.toString().includes(draftSource)).to.equal(true);
+            expect(document.notarySeals.getSize()).to.equal(1);
             var seal = document.getLastSeal();
-            var sealCitation = consumerNotary.extractCitation(seal.certificateReference);
-            expect(sealCitation.equalTo(consumerCitation)).to.equal(true);
+            var sealCitation = consumerNotary.extractCitation(seal.getValue('$certificateReference'));
+            expect(sealCitation.isEqualTo(consumerCitation)).to.equal(true);
         });
 
         it('should retrieve the committed document from the repository', function() {
@@ -163,20 +161,21 @@ describe('Bali Cloud API™', function() {
             draft = consumerClient.retrieveDraft(draftCitation);
             expect(draft).to.exist;  // jshint ignore:line
             var documentReference = consumerNotary.createReference(documentCitation);
-            expect(draft.toString()).to.equal(documentReference + '\n' + draftSource);
+            expect(draft.toString().includes('$foo: "bar"')).to.equal(true);
+            expect(draft.toString().includes(documentReference)).to.equal(true);
         });
 
         it('should commit an updated version of the document to the repository', function() {
             draft.setValue('$bar', '"baz"');
             documentCitation = consumerClient.commitDraft(draftCitation, draft);
             expect(documentCitation.toString()).to.not.equal(draftCitation.toString());
-            expect(documentCitation.getValue('$tag').equalTo(draftCitation.getValue('$tag'))).to.equal(true);
-            expect(documentCitation.getValue('$version').equalTo(draftCitation.getValue('$version'))).to.equal(true);
-            expect(draft.getString('$bar')).to.equal('"baz"');
-            expect(draft.notarySeals.length).to.equal(1);
+            expect(documentCitation.getValue('$tag').isEqualTo(draftCitation.getValue('$tag'))).to.equal(true);
+            expect(documentCitation.getValue('$version').isEqualTo(draftCitation.getValue('$version'))).to.equal(true);
+            expect(draft.getValue('$bar').toString()).to.equal('"baz"');
+            expect(draft.notarySeals.getSize()).to.equal(1);
             var seal = draft.getLastSeal();
-            var sealCitation = consumerNotary.extractCitation(seal.certificateReference);
-            expect(sealCitation.equalTo(consumerCitation)).to.equal(true);
+            var sealCitation = consumerNotary.extractCitation(seal.getValue('$certificateReference'));
+            expect(sealCitation.isEqualTo(consumerCitation)).to.equal(true);
         });
 
         it('should retrieve the updated committed document from the repository', function() {
@@ -184,12 +183,12 @@ describe('Bali Cloud API™', function() {
             expect(document).to.exist;  // jshint ignore:line
             var previousCitation = consumerNotary.extractCitation(document.previousReference);
             expect(previousCitation).to.exist;  // jshint ignore:line
-            expect(previousCitation.equalTo(documentCitation)).to.equal(false);
-            expect(document.getString('$bar')).to.equal('"baz"');
-            expect(document.notarySeals.length).to.equal(1);
+            expect(previousCitation.isEqualTo(documentCitation)).to.equal(false);
+            expect(document.getValue('$bar').toString()).to.equal('"baz"');
+            expect(document.notarySeals.getSize()).to.equal(1);
             var seal = document.getLastSeal();
-            var sealCitation = consumerNotary.extractCitation(seal.certificateReference);
-            expect(sealCitation.equalTo(consumerCitation)).to.equal(true);
+            var sealCitation = consumerNotary.extractCitation(seal.getValue('$certificateReference'));
+            expect(sealCitation.isEqualTo(consumerCitation)).to.equal(true);
         });
 
         it('should checkout the latest version of the document from the repository', function() {
@@ -197,8 +196,8 @@ describe('Bali Cloud API™', function() {
             draft = consumerClient.retrieveDraft(draftCitation);
             var previousCitation = consumerNotary.extractCitation(draft.previousReference);
             expect(previousCitation).to.exist;  // jshint ignore:line
-            expect(previousCitation.equalTo(documentCitation)).to.equal(true);
-            expect(draft.notarySeals.length).to.equal(0);
+            expect(previousCitation.isEqualTo(documentCitation)).to.equal(true);
+            expect(draft.notarySeals.getSize()).to.equal(0);
         });
 
         it('should discard the draft document in the repository', function() {
@@ -229,7 +228,9 @@ describe('Bali Cloud API™', function() {
             '    $price: 1.25(USD)\n' +
             '    $tax: 1.07(USD)\n' +
             '    $total: 13.57(USD)\n' +
-            ']\n';
+            ']\n' +
+            '-----\n' +
+            'none\n';
 
         it('should allow the merchant to verify that the queue is empty', function() {
             var message = merchantClient.receiveMessage(queue);
@@ -238,14 +239,14 @@ describe('Bali Cloud API™', function() {
 
         it('should allow the consumer to place some transactions on the queue', function() {
             for (var i = 0; i < 3; i++) {
-                transaction = bali.parser.parseDocument(source);
+                transaction = notary.NotarizedDocument.fromString(source);
                 consumerClient.queueMessage(queue, transaction);
-                expect(transaction.previousReference).to.not.exist;  // jshint ignore:line
+                expect(transaction.previousReference.isEqualTo(bali.Template.NONE)).to.equal(true);
                 expect(transaction.documentContent.toString()).contains('$tag:');
-                expect(transaction.notarySeals.length).to.equal(1);
+                expect(transaction.notarySeals.getSize()).to.equal(1);
                 var seal = transaction.getLastSeal();
-                var sealCitation = consumerNotary.extractCitation(seal.certificateReference);
-                expect(sealCitation.equalTo(consumerCitation)).to.equal(true);
+                var sealCitation = consumerNotary.extractCitation(seal.getValue('$certificateReference'));
+                expect(sealCitation.isEqualTo(consumerCitation)).to.equal(true);
             }
         });
 
@@ -254,22 +255,22 @@ describe('Bali Cloud API™', function() {
             var transaction = merchantClient.receiveMessage(queue);
             while (transaction) {
                 count++;
-                expect(transaction.previousReference).to.not.exist;  // jshint ignore:line
-                expect(transaction.notarySeals.length).to.equal(1);
+                expect(transaction.previousReference.isEqualTo(bali.Template.NONE)).to.equal(true);
+                expect(transaction.notarySeals.getSize()).to.equal(1);
                 var seal = transaction.getLastSeal();
-                var sealCitation = merchantNotary.extractCitation(seal.certificateReference);
+                var sealCitation = merchantNotary.extractCitation(seal.getValue('$certificateReference'));
                 expect(sealCitation.toString()).to.equal(consumerCitation.toString());
 
                 var tag = transaction.getValue('$tag');
                 var transactionCitation = merchantNotary.createCitation(tag);
                 var documentCitation = merchantClient.commitDraft(transactionCitation, transaction);
-                expect(documentCitation.getValue('$tag').equalTo(tag)).to.equal(true);
-                expect(documentCitation.getValue('$version').equalTo(transactionCitation.getValue('$version'))).to.equal(true);
-                expect(transaction.previousReference).to.not.exist;  // jshint ignore:line
-                expect(transaction.notarySeals.length).to.equal(2);
+                expect(documentCitation.getValue('$tag').isEqualTo(tag)).to.equal(true);
+                expect(documentCitation.getValue('$version').isEqualTo(transactionCitation.getValue('$version'))).to.equal(true);
+                expect(transaction.previousReference.isEqualTo(bali.Template.NONE)).to.equal(true);
+                expect(transaction.notarySeals.getSize()).to.equal(2);
                 seal = transaction.getLastSeal();
-                sealCitation = merchantNotary.extractCitation(seal.certificateReference);
-                expect(sealCitation.equalTo(merchantCitation)).to.equal(true);
+                sealCitation = merchantNotary.extractCitation(seal.getValue('$certificateReference'));
+                expect(sealCitation.isEqualTo(merchantCitation)).to.equal(true);
 
                 transaction = merchantClient.receiveMessage(queue);
             }
@@ -283,17 +284,19 @@ describe('Bali Cloud API™', function() {
             '[\n' +
             '    $type: $TransactionPosted\n' +
             '    $transaction: <bali:[$protocol:v1,$tag:#WTFL0GLK7V5SJBZKCX9NH0KQWH0JYBL9,$version:v1,$hash:\'R5BXA11KMC4W117RNY197MQVJ78VND18FXTXPT1A0PL2TYKYPHZTAAVVA6FHBRZ9N46P7102GSY8PVTQBBFTF3QYS8Q02H9S3ZLP8L8\']>\n' +
-            ']\n';
+            ']\n' +
+            '-----\n' +
+            'none\n';
 
         it('should allow the merchant to publish an event', function() {
-            var event = bali.parser.parseDocument(source);
+            var event = notary.NotarizedDocument.fromString(source);
             merchantClient.publishEvent(event);
-            expect(event.previousReference).to.not.exist;  // jshint ignore:line
+            expect(event.previousReference.isEqualTo(bali.Template.NONE)).to.equal(true);
             expect(event.documentContent.toString()).contains('$tag:');
-            expect(event.notarySeals.length).to.equal(1);
+            expect(event.notarySeals.getSize()).to.equal(1);
             var seal = event.getLastSeal();
-            sealCitation = merchantNotary.extractCitation(seal.certificateReference);
-            expect(sealCitation.equalTo(merchantCitation)).to.equal(true);
+            sealCitation = merchantNotary.extractCitation(seal.getValue('$certificateReference'));
+            expect(sealCitation.isEqualTo(merchantCitation)).to.equal(true);
         });
 
 

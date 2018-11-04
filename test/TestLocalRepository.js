@@ -10,7 +10,8 @@
 
 var mocha = require('mocha');
 var expect = require('chai').expect;
-var bali = require('bali-document-framework');
+var bali = require('bali-component-framework');
+var notary = require('bali-digital-notary');
 var LocalRepository = require('../src/LocalRepository');
 var repository = LocalRepository.api('test/config/');
 
@@ -22,7 +23,9 @@ var source =
     '    $price: 1.25(USD)\n' +
     '    $tax: 1.07(USD)\n' +
     '    $total: 13.57(USD)\n' +
-    ']\n';
+    ']\n' +
+    '-----\n' +
+    'none\n';
 
 describe('Bali Cloud API™', function() {
 
@@ -95,7 +98,7 @@ describe('Bali Cloud API™', function() {
             for (var i = 0; i < 3; i++) {
                 // place a new message on the queue
                 var tag = new bali.Tag('#RCF5A7QYVNXHKSW449QTY3HJB63JG8DP' + i);
-                message = bali.parser.parseDocument(source);
+                message = notary.NotarizedDocument.fromString(source);
                 message.setValue('$tag', tag);
                 repository.queueMessage(queue, message);
 
@@ -107,7 +110,7 @@ describe('Bali Cloud API™', function() {
             for (var j = 0; j < 3; j++) {
                 // retrieve a message from the queue
                 message = repository.dequeueMessage(queue);
-                message = bali.parser.parseDocument(message);
+                message = notary.NotarizedDocument.fromString(message);
                 message.removeValue('$tag');
                 expect(message.toString()).to.equal(source);
             }
