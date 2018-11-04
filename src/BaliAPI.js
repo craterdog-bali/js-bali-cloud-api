@@ -115,14 +115,16 @@ exports.api = function(notary, repository) {
         /**
          * This method creates in the Bali Cloud Environment™ a new empty draft document.
          * 
+         * @param {Component} documentContent An optional component that is to be used as
+         * the document content for the new draft document. 
          * @returns {Catalog} A document citation to the new empty draft document.
          */
-        createDraft: function() {
+        createDraft: function(documentContent) {
+            documentContent = documentContent || new bali.Catalog();
             var tag = new bali.Tag();
             var draftCitation = notary.createCitation(tag);
             var draftId = extractId(draftCitation);
-            var empty = new bali.Catalog();
-            var draft = new NotarizedDocument(bali.Template.NONE, empty);
+            var draft = new NotarizedDocument(bali.Template.NONE, documentContent);
             repository.storeDraft(draftId, draft);
             return draftCitation;
         },

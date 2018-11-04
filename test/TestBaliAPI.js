@@ -78,7 +78,7 @@ describe('Bali Cloud API™', function() {
         var draftCitation;
         var draftSource;
 
-        it('should create a new draft document', function() {
+        it('should create a new empty draft document', function() {
             draftCitation = consumerClient.createDraft();
             draft = consumerClient.retrieveDraft(draftCitation);
             draft.setValue('$foo', '"bar"');
@@ -128,10 +128,11 @@ describe('Bali Cloud API™', function() {
         var document;
         var documentCitation;
 
-        it('should create a new draft document', function() {
-            draftCitation = consumerClient.createDraft();
+        it('should create a new draft document from a component', function() {
+            var catalog = new bali.Catalog();
+            catalog.setValue('$foo', '"bar"');
+            draftCitation = consumerClient.createDraft(catalog);
             draft = consumerClient.retrieveDraft(draftCitation);
-            draft.setValue('$foo', '"bar"');
             draftSource = draft.toString();
         });
 
