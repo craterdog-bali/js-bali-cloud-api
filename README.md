@@ -7,7 +7,7 @@ This project provides a JavaScript version of the API needed to interact with th
  * send and receive notarized messages
  * post notarized events to other interested components
 
-![Pyramid](https://raw.githubusercontent.com/craterdog-bali/bali-project-documentation/master/images/Bali%20Pyramid%20-%20Cloud%20API.png)
+![Pyramid](https://raw.githubusercontent.com/craterdog-bali/bali-project-documentation/master/images/BaliPyramid-CloudAPI.png)
 
 _**WARNING**_
 _This project is still in its early stages and the classes and interfaces to the classes are likely to change._
@@ -24,7 +24,7 @@ For more information on this project click on the following links:
  * **CloudRepository** - a singleton object that acts as a proxy to the Amazon AWS S3 buckets used to store notarized documents.
  * **LocalRepository** - a singleton object that acts as a proxy to the local filesystem used to store notarized documents. This module can be used for local testing.
 
-![Bali API](https://raw.githubusercontent.com/craterdog-bali/bali-project-documentation/master/images/Bali%20Cloud%20API.png)
+![Bali Cloud API](https://raw.githubusercontent.com/craterdog-bali/bali-project-documentation/master/images/BaliCloudAPI.png)
 
 ### Getting Started
 To install this NodeJS package:
