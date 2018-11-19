@@ -32,7 +32,7 @@
     "mocha": "^5.2.0"
   },
   "dependencies": {
-    "bali-component-framework": "^1.2.0",
-    "bali-digital-notary": "file:../js-bali-digital-notary"
+    "bali-component-framework": "^1.2.1",
+    "bali-digital-notary": "^1.1.1"
   }
 }
