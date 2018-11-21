@@ -95,7 +95,7 @@ exports.api = function(notary, repository) {
          * to be associated with the specified document citation.
          * 
          * @param {Catalog} citation The document citation for the type document.
-         * @param {NotarizedDocument} type The type document to be committed.
+         * @param {Catalog} type A catalog containing the compiled type to be committed.
          * @returns {Catalog} The updated citation for the type document.
          */
         commitType: function(citation, type) {
@@ -104,10 +104,11 @@ exports.api = function(notary, repository) {
             if (repository.typeExists(typeId)) {
                 throw new Error('API: The type being committed is already committed: ' + typeId);
             }
-            citation = notary.notarizeDocument(citation, type);
-            validateDocument(notary, repository, citation, type);
-            repository.storeType(typeId, type);
-            cache.storeType(typeId, type);
+            var document = new NotarizedDocument(bali.Template.NONE, type);
+            citation = notary.notarizeDocument(citation, document);
+            validateDocument(notary, repository, citation, document);
+            repository.storeType(typeId, document);
+            cache.storeType(typeId, document);
 
             return citation;
         },
@@ -182,7 +183,7 @@ exports.api = function(notary, repository) {
          * @param {NotarizedDocument} document The draft document to be committed.
          * @returns {Catalog} The updated citation for the committed document.
          */
-        commitDraft: function(citation, document) {
+        commitDocument: function(citation, document) {
             var documentId = extractId(citation);
             if (cache.documentExists(documentId) || repository.documentExists(documentId)) {
                 throw new Error('API: The draft document being committed has already been committed: ' + documentId);

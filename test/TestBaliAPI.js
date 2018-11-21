@@ -138,7 +138,7 @@ describe('Bali Cloud API™', function() {
 
 
         it('should commit a draft of a new document to the repository', function() {
-            documentCitation = consumerClient.commitDraft(draftCitation, draft);
+            documentCitation = consumerClient.commitDocument(draftCitation, draft);
             expect(documentCitation.getValue('$tag').isEqualTo(draftCitation.getValue('$tag'))).to.equal(true);
             expect(documentCitation.getValue('$version').isEqualTo(draftCitation.getValue('$version'))).to.equal(true);
             document = consumerClient.retrieveDocument(documentCitation);
@@ -168,7 +168,7 @@ describe('Bali Cloud API™', function() {
 
         it('should commit an updated version of the document to the repository', function() {
             draft.setValue('$bar', '"baz"');
-            documentCitation = consumerClient.commitDraft(draftCitation, draft);
+            documentCitation = consumerClient.commitDocument(draftCitation, draft);
             expect(documentCitation.toString()).to.not.equal(draftCitation.toString());
             expect(documentCitation.getValue('$tag').isEqualTo(draftCitation.getValue('$tag'))).to.equal(true);
             expect(documentCitation.getValue('$version').isEqualTo(draftCitation.getValue('$version'))).to.equal(true);
@@ -258,7 +258,7 @@ describe('Bali Cloud API™', function() {
 
                 var tag = transaction.getValue('$tag');
                 var transactionCitation = merchantNotary.createCitation(tag);
-                var documentCitation = merchantClient.commitDraft(transactionCitation, transaction);
+                var documentCitation = merchantClient.commitDocument(transactionCitation, transaction);
                 expect(documentCitation.getValue('$tag').isEqualTo(tag)).to.equal(true);
                 expect(documentCitation.getValue('$version').isEqualTo(transactionCitation.getValue('$version'))).to.equal(true);
                 expect(transaction.previousReference.isEqualTo(bali.Template.NONE)).to.equal(true);
