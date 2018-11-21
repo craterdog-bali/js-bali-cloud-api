@@ -113,7 +113,8 @@ exports.api = function(notary, repository) {
         },
 
         /**
-         * This method creates in the Bali Cloud Environment™ a new empty draft document.
+         * This method creates in the Bali Cloud Environment™ a new draft document. If no
+         * document content is provided, an empty draft document is created.
          * 
          * @param {Component} documentContent An optional component that is to be used as
          * the document content for the new draft document. 
@@ -267,14 +268,15 @@ exports.api = function(notary, repository) {
          * Any component that has registered event handlers for this type of event
          * will be automatically notified.
          * 
-         * @param {NotarizedDocument} event The document containing the information about the event.
+         * @param {Catalog} event The Bali catalog documenting the event.
          */
         publishEvent: function(event) {
             var tag = new bali.Tag();
             event.setValue('$tag', tag);
-            var eventCitation = notary.createCitation(tag);
-            notary.notarizeDocument(eventCitation, event);
-            repository.queueMessage(EVENT_QUEUE_TAG, event);
+            var documentCitation = notary.createCitation(tag);
+            var document = new NotarizedDocument(bali.Template.NONE, event);
+            notary.notarizeDocument(documentCitation, document);
+            repository.queueMessage(EVENT_QUEUE_TAG, document);
         },
 
         /**
@@ -282,16 +284,18 @@ exports.api = function(notary, repository) {
          * Cloud Environment™ that is referenced by the specified target document citation.
          * The message is sent asynchronously so there is no response.
          * 
-         * @param {Catalog} targetCitation A document citation referencing the target of the message.
-         * @param {NotarizedDocument} message The message to be sent to the target component.
+         * @param {Catalog} targetCitation A document citation referencing the document containing
+         * the target component of the message.
+         * @param {Catalog} message The message to be sent to the target component.
          */
         sendMessage: function(targetCitation, message) {
             var tag = new bali.Tag();
-            message.setValue('$target', targetCitation);
             message.setValue('$tag', tag);
-            var messageCitation = notary.createCitation(tag);
-            notary.notarizeDocument(messageCitation, message);
-            repository.queueMessage(SEND_QUEUE_TAG, message);
+            message.setValue('$target', targetCitation);
+            var documentCitation = notary.createCitation(tag);
+            var document = new NotarizedDocument(bali.Template.NONE, message);
+            notary.notarizeDocument(documentCitation, document);
+            repository.queueMessage(SEND_QUEUE_TAG, document);
         },
 
         /**
@@ -301,14 +305,15 @@ exports.api = function(notary, repository) {
          * 
          * @param {Tag} queue The unique tag identifying the queue on which to place
          * the message.
-         * @param {NotarizedDocument} message The message to be placed on the queue.
+         * @param {Catalog} message The message to be placed on the queue.
          */
         queueMessage: function(queue, message) {
             var tag = new bali.Tag();
             message.setValue('$tag', tag);
-            var messageCitation = notary.createCitation(tag);
-            notary.notarizeDocument(messageCitation, message);
-            repository.queueMessage(queue, message);
+            var documentCitation = notary.createCitation(tag);
+            var document = new NotarizedDocument(bali.Template.NONE, message);
+            notary.notarizeDocument(documentCitation, document);
+            repository.queueMessage(queue, document);
         },
 
         /**
@@ -322,13 +327,21 @@ exports.api = function(notary, repository) {
          * @returns {NotarizedDocument} The message received from the queue.
          */
         receiveMessage: function(queue) {
-            var message;
+            var document;
             var source = repository.dequeueMessage(queue);
             if (source) {
                 // validate the document
-                message = NotarizedDocument.fromString(source);
+                document = NotarizedDocument.fromString(source);
+                var seal = document.getLastSeal();
+                var sealCitation = notary.extractCitation(seal.getValue('$certificateReference'));
+                var sealCitationId = extractId(sealCitation);
+                source = repository.fetchCertificate(sealCitationId);
+                certificate = NotarizedDocument.fromString(source);
+                if (!notary.documentIsValid(certificate, document)) {
+                    throw new Error('API: Received an invalid message: ' + document);
+                }
             }
-            return message;
+            return document;
         }
     };
 };

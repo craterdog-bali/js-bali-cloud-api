@@ -240,14 +240,8 @@ describe('Bali Cloud API™', function() {
 
         it('should allow the consumer to place some transactions on the queue', function() {
             for (var i = 0; i < 3; i++) {
-                transaction = notary.NotarizedDocument.fromString(source);
+                transaction = bali.parser.parseDocument(source);
                 consumerClient.queueMessage(queue, transaction);
-                expect(transaction.previousReference.isEqualTo(bali.Template.NONE)).to.equal(true);
-                expect(transaction.documentContent.toString()).contains('$tag:');
-                expect(transaction.notarySeals.getSize()).to.equal(1);
-                var seal = transaction.getLastSeal();
-                var sealCitation = consumerNotary.extractCitation(seal.getValue('$certificateReference'));
-                expect(sealCitation.isEqualTo(consumerCitation)).to.equal(true);
             }
         });
 
@@ -290,14 +284,8 @@ describe('Bali Cloud API™', function() {
             'none\n';
 
         it('should allow the merchant to publish an event', function() {
-            var event = notary.NotarizedDocument.fromString(source);
+            var event = bali.parser.parseDocument(source);
             merchantClient.publishEvent(event);
-            expect(event.previousReference.isEqualTo(bali.Template.NONE)).to.equal(true);
-            expect(event.documentContent.toString()).contains('$tag:');
-            expect(event.notarySeals.getSize()).to.equal(1);
-            var seal = event.getLastSeal();
-            sealCitation = merchantNotary.extractCitation(seal.getValue('$certificateReference'));
-            expect(sealCitation.isEqualTo(merchantCitation)).to.equal(true);
         });
 
 
