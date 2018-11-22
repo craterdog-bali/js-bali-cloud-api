@@ -70,20 +70,21 @@ exports.api = function(notary, repository) {
         },
 
         /**
-         * This method retrieves from the Bali Cloud Environment™ the type document
+         * This method retrieves from the Bali Cloud Environment™ the compiled type document
          * for the specified document citation.
          * 
-         * @param {Catalog} citation The document citation for the desired type document.
-         * @returns {NotarizedDocument} The desired type document.
+         * @param {Catalog} documentCitation The document citation for the desired compiled
+         * type document.
+         * @returns {NotarizedDocument} The compiled type document.
          */
-        retrieveType: function(citation) {
-            var typeId = extractId(citation);
+        retrieveType: function(documentCitation) {
+            var typeId = extractId(documentCitation);
             var type = cache.fetchType(typeId);
             if (!type) {
                 var source = repository.fetchType(typeId);
                 if (source) {
                     type = NotarizedDocument.fromString(source);
-                    validateDocument(notary, citation, type);
+                    validateDocument(notary, repository, type);
                     cache.storeType(typeId, type);
                 }
             }
@@ -91,26 +92,27 @@ exports.api = function(notary, repository) {
         },
 
         /**
-         * This method commits to the Bali Cloud Environment™ the specified type document
-         * to be associated with the specified document citation.
+         * This method commits to the Bali Cloud Environment™ the specified compiled type
+         * document to be associated with the specified document citation. This method requires
+         * the account calling it to have additional privileges.
          * 
-         * @param {Catalog} citation The document citation for the type document.
+         * @param {Catalog} documentCitation The document citation for the compiled type document.
          * @param {Catalog} type A catalog containing the compiled type to be committed.
-         * @returns {Catalog} The updated citation for the type document.
+         * @returns {Catalog} The new citation for the compiled type document.
          */
-        commitType: function(citation, type) {
-            var typeId = extractId(citation);
+        commitType: function(documentCitation, type) {
+            var typeId = extractId(documentCitation);
             // store the new version of the type in the repository
             if (repository.typeExists(typeId)) {
                 throw new Error('API: The type being committed is already committed: ' + typeId);
             }
             var document = new NotarizedDocument(bali.Template.NONE, type);
-            citation = notary.notarizeDocument(citation, document);
-            validateDocument(notary, repository, citation, document);
+            var typeCitation = notary.notarizeDocument(documentCitation, document);
+            validateDocument(notary, repository, document);
             repository.storeType(typeId, document);
             cache.storeType(typeId, document);
 
-            return citation;
+            return typeCitation;
         },
 
         /**
@@ -136,7 +138,7 @@ exports.api = function(notary, repository) {
          * associated with the specified document citation.
          * 
          * @param {Catalog} citation The document citation for the desired draft document.
-         * @returns {NotarizedDocument} The desired type document.
+         * @returns {NotarizedDocument} The desired draft document.
          */
         retrieveDraft: function(citation) {
             var draftId = extractId(citation);
@@ -189,7 +191,7 @@ exports.api = function(notary, repository) {
                 throw new Error('API: The draft document being committed has already been committed: ' + documentId);
             }
             citation = notary.notarizeDocument(citation, document);
-            validateDocument(notary, repository, citation, document);
+            validateDocument(notary, repository, document);
             repository.storeDocument(documentId, document);
             cache.storeDocument(documentId, document);
             if (repository.draftExists(documentId)) repository.deleteDraft(documentId);
@@ -210,7 +212,10 @@ exports.api = function(notary, repository) {
                 var source = repository.fetchDocument(documentId);
                 if (source) {
                     document = NotarizedDocument.fromString(source);
-                    validateDocument(notary, repository, citation, document);
+                    if (!notary.documentMatches(citation, document)) {
+                        throw new Error('API: The retrieved document has been modified since it was committed: ' + document);
+                    }
+                    validateDocument(notary, repository, document);
                     cache.storeDocument(documentId, document);
                 }
             }
@@ -397,20 +402,14 @@ function validateCertificate(notary, citation, certificate) {
 
 
 /**
- * This function validates a notarized document. It makes sure that the specified
- * document citation references the document; and it makes sure that the all notary seals
- * attached to the document are valid. If either condition is not true an exception
- * is thrown.
+ * This function validates a notarized document. It makes sure that all notary seals
+ * attached to the document are valid. If any seal is not valid an exception is thrown.
  * 
  * @param {Object} notary The notary to be used for validating the document.
  * @param {Object} repository The document repository containing the certificates.
- * @param {Catalog} citation A document citation to the document that is specified.
  * @param {NotarizedDocument} document The notarized document to be validated.
  */
-function validateDocument(notary, repository, citation, document) {
-    if (!notary.documentMatches(citation, document)) {
-        throw new Error('API: The following are incompatible:\ncitation: ' + citation + '\ndocument: ' + document);
-    }
+function validateDocument(notary, repository, document) {
     var seal = document.getLastSeal();
     while (seal) {
         var sealCitation = notary.extractCitation(seal.getValue('$certificateReference'));

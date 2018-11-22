@@ -219,6 +219,27 @@ describe('Bali Cloud API™', function() {
 
     });
 
+    describe('Test Types', function() {
+        var typeCitation;
+
+        it('should allow a new compiled type to be committed', function() {
+            var type = new bali.Catalog();
+            type.setValue('$foo', '"bar"');
+            var documentCitation = merchantClient.createDraft(type);
+            typeCitation = merchantClient.commitType(documentCitation, type);
+            expect(typeCitation).to.exist;  // jshint ignore:line
+        });
+
+        it('should allow a compiled type to be retrieved', function() {
+            var expected = merchantClient.retrieveType(typeCitation);
+            expect(expected).to.exist;  // jshint ignore:line
+            var type = consumerClient.retrieveType(typeCitation);
+            expect(type).to.exist;  // jshint ignore:line
+            expect(type.toString()).to.equal(expected.toString());
+        });
+
+    });
+
     describe('Test Messages', function() {
         var queue = new bali.Tag('#QSZNT8ABGSF75XR8FWHMYQCKTVK2WCPY');
         var source =
@@ -229,9 +250,7 @@ describe('Bali Cloud API™', function() {
             '    $price: 1.25(USD)\n' +
             '    $tax: 1.07(USD)\n' +
             '    $total: 13.57(USD)\n' +
-            ']\n' +
-            '-----\n' +
-            'none\n';
+            ']\n';
 
         it('should allow the merchant to verify that the queue is empty', function() {
             var message = merchantClient.receiveMessage(queue);
@@ -279,9 +298,7 @@ describe('Bali Cloud API™', function() {
             '[\n' +
             '    $type: $TransactionPosted\n' +
             '    $transaction: <bali:[$protocol:v1,$tag:#WTFL0GLK7V5SJBZKCX9NH0KQWH0JYBL9,$version:v1,$hash:\'R5BXA11KMC4W117RNY197MQVJ78VND18FXTXPT1A0PL2TYKYPHZTAAVVA6FHBRZ9N46P7102GSY8PVTQBBFTF3QYS8Q02H9S3ZLP8L8\']>\n' +
-            ']\n' +
-            '-----\n' +
-            'none\n';
+            ']\n';
 
         it('should allow the merchant to publish an event', function() {
             var event = bali.parser.parseDocument(source);
