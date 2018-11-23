@@ -77,7 +77,7 @@ exports.api = function(testDirectory) {
             var certificate;
             try {
                 if (fs.existsSync(filename)) {
-                    certificate = fs.readFileSync(filename).toString();
+                    certificate = fs.readFileSync(filename).toString().slice(0, -1);  // remove POSIX compliant <EOL>
                 }
             } catch (e) {
                 throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
@@ -97,7 +97,8 @@ exports.api = function(testDirectory) {
                 throw new Error('REPOSITORY: The following certificate already exists in the filesystem: ' + certificateId);
             }
             try {
-                fs.writeFileSync(filename, certificate.toString(), {encoding: 'utf8', mode: 256});
+                var document = certificate.toString() + '\n';  // add POSIX compliant <EOL>
+                fs.writeFileSync(filename, document, {encoding: 'utf8', mode: 256});
             } catch (e) {
                 throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
             }
@@ -117,7 +118,7 @@ exports.api = function(testDirectory) {
             var draft;
             try {
                 if (fs.existsSync(filename)) {
-                    draft = fs.readFileSync(filename).toString();
+                    draft = fs.readFileSync(filename).toString().slice(0, -1);  // remove POSIX compliant <EOL>
                 }
             } catch (e) {
                 throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
@@ -128,7 +129,8 @@ exports.api = function(testDirectory) {
         storeDraft: function(draftId, draft) {
             var filename = drafts + draftId + '.bali';
             try {
-                fs.writeFileSync(filename, draft.toString(), {encoding: 'utf8', mode: 384});
+                var document = draft.toString() + '\n';  // add POSIX compliant <EOL>
+                fs.writeFileSync(filename, document, {encoding: 'utf8', mode: 384});
             } catch (e) {
                 throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
             }
@@ -159,7 +161,7 @@ exports.api = function(testDirectory) {
             var document;
             try {
                 if (fs.existsSync(filename)) {
-                    document = fs.readFileSync(filename).toString();
+                    document = fs.readFileSync(filename).toString().slice(0, -1);  // remove POSIX compliant <EOL>
                 }
             } catch (e) {
                 throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
@@ -179,7 +181,8 @@ exports.api = function(testDirectory) {
                 throw new Error('REPOSITORY: The following document already exists in the filesystem: ' + documentId);
             }
             try {
-                fs.writeFileSync(filename, document.toString(), {encoding: 'utf8', mode: 256});
+                document = document.toString() + '\n';  // add POSIX compliant <EOL>
+                fs.writeFileSync(filename, document, {encoding: 'utf8', mode: 256});
             } catch (e) {
                 throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
             }
@@ -199,7 +202,7 @@ exports.api = function(testDirectory) {
             var type;
             try {
                 if (fs.existsSync(filename)) {
-                    type = fs.readFileSync(filename).toString();
+                    type = fs.readFileSync(filename).toString().slice(0, -1);  // remove POSIX compliant <EOL>
                 }
             } catch (e) {
                 throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
@@ -219,7 +222,8 @@ exports.api = function(testDirectory) {
                 throw new Error('REPOSITORY: The following type already exists in the filesystem: ' + typeId);
             }
             try {
-                fs.writeFileSync(filename, type.toString(), {encoding: 'utf8', mode: 256});
+                var document = type.toString() + '\n';  // add POSIX compliant <EOL>
+                fs.writeFileSync(filename, document, {encoding: 'utf8', mode: 256});
             } catch (e) {
                 throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
             }
@@ -239,7 +243,8 @@ exports.api = function(testDirectory) {
                 throw new Error('REPOSITORY: The following message already exists in the queue: ' + messageId);
             }
             try {
-                fs.writeFileSync(filename, message.toString(), {encoding: 'utf8', mode: 384});
+                var document = message.toString() + '\n';  // add POSIX compliant <EOL>
+                fs.writeFileSync(filename, document, {encoding: 'utf8', mode: 384});
             } catch (e) {
                 throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
             }
@@ -260,7 +265,7 @@ exports.api = function(testDirectory) {
                         }
                         var messageId = messages[index];
                         var filename = directory + messageId;
-                        message = fs.readFileSync(filename).toString();
+                        message = fs.readFileSync(filename).toString().slice(0, -1);  // remove POSIX compliant <EOL>
                         try {
                             fs.unlinkSync(filename);
                             break; // we got there first
