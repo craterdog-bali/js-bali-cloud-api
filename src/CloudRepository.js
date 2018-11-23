@@ -39,8 +39,7 @@ exports.api = function() {
             throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
         },
 
-        storeCertificate: function(certificate) {
-            var certificateId = certificate.getValue('$tag').toString() + certificate.getValue('$version');
+        storeCertificate: function(certificateId, certificate) {
             throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
         },
 
@@ -84,8 +83,7 @@ exports.api = function() {
             throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
         },
 
-        queueMessage: function(queue, message) {
-            var messageId = message.getValue('$tag').toString();
+        queueMessage: function(queue, messageId, message) {
             throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
         },
 

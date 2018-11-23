@@ -25,7 +25,6 @@
  */
 var fs = require('fs');
 var homeDirectory = require('os').homedir() + '/.bali/';
-var bali = require('bali-component-framework');
 
 
 /**
@@ -86,8 +85,7 @@ exports.api = function(testDirectory) {
             return certificate;
         },
 
-        storeCertificate: function(certificate) {
-            var certificateId = certificate.getValue('$tag').toString() + certificate.getValue('$version');
+        storeCertificate: function(certificateId, certificate) {
             var filename = certificates + certificateId + '.bali';
             var exists;
             try {
@@ -227,8 +225,7 @@ exports.api = function(testDirectory) {
             }
         },
 
-        queueMessage: function(queue, message) {
-            var messageId = message.getValue('$tag');
+        queueMessage: function(queue, messageId, message) {
             var directory = queues + queue + '/';
             var filename = directory + messageId + '.bali';
             var exists;
@@ -258,7 +255,8 @@ exports.api = function(testDirectory) {
                     if (count) {
                         var index = 0;
                         if (count > 1) {
-                            index = bali.codex.randomIndex(count);
+                            // select a message a random since a distributed queue cannot guarantee FIFO
+                            index = Math.floor(Math.random() * Math.floor(count));
                         }
                         var messageId = messages[index];
                         var filename = directory + messageId;
