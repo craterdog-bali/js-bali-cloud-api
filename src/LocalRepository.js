@@ -64,7 +64,7 @@ exports.api = function(testDirectory) {
         },
 
         certificateExists: function(certificateId) {
-            var filename = certificates + certificateId + '.bali';
+            var filename = certificates + certificateId + '.bdoc';
             try {
                 return fs.existsSync(filename);
             } catch (e) {
@@ -73,7 +73,7 @@ exports.api = function(testDirectory) {
         },
 
         fetchCertificate: function(certificateId) {
-            var filename = certificates + certificateId + '.bali';
+            var filename = certificates + certificateId + '.bdoc';
             var certificate;
             try {
                 if (fs.existsSync(filename)) {
@@ -86,7 +86,7 @@ exports.api = function(testDirectory) {
         },
 
         storeCertificate: function(certificateId, certificate) {
-            var filename = certificates + certificateId + '.bali';
+            var filename = certificates + certificateId + '.bdoc';
             var exists;
             try {
                 exists = fs.existsSync(filename);
@@ -105,7 +105,7 @@ exports.api = function(testDirectory) {
         },
 
         draftExists: function(draftId) {
-            var filename = drafts + draftId + '.bali';
+            var filename = drafts + draftId + '.bdoc';
             try {
                 return fs.existsSync(filename);
             } catch (e) {
@@ -114,7 +114,7 @@ exports.api = function(testDirectory) {
         },
 
         fetchDraft: function(draftId) {
-            var filename = drafts + draftId + '.bali';
+            var filename = drafts + draftId + '.bdoc';
             var draft;
             try {
                 if (fs.existsSync(filename)) {
@@ -127,7 +127,7 @@ exports.api = function(testDirectory) {
         },
 
         storeDraft: function(draftId, draft) {
-            var filename = drafts + draftId + '.bali';
+            var filename = drafts + draftId + '.bdoc';
             try {
                 var document = draft.toString() + '\n';  // add POSIX compliant <EOL>
                 fs.writeFileSync(filename, document, {encoding: 'utf8', mode: 384});
@@ -137,7 +137,7 @@ exports.api = function(testDirectory) {
         },
 
         deleteDraft: function(draftId) {
-            var filename = drafts + draftId + '.bali';
+            var filename = drafts + draftId + '.bdoc';
             try {
                 if (fs.existsSync(filename)) {
                     fs.unlinkSync(filename);
@@ -148,7 +148,7 @@ exports.api = function(testDirectory) {
         },
 
         documentExists: function(documentId) {
-            var filename = documents + documentId + '.bali';
+            var filename = documents + documentId + '.bdoc';
             try {
                 return fs.existsSync(filename);
             } catch (e) {
@@ -157,7 +157,7 @@ exports.api = function(testDirectory) {
         },
 
         fetchDocument: function(documentId) {
-            var filename = documents + documentId + '.bali';
+            var filename = documents + documentId + '.bdoc';
             var document;
             try {
                 if (fs.existsSync(filename)) {
@@ -170,7 +170,7 @@ exports.api = function(testDirectory) {
         },
 
         storeDocument: function(documentId, document) {
-            var filename = documents + documentId + '.bali';
+            var filename = documents + documentId + '.bdoc';
             var exists;
             try {
                 exists = fs.existsSync(filename);
@@ -189,7 +189,7 @@ exports.api = function(testDirectory) {
         },
 
         typeExists: function(typeId) {
-            var filename = types + typeId + '.bali';
+            var filename = types + typeId + '.bdoc';
             try {
                 return fs.existsSync(filename);
             } catch (e) {
@@ -198,7 +198,7 @@ exports.api = function(testDirectory) {
         },
 
         fetchType: function(typeId) {
-            var filename = types + typeId + '.bali';
+            var filename = types + typeId + '.bdoc';
             var type;
             try {
                 if (fs.existsSync(filename)) {
@@ -211,7 +211,7 @@ exports.api = function(testDirectory) {
         },
 
         storeType: function(typeId, type) {
-            var filename = types + typeId + '.bali';
+            var filename = types + typeId + '.bdoc';
             var exists;
             try {
                 exists = fs.existsSync(filename);
@@ -231,7 +231,7 @@ exports.api = function(testDirectory) {
 
         queueMessage: function(queue, messageId, message) {
             var directory = queues + queue + '/';
-            var filename = directory + messageId + '.bali';
+            var filename = directory + messageId + '.bdoc';
             var exists;
             try {
                 if (!fs.existsSync(directory)) fs.mkdirSync(directory);
