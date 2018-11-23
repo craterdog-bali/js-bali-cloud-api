@@ -129,6 +129,7 @@ exports.api = function(notary, repository) {
             var citation = notary.createCitation(tag);
             var draftId = extractId(citation);
             var notarizedDraft = notary.notarizeDocument(citation, draft);
+            citation.setValue('$digest', bali.Template.NONE);  // drafts are mutable so no digest
             repository.storeDraft(draftId, notarizedDraft);
             // we don't cache drafts since they are mutable
             return citation;
@@ -168,6 +169,7 @@ exports.api = function(notary, repository) {
                 throw new Error('API: The draft being saved is already committed: ' + documentId);
             }
             var notarizedDraft = notary.notarizeDocument(citation, draft);
+            citation.setValue('$digest', bali.Template.NONE);  // drafts are mutable so no digest
             repository.storeDraft(documentId, notarizedDraft);
             // we don't cache drafts since they are mutable
             return citation;
@@ -276,6 +278,7 @@ exports.api = function(notary, repository) {
             // store a draft copy of the document in the repository (NOTE: drafts are not cached)
             var reference = notary.createReference(citation);
             var draft = notary.notarizeDocument(draftCitation, content, reference);
+            draftCitation.setValue('$digest', bali.Template.NONE);  // drafts are mutable so no digest
             repository.storeDraft(draftId, draft);
 
             return draftCitation;
