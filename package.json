@@ -1,38 +1,38 @@
 {
-  "name": "bali-cloud-api",
+  "name": "bali-nebula-api",
   "version": "1.0.0",
   "description": "This library provides a JavaScript based parser and formatter for the Bali Instruction Set.",
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/craterdog-bali/js-bali-cloud-api.git"
+    "url": "git+ssh://git@github.com/craterdog-bali/js-bali-nebula-api.git"
   },
   "keywords": [
     "JavaScript",
     "NodeJS",
-    "Bali Cloud Environment",
+    "Bali Nebula",
     "Bali Component Framework",
     "Bali Document Notation",
     "Bali Digital Notary",
-    "Bali Cloud API"
+    "Bali Nebula API"
   ],
   "author": "Derk Norton",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/craterdog-bali/js-bali-cloud-api/issues"
+    "url": "https://github.com/craterdog-bali/js-bali-nebula-api/issues"
   },
-  "homepage": "https://github.com/craterdog-bali/js-bali-cloud-api#readme",
+  "homepage": "https://github.com/craterdog-bali/js-bali-nebula-api#readme",
   "devDependencies": {
-    "chai": "^4.1.2",
+    "chai": "^4.2.0",
     "grunt": "^1.0.3",
-    "grunt-contrib-clean": "^1.1.0",
+    "grunt-contrib-clean": "^2.0.0",
     "grunt-contrib-concat": "^1.0.1",
-    "grunt-contrib-jshint": "^1.1.0",
-    "grunt-contrib-uglify": "^3.4.0",
+    "grunt-contrib-jshint": "^2.0.0",
+    "grunt-contrib-uglify": "^4.0.0",
     "grunt-mocha-test": "^0.13.3",
     "mocha": "^5.2.0"
   },
   "dependencies": {
-    "bali-component-framework": "^1.4.0",
-    "bali-digital-notary": "file:../js-bali-digital-notary"
+    "bali-component-framework": "^1.4.1",
+    "bali-digital-notary": "^1.2.0"
   }
 }

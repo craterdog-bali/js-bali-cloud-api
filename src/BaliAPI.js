@@ -11,7 +11,7 @@
 
 /*
  * This module uses the singleton pattern to provide an object that implements the API
- * used to by registered accounts to access the Bali Cloud Environment™. The implementation
+ * used to by registered accounts to access the Bali Nebula™. The implementation
  * requires that objects implementing the digital notary API and the document repository API
  * be passed into the constructor.
  */
@@ -24,11 +24,11 @@ var NotarizedDocument = require('bali-digital-notary/src/NotarizedDocument').Not
 
 
 /**
- * This function returns an object that implements the API for the Bali Cloud Environment™.
+ * This function returns an object that implements the API for the Bali Nebula™.
  *
  * @param {Object} notary An object that implements the API for the digital notary.
  * @param {Object} repository An object that implements the API for the document repository.
- * @returns {Object} An object that implements the API for the Bali Cloud Environment™.
+ * @returns {Object} An object that implements the API for the Bali Nebula™.
  */
 exports.api = function(notary, repository) {
     var SEND_QUEUE_TAG = new bali.Tag('#JXT095QY01HBLHPAW04ZR5WSH41MWG4H');
@@ -38,7 +38,7 @@ exports.api = function(notary, repository) {
     return {
 
         /**
-         * This method retrieves from the Bali Cloud Environment™ the certificate citation
+         * This method retrieves from the Bali Nebula™ the certificate citation
          * for this client.
          * 
          * @returns {Catalog} The certificate citation for this client.
@@ -49,7 +49,7 @@ exports.api = function(notary, repository) {
         },
         
         /**
-         * This method retrieves from the Bali Cloud Environment™ the notary certificate
+         * This method retrieves from the Bali Nebula™ the notary certificate
          * for the specified certificate citation.
          * 
          * @param {Catalog} citation The certificate citation for the desired notary certificate.
@@ -71,7 +71,7 @@ exports.api = function(notary, repository) {
         },
 
         /**
-         * This method retrieves from the Bali Cloud Environment™ the compiled type document
+         * This method retrieves from the Bali Nebula™ the compiled type document
          * for the specified document citation.
          * 
          * @param {Catalog} citation The document citation for the desired compiled
@@ -94,7 +94,7 @@ exports.api = function(notary, repository) {
         },
 
         /**
-         * This method commits to the Bali Cloud Environment™ the specified compiled type
+         * This method commits to the Bali Nebula™ the specified compiled type
          * document to be associated with the specified document citation. This method requires
          * the account calling it to have additional privileges.
          * 
@@ -116,7 +116,7 @@ exports.api = function(notary, repository) {
         },
 
         /**
-         * This method creates in the Bali Cloud Environment™ a new draft document. If no
+         * This method creates in the Bali Nebula™ a new draft document. If no
          * draft content is provided, an empty catalog is created.
          * 
          * @param {Component} draft An optional component that is to be used as
@@ -136,7 +136,7 @@ exports.api = function(notary, repository) {
         },
 
         /**
-         * This method retrieves from the Bali Cloud Environment™ the saved draft document
+         * This method retrieves from the Bali Nebula™ the saved draft document
          * associated with the specified document citation.
          * 
          * @param {Catalog} citation The document citation for the desired draft document.
@@ -156,7 +156,7 @@ exports.api = function(notary, repository) {
         },
 
         /**
-         * This method saves to the Bali Cloud Environment™ the specified draft document
+         * This method saves to the Bali Nebula™ the specified draft document
          * to be associated with the specified document citation.
          * 
          * @param {Catalog} citation The document citation for the draft document.
@@ -176,7 +176,7 @@ exports.api = function(notary, repository) {
         },
 
         /**
-         * This method deletes from the Bali Cloud Environment™ the saved draft document
+         * This method deletes from the Bali Nebula™ the saved draft document
          * associated with the specified document citation.
          * 
          * @param {Catalog} citation The document citation for the draft document to be deleted.
@@ -187,7 +187,7 @@ exports.api = function(notary, repository) {
         },
 
         /**
-         * This method commits to the Bali Cloud Environment™ the specified draft document
+         * This method commits to the Bali Nebula™ the specified draft document
          * to be associated with the specified document citation.
          * 
          * @param {Catalog} citation The document citation for the draft document.
@@ -207,7 +207,7 @@ exports.api = function(notary, repository) {
         },
 
         /**
-         * This method retrieves from the Bali Cloud Environment™ the committed document
+         * This method retrieves from the Bali Nebula™ the committed document
          * for the specified document citation.
          * 
          * @param {Catalog} citation The document citation for the desired document.
@@ -230,7 +230,7 @@ exports.api = function(notary, repository) {
         },
 
         /**
-         * This method checks out from the Bali Cloud Environment™ a new draft of the
+         * This method checks out from the Bali Nebula™ a new draft of the
          * committed document for the specified document citation. The version string
          * for the new draft is calculated based on the specified level.
          * <pre>
@@ -285,7 +285,7 @@ exports.api = function(notary, repository) {
         },
 
         /**
-         * This method publishes the specified event in the Bali Cloud Environment™.
+         * This method publishes the specified event in the Bali Nebula™.
          * Any component that has registered event handlers for this type of event
          * will be automatically notified.
          * 
@@ -301,7 +301,7 @@ exports.api = function(notary, repository) {
 
         /**
          * This method sends the specified message to the document residing in the Bali
-         * Cloud Environment™ that is referenced by the specified target document citation.
+         * Nebula™ that is referenced by the specified target document citation.
          * The message is sent asynchronously so there is no response.
          * 
          * @param {Catalog} targetCitation A document citation referencing the document containing
@@ -319,7 +319,7 @@ exports.api = function(notary, repository) {
 
         /**
          * This method places the specified message on the specified queue in the Bali
-         * Cloud Environment™. The message will be received by another task using the
+         * Nebula™. The message will be received by another task using the
          * <code>receiveMessage(queue)</code> method with the same queue from the API.
          * 
          * @param {Tag} queue The unique tag identifying the queue on which to place
@@ -336,7 +336,7 @@ exports.api = function(notary, repository) {
 
         /**
          * This method receives a message from the specified queue in the Bali
-         * Cloud Environment™. The message was placed there by another task using the
+         * Nebula™. The message was placed there by another task using the
          * <code>queueMessage(queue, message)</code> method with the same queue from the API.
          * If there are no messages on the queue, the result of this call will be Template.NONE.
          * 

@@ -12,10 +12,10 @@ var mocha = require('mocha');
 var expect = require('chai').expect;
 var bali = require('bali-component-framework');
 var notary = require('bali-digital-notary');
-var cloud = require('../src/BaliAPI');
+var nebula = require('../src/BaliAPI');
 var repository = require('../src/LocalRepository').api('test/config/');
 
-describe('Bali Cloud API™', function() {
+describe('Bali Nebula API™', function() {
     var consumerNotary;
     var consumerClient;
     var consumerCitation;
@@ -54,7 +54,7 @@ describe('Bali Cloud API™', function() {
         });
 
         it('should setup the client environment for the consumer', function() {
-            consumerClient = cloud.api(consumerNotary, repository);
+            consumerClient = nebula.api(consumerNotary, repository);
             expect(consumerClient).to.exist;  // jshint ignore:line
             var citation = consumerClient.retrieveCitation();
             expect(citation).to.exist;  // jshint ignore:line
@@ -64,7 +64,7 @@ describe('Bali Cloud API™', function() {
         });
 
         it('should setup the client environment for the merchant', function() {
-            merchantClient = cloud.api(merchantNotary, repository);
+            merchantClient = nebula.api(merchantNotary, repository);
             expect(merchantClient).to.exist;  // jshint ignore:line
             var citation = merchantClient.retrieveCitation();
             expect(citation).to.exist;  // jshint ignore:line

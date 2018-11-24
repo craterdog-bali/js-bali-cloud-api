@@ -23,7 +23,7 @@ var source =
     '    $total: 13.57(USD)\n' +
     ']';
 
-describe('Bali Cloud API™', function() {
+describe('Bali Nebula API™', function() {
 
     describe('Test LocalRepository', function() {
 

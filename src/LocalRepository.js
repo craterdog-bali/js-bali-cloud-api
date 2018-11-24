@@ -18,10 +18,9 @@
 /*
  * This module defines a singleton that implements a local filesystem based document
  * repository. It treats documents as UTF-8 encoded strings. It can be used for local
- * testing of the Bali Cloud Environment™. If a test directory is specified, it will
- * be created and used as the repository. Otherwise, a repository directory will be
- * created and used within a '.bali/' directory in the home directory for the running
- * process.
+ * testing of the Bali Nebula™. If a test directory is specified, it will be created
+ * and used as the repository. Otherwise, a repository directory will be created and
+ * used within a '.bali/' directory in the home directory for the running process.
  */
 var fs = require('fs');
 var homeDirectory = require('os').homedir() + '/.bali/';
