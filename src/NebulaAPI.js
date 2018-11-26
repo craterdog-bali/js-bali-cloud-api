@@ -414,7 +414,7 @@ function validateCertificate(notary, citation, document) {
  * @param {NotarizedDocument} document The notarized document to be validated.
  */
 function validateDocument(notary, repository, document) {
-    var certificateCitation = notary.extractCitation(document.certificateReference);
+    var certificateCitation = notary.extractCitation(document.certificate);
     while (!certificateCitation.getValue('$digest').isEqualTo(bali.Template.NONE)) {
         var certificateId = extractId(certificateCitation);
         var certificate = cache.fetchCertificate(certificateId);
@@ -434,7 +434,7 @@ function validateDocument(notary, repository, document) {
         }
         try {
             document = notary.NotaryDocument.fromString(document.content);
-            certificateCitation = notary.extractCitation(document.certificateReference);
+            certificateCitation = notary.extractCitation(document.certificate);
         } catch (e) {
             // we have reached the root content so we are done
             break;

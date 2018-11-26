@@ -12,7 +12,7 @@ var mocha = require('mocha');
 var expect = require('chai').expect;
 var bali = require('bali-component-framework');
 var notary = require('bali-digital-notary');
-var nebula = require('../src/BaliAPI');
+var nebula = require('../src/NebulaAPI');
 var repository = require('../src/LocalRepository').api('test/config/');
 
 describe('Bali Nebula API™', function() {
