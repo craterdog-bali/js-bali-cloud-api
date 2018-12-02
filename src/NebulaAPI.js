@@ -52,10 +52,11 @@ exports.api = function(notary, repository) {
          * This method retrieves from the Bali Nebula™ the notary certificate
          * for the specified certificate citation.
          * 
-         * @param {Catalog} citation The certificate citation for the desired notary certificate.
+         * @param {Reference|Catalog} citation The certificate citation for the desired notary certificate.
          * @returns {Catalog} The desired notary certificate.
          */
         retrieveCertificate: function(citation) {
+            citation = citation.type === bali.types.REFERENCE ? notary.extractCitation(citation) : citation;
             var certificateId = extractId(citation);
             var certificate = cache.fetchCertificate(certificateId);
             if (!certificate) {
@@ -74,11 +75,12 @@ exports.api = function(notary, repository) {
          * This method retrieves from the Bali Nebula™ the compiled type document
          * for the specified document citation.
          * 
-         * @param {Catalog} citation The document citation for the desired compiled
+         * @param {Reference|Catalog} citation The document citation for the desired compiled
          * type document.
          * @returns {Catalog} The compiled type document.
          */
         retrieveType: function(citation) {
+            citation = citation.type === bali.types.REFERENCE ? notary.extractCitation(citation) : citation;
             var typeId = extractId(citation);
             var type = cache.fetchType(typeId);
             if (!type) {
@@ -98,11 +100,12 @@ exports.api = function(notary, repository) {
          * document to be associated with the specified document citation. This method requires
          * the account calling it to have additional privileges.
          * 
-         * @param {Catalog} citation The document citation for the compiled type document.
+         * @param {Reference|Catalog} citation The document citation for the compiled type document.
          * @param {Catalog} type A catalog containing the compiled type to be committed.
          * @returns {Catalog} The new citation for the compiled type document.
          */
         commitType: function(citation, type) {
+            citation = citation.type === bali.types.REFERENCE ? notary.extractCitation(citation) : citation;
             var typeId = extractId(citation);
             // store the new version of the type in the repository
             if (repository.typeExists(typeId)) {
@@ -139,10 +142,11 @@ exports.api = function(notary, repository) {
          * This method retrieves from the Bali Nebula™ the saved draft document
          * associated with the specified document citation.
          * 
-         * @param {Catalog} citation The document citation for the desired draft document.
+         * @param {Reference|Catalog} citation The document citation for the desired draft document.
          * @returns {Component} The desired draft document.
          */
         retrieveDraft: function(citation) {
+            citation = citation.type === bali.types.REFERENCE ? notary.extractCitation(citation) : citation;
             var documentId = extractId(citation);
             var draft;
             var source = repository.fetchDraft(documentId);
@@ -159,11 +163,12 @@ exports.api = function(notary, repository) {
          * This method saves to the Bali Nebula™ the specified draft document
          * to be associated with the specified document citation.
          * 
-         * @param {Catalog} citation The document citation for the draft document.
+         * @param {Reference|Catalog} citation The document citation for the draft document.
          * @param {Component} draft The draft document to be saved.
          * @returns {Catalog} A document citation for the updated draft document.
          */
         saveDraft: function(citation, draft) {
+            citation = citation.type === bali.types.REFERENCE ? notary.extractCitation(citation) : citation;
             var documentId = extractId(citation);
             if (cache.documentExists(documentId) || repository.documentExists(documentId)) {
                 throw new Error('API: The draft being saved is already committed: ' + documentId);
@@ -179,9 +184,10 @@ exports.api = function(notary, repository) {
          * This method deletes from the Bali Nebula™ the saved draft document
          * associated with the specified document citation.
          * 
-         * @param {Catalog} citation The document citation for the draft document to be deleted.
+         * @param {Reference|Catalog} citation The document citation for the draft document to be deleted.
          */
         discardDraft: function(citation) {
+            citation = citation.type === bali.types.REFERENCE ? notary.extractCitation(citation) : citation;
             var documentId = extractId(citation);
             repository.deleteDraft(documentId);
         },
@@ -190,11 +196,12 @@ exports.api = function(notary, repository) {
          * This method commits to the Bali Nebula™ the specified draft document
          * to be associated with the specified document citation.
          * 
-         * @param {Catalog} citation The document citation for the draft document.
+         * @param {Reference|Catalog} citation The document citation for the draft document.
          * @param {Component} document The draft document to be committed.
          * @returns {Catalog} The updated citation for the committed document.
          */
         commitDocument: function(citation, document) {
+            citation = citation.type === bali.types.REFERENCE ? notary.extractCitation(citation) : citation;
             var documentId = extractId(citation);
             if (cache.documentExists(documentId) || repository.documentExists(documentId)) {
                 throw new Error('API: The draft document being committed has already been committed: ' + documentId);
@@ -210,10 +217,11 @@ exports.api = function(notary, repository) {
          * This method retrieves from the Bali Nebula™ the committed document
          * for the specified document citation.
          * 
-         * @param {Catalog} citation The document citation for the desired document.
+         * @param {Reference|Catalog} citation The document citation for the desired document.
          * @returns {Component} The desired document.
          */
         retrieveDocument: function(citation) {
+            citation = citation.type === bali.types.REFERENCE ? notary.extractCitation(citation) : citation;
             var documentId = extractId(citation);
             var document = cache.fetchDocument(documentId);
             if (!document) {
@@ -240,12 +248,13 @@ exports.api = function(notary, repository) {
          *     level 2:    v5.7              v5.7.1     (changes being tested)
          * </pre>
          * 
-         * @param {Catalog} citation The document citation for the committed document.
+         * @param {Reference|Catalog} citation The document citation for the committed document.
          * @param {Number} level The (optional) version level that should be incremented. If no
          * level is specified, the last number in the document version string is incremented.
          * @returns {Catalog} The document citation for the new draft document.
          */
         checkoutDocument: function(citation, level) {
+            citation = citation.type === bali.types.REFERENCE ? notary.extractCitation(citation) : citation;
             // create the draft citation
             var documentVersion = citation.getValue('$version');
             var draftVersion = bali.Version.nextVersion(documentVersion, level);
