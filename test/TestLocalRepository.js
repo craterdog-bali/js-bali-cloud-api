@@ -8,12 +8,12 @@
  * Source Initiative. (See http://opensource.org/licenses/MIT)          *
  ************************************************************************/
 
-var mocha = require('mocha');
-var expect = require('chai').expect;
-var LocalRepository = require('../src/LocalRepository');
-var repository = LocalRepository.api('test/config/');
+const mocha = require('mocha');
+const expect = require('chai').expect;
+const LocalRepository = require('../src/LocalRepository');
+const repository = LocalRepository.api('test/config/');
 
-var source =
+const source =
     '[\n' +
     '    $date: <2018-04-01>\n' +
     '    $product: "Snickers Bar"\n' +
@@ -28,7 +28,7 @@ describe('Bali Nebula API™', function() {
     describe('Test LocalRepository', function() {
 
         it('should perform a draft document lifecycle', function() {
-            var identifier = '#NZRRDAB94B4ZH0WDRT5N3TGX2ZTVMSV2v1.2.3';
+            const identifier = '#NZRRDAB94B4ZH0WDRT5N3TGX2ZTVMSV2v1.2.3';
 
             // store a new draft in the repository
             repository.storeDraft(identifier, source);
@@ -42,7 +42,7 @@ describe('Bali Nebula API™', function() {
             expect(exists).is.false;  // jshint ignore:line
 
             // fetch the new draft from the repository
-            var draft = repository.fetchDraft(identifier);
+            const draft = repository.fetchDraft(identifier);
             expect(draft).to.equal(source);
 
             // delete the new draft from the repository
@@ -57,21 +57,21 @@ describe('Bali Nebula API™', function() {
         });
 
         it('should perform a committed document lifecycle', function() {
-            var identifier = '#YK4KPZHX2ZPVS0NNK2YH368XP7FR05Y9v3.4';
+            const identifier = '#YK4KPZHX2ZPVS0NNK2YH368XP7FR05Y9v3.4';
 
             // store a new document in the repository
             repository.storeDocument(identifier, source);
 
             // make sure the same draft does not exist in the repository
-            exists = repository.draftExists(identifier);
+            var exists = repository.draftExists(identifier);
             expect(exists).is.false;  // jshint ignore:line
 
             // make sure the new document exists in the repository
-            var exists = repository.documentExists(identifier);
+            exists = repository.documentExists(identifier);
             expect(exists).is.true;  // jshint ignore:line
 
             // fetch the new document from the repository
-            var document = repository.fetchDocument(identifier);
+            const document = repository.fetchDocument(identifier);
             expect(document).to.equal(source);
 
             // make sure the new document still exists in the repository
@@ -83,14 +83,14 @@ describe('Bali Nebula API™', function() {
         });
 
         it('should perform a message queue lifecycle', function() {
-            var queue = '#QSZNT8ABGSF75XR8FWHMYQCKTVK2WCPY';
-            var message;
+            const queue = '#QSZNT8ABGSF75XR8FWHMYQCKTVK2WCPY';
 
             // make sure the message queue is empty
             var none = repository.dequeueMessage(queue);
             expect(none).to.not.exist;  // jshint ignore:line
 
             // queue up some messages
+            var message;
             for (var i = 0; i < 3; i++) {
                 // place a new message on the queue
                 message = i.toString();

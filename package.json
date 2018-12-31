@@ -23,16 +23,18 @@
   "homepage": "https://github.com/craterdog-bali/js-bali-nebula-api#readme",
   "devDependencies": {
     "chai": "^4.2.0",
+    "mocha": "^5.2.0",
     "grunt": "^1.0.3",
     "grunt-contrib-clean": "^2.0.0",
     "grunt-contrib-concat": "^1.0.1",
     "grunt-contrib-jshint": "^2.0.0",
     "grunt-contrib-uglify": "^4.0.0",
     "grunt-mocha-test": "^0.13.3",
-    "mocha": "^5.2.0"
+    "grunt-webpack": "^3.1.3",
+    "webpack": "^4.28.2"
   },
   "dependencies": {
-    "bali-component-framework": "^1.4.14",
-    "bali-digital-notary": "^1.3.3"
+    "bali-component-framework": "^1.5.0",
+    "bali-digital-notary": "^1.3.4"
   }
 }

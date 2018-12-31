@@ -22,8 +22,9 @@
  * and used as the repository. Otherwise, a repository directory will be created and
  * used within a '.bali/' directory in the home directory for the running process.
  */
-var fs = require('fs');
-var homeDirectory = require('os').homedir() + '/.bali/';
+const fs = require('fs');
+const os = require('os');
+const bali = require('bali-component-framework');
 
 
 /**
@@ -35,16 +36,17 @@ var homeDirectory = require('os').homedir() + '/.bali/';
  * @returns {Object} An object containing the functions that the repository supports.
  */
 exports.api = function(testDirectory) {
-    if (testDirectory) homeDirectory = testDirectory;
-    var repositoryDirectory = homeDirectory + 'repository/';
-    var certificates = repositoryDirectory + 'certificates/';
-    var drafts = repositoryDirectory + 'drafts/';
-    var documents = repositoryDirectory + 'documents/';
-    var types = repositoryDirectory + 'types/';
-    var queues = repositoryDirectory + 'queues/';
+    // create the config directory if necessary
+    const configDirectory = testDirectory || os.homedir() + '/.bali/';
+    const repositoryDirectory = configDirectory + 'repository/';
+    const certificates = repositoryDirectory + 'certificates/';
+    const drafts = repositoryDirectory + 'drafts/';
+    const documents = repositoryDirectory + 'documents/';
+    const types = repositoryDirectory + 'types/';
+    const queues = repositoryDirectory + 'queues/';
     try {
         // create the repository directory structure if necessary (with drwx------ permissions)
-        if (!fs.existsSync(homeDirectory)) fs.mkdirSync(homeDirectory, 448);
+        if (!fs.existsSync(configDirectory)) fs.mkdirSync(configDirectory, 448);
         if (!fs.existsSync(repositoryDirectory)) fs.mkdirSync(repositoryDirectory, 448);
         if (!fs.existsSync(certificates)) fs.mkdirSync(certificates, 448);
         if (!fs.existsSync(drafts)) fs.mkdirSync(drafts, 448);
@@ -63,8 +65,8 @@ exports.api = function(testDirectory) {
         },
 
         certificateExists: function(certificateId) {
-            var filename = certificates + certificateId + '.bdoc';
             try {
+                const filename = certificates + certificateId + '.bdoc';
                 return fs.existsSync(filename);
             } catch (e) {
                 throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
@@ -72,31 +74,25 @@ exports.api = function(testDirectory) {
         },
 
         fetchCertificate: function(certificateId) {
-            var filename = certificates + certificateId + '.bdoc';
-            var certificate;
             try {
+                const filename = certificates + certificateId + '.bdoc';
                 if (fs.existsSync(filename)) {
-                    certificate = fs.readFileSync(filename).toString().slice(0, -1);  // remove POSIX compliant <EOL>
+                    const certificate = fs.readFileSync(filename).toString().slice(0, -1);  // remove POSIX compliant <EOL>
+                    return certificate;
                 }
             } catch (e) {
                 throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
             }
-            return certificate;
         },
 
         storeCertificate: function(certificateId, certificate) {
-            var filename = certificates + certificateId + '.bdoc';
-            var exists;
             try {
-                exists = fs.existsSync(filename);
-            } catch (e) {
-                throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
-            }
-            if (exists) {
-                throw new Error('REPOSITORY: The following certificate already exists in the filesystem: ' + certificateId);
-            }
-            try {
-                var document = certificate.toString() + '\n';  // add POSIX compliant <EOL>
+                const filename = certificates + certificateId + '.bdoc';
+                const exists = fs.existsSync(filename);
+                if (exists) {
+                    throw new Error('REPOSITORY: The following certificate already exists in the filesystem: ' + certificateId);
+                }
+                const document = certificate.toString() + '\n';  // add POSIX compliant <EOL>
                 fs.writeFileSync(filename, document, {encoding: 'utf8', mode: 256});
             } catch (e) {
                 throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
@@ -104,8 +100,8 @@ exports.api = function(testDirectory) {
         },
 
         draftExists: function(draftId) {
-            var filename = drafts + draftId + '.bdoc';
             try {
+                const filename = drafts + draftId + '.bdoc';
                 return fs.existsSync(filename);
             } catch (e) {
                 throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
@@ -113,22 +109,21 @@ exports.api = function(testDirectory) {
         },
 
         fetchDraft: function(draftId) {
-            var filename = drafts + draftId + '.bdoc';
-            var draft;
             try {
+                const filename = drafts + draftId + '.bdoc';
                 if (fs.existsSync(filename)) {
-                    draft = fs.readFileSync(filename).toString().slice(0, -1);  // remove POSIX compliant <EOL>
+                    const draft = fs.readFileSync(filename).toString().slice(0, -1);  // remove POSIX compliant <EOL>
+                    return draft;
                 }
             } catch (e) {
                 throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
             }
-            return draft;
         },
 
         storeDraft: function(draftId, draft) {
-            var filename = drafts + draftId + '.bdoc';
             try {
-                var document = draft.toString() + '\n';  // add POSIX compliant <EOL>
+                const filename = drafts + draftId + '.bdoc';
+                const document = draft.toString() + '\n';  // add POSIX compliant <EOL>
                 fs.writeFileSync(filename, document, {encoding: 'utf8', mode: 384});
             } catch (e) {
                 throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
@@ -136,8 +131,8 @@ exports.api = function(testDirectory) {
         },
 
         deleteDraft: function(draftId) {
-            var filename = drafts + draftId + '.bdoc';
             try {
+                const filename = drafts + draftId + '.bdoc';
                 if (fs.existsSync(filename)) {
                     fs.unlinkSync(filename);
                 }
@@ -147,8 +142,8 @@ exports.api = function(testDirectory) {
         },
 
         documentExists: function(documentId) {
-            var filename = documents + documentId + '.bdoc';
             try {
+                const filename = documents + documentId + '.bdoc';
                 return fs.existsSync(filename);
             } catch (e) {
                 throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
@@ -156,30 +151,24 @@ exports.api = function(testDirectory) {
         },
 
         fetchDocument: function(documentId) {
-            var filename = documents + documentId + '.bdoc';
-            var document;
             try {
+                const filename = documents + documentId + '.bdoc';
                 if (fs.existsSync(filename)) {
-                    document = fs.readFileSync(filename).toString().slice(0, -1);  // remove POSIX compliant <EOL>
+                    const document = fs.readFileSync(filename).toString().slice(0, -1);  // remove POSIX compliant <EOL>
+                    return document;
                 }
             } catch (e) {
                 throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
             }
-            return document;
         },
 
         storeDocument: function(documentId, document) {
-            var filename = documents + documentId + '.bdoc';
-            var exists;
             try {
-                exists = fs.existsSync(filename);
-            } catch (e) {
-                throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
-            }
-            if (exists) {
-                throw new Error('REPOSITORY: The following document already exists in the filesystem: ' + documentId);
-            }
-            try {
+                const filename = documents + documentId + '.bdoc';
+                const exists = fs.existsSync(filename);
+                if (exists) {
+                    throw new Error('REPOSITORY: The following document already exists in the filesystem: ' + documentId);
+                }
                 document = document.toString() + '\n';  // add POSIX compliant <EOL>
                 fs.writeFileSync(filename, document, {encoding: 'utf8', mode: 256});
             } catch (e) {
@@ -188,8 +177,8 @@ exports.api = function(testDirectory) {
         },
 
         typeExists: function(typeId) {
-            var filename = types + typeId + '.bdoc';
             try {
+                const filename = types + typeId + '.bdoc';
                 return fs.existsSync(filename);
             } catch (e) {
                 throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
@@ -197,31 +186,25 @@ exports.api = function(testDirectory) {
         },
 
         fetchType: function(typeId) {
-            var filename = types + typeId + '.bdoc';
-            var type;
             try {
+                const filename = types + typeId + '.bdoc';
                 if (fs.existsSync(filename)) {
-                    type = fs.readFileSync(filename).toString().slice(0, -1);  // remove POSIX compliant <EOL>
+                    const type = fs.readFileSync(filename).toString().slice(0, -1);  // remove POSIX compliant <EOL>
+                    return type;
                 }
             } catch (e) {
                 throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
             }
-            return type;
         },
 
         storeType: function(typeId, type) {
-            var filename = types + typeId + '.bdoc';
-            var exists;
             try {
-                exists = fs.existsSync(filename);
-            } catch (e) {
-                throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
-            }
-            if (exists) {
-                throw new Error('REPOSITORY: The following type already exists in the filesystem: ' + typeId);
-            }
-            try {
-                var document = type.toString() + '\n';  // add POSIX compliant <EOL>
+                const filename = types + typeId + '.bdoc';
+                const exists = fs.existsSync(filename);
+                if (exists) {
+                    throw new Error('REPOSITORY: The following type already exists in the filesystem: ' + typeId);
+                }
+                const document = type.toString() + '\n';  // add POSIX compliant <EOL>
                 fs.writeFileSync(filename, document, {encoding: 'utf8', mode: 256});
             } catch (e) {
                 throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
@@ -229,20 +212,15 @@ exports.api = function(testDirectory) {
         },
 
         queueMessage: function(queue, messageId, message) {
-            var directory = queues + queue + '/';
-            var filename = directory + messageId + '.bdoc';
-            var exists;
             try {
+                const directory = queues + queue + '/';
+                const filename = directory + messageId + '.bdoc';
                 if (!fs.existsSync(directory)) fs.mkdirSync(directory);
-                exists = fs.existsSync(filename);
-            } catch (e) {
-                throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
-            }
-            if (exists) {
-                throw new Error('REPOSITORY: The following message already exists in the queue: ' + messageId);
-            }
-            try {
-                var document = message.toString() + '\n';  // add POSIX compliant <EOL>
+                const exists = fs.existsSync(filename);
+                if (exists) {
+                    throw new Error('REPOSITORY: The following message already exists in the queue: ' + messageId);
+                }
+                const document = message.toString() + '\n';  // add POSIX compliant <EOL>
                 fs.writeFileSync(filename, document, {encoding: 'utf8', mode: 384});
             } catch (e) {
                 throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
@@ -250,20 +228,17 @@ exports.api = function(testDirectory) {
         },
 
         dequeueMessage: function(queue) {
-            var directory = queues + queue + '/';
-            var message;
             try {
+                var message;
+                const directory = queues + queue + '/';
                 while (fs.existsSync(directory)) {
-                    var messages = fs.readdirSync(directory);
-                    var count = messages.length;
+                    const messages = fs.readdirSync(directory);
+                    const count = messages.length;
                     if (count) {
-                        var index = 0;
-                        if (count > 1) {
-                            // select a message a random since a distributed queue cannot guarantee FIFO
-                            index = Math.floor(Math.random() * Math.floor(count));
-                        }
-                        var messageId = messages[index];
-                        var filename = directory + messageId;
+                        // select a message a random since a distributed queue cannot guarantee FIFO
+                        const index = bali.random.index(count) - 1;  // convert to zero based indexing
+                        const messageId = messages[index];
+                        const filename = directory + messageId;
                         message = fs.readFileSync(filename).toString().slice(0, -1);  // remove POSIX compliant <EOL>
                         try {
                             fs.unlinkSync(filename);
@@ -276,10 +251,10 @@ exports.api = function(testDirectory) {
                         break;  // no more messages
                     }
                 }
+                return message;
             } catch (e) {
                 throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
             }
-            return message;
         }
 
     };

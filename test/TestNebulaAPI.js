@@ -8,12 +8,12 @@
  * Source Initiative. (See http://opensource.org/licenses/MIT)          *
  ************************************************************************/
 
-var mocha = require('mocha');
-var expect = require('chai').expect;
-var bali = require('bali-component-framework');
-var notary = require('bali-digital-notary');
-var nebula = require('../src/NebulaAPI');
-var repository = require('../src/LocalRepository').api('test/config/');
+const mocha = require('mocha');
+const expect = require('chai').expect;
+const bali = require('bali-component-framework');
+const notary = require('bali-digital-notary');
+const nebula = require('../src/NebulaAPI');
+const repository = require('../src/LocalRepository').api('test/config/');
 
 describe('Bali Nebula API™', function() {
     var consumerNotary;
@@ -38,7 +38,7 @@ describe('Bali Nebula API™', function() {
             expect(consumerCertificate).to.exist;  // jshint ignore:line
             consumerCitation = consumerNotary.getNotaryCitation();
             expect(consumerCitation).to.exist;  // jshint ignore:line
-            var certificateId = '' + consumerCitation.getValue('$tag') + consumerCitation.getValue('$version');
+            const certificateId = '' + consumerCitation.getValue('$tag') + consumerCitation.getValue('$version');
             repository.storeCertificate(certificateId, consumerCertificate);
         });
 
@@ -49,14 +49,14 @@ describe('Bali Nebula API™', function() {
             expect(merchantCertificate).to.exist;  // jshint ignore:line
             merchantCitation = merchantNotary.getNotaryCitation();
             expect(merchantCitation).to.exist;  // jshint ignore:line
-            var certificateId = '' + merchantCitation.getValue('$tag') + merchantCitation.getValue('$version');
+            const certificateId = '' + merchantCitation.getValue('$tag') + merchantCitation.getValue('$version');
             repository.storeCertificate(certificateId, merchantCertificate);
         });
 
         it('should setup the client environment for the consumer', function() {
             consumerClient = nebula.api(consumerNotary, repository);
             expect(consumerClient).to.exist;  // jshint ignore:line
-            var citation = consumerClient.retrieveCitation();
+            const citation = consumerClient.retrieveCitation();
             expect(citation).to.exist;  // jshint ignore:line
             expect(citation.isEqualTo(consumerCitation)).to.equal(true);
             consumerCertificate = consumerClient.retrieveCertificate(consumerCitation);
@@ -66,7 +66,7 @@ describe('Bali Nebula API™', function() {
         it('should setup the client environment for the merchant', function() {
             merchantClient = nebula.api(merchantNotary, repository);
             expect(merchantClient).to.exist;  // jshint ignore:line
-            var citation = merchantClient.retrieveCitation();
+            const citation = merchantClient.retrieveCitation();
             expect(citation).to.exist;  // jshint ignore:line
             expect(citation.isEqualTo(merchantCitation)).to.equal(true);
             merchantCertificate = merchantClient.retrieveCertificate(merchantCitation);
@@ -125,7 +125,7 @@ describe('Bali Nebula API™', function() {
         var documentCitation;
 
         it('should create a new draft document from a component', function() {
-            var catalog = new bali.Catalog();
+            const catalog = new bali.Catalog();
             catalog.setValue('$foo', '"bar"');
             draftCitation = consumerClient.createDraft(catalog);
             draft = consumerClient.retrieveDraft(draftCitation);
@@ -142,7 +142,7 @@ describe('Bali Nebula API™', function() {
         });
 
         it('should retrieve the committed document from the repository', function() {
-            var newSource = document.toString();
+            const newSource = document.toString();
             document = consumerClient.retrieveDocument(documentCitation);
             expect(document).to.exist;  // jshint ignore:line
             expect(document.toString()).to.equal(newSource);
@@ -183,7 +183,7 @@ describe('Bali Nebula API™', function() {
         });
 
         it('should make sure the new document still exists in the repository', function() {
-            var newSource = document.toString();
+            const newSource = document.toString();
             document = consumerClient.retrieveDocument(documentCitation);
             expect(document).to.exist;  // jshint ignore:line
             expect(document.toString()).to.equal(newSource);
@@ -195,17 +195,17 @@ describe('Bali Nebula API™', function() {
         var typeCitation;
 
         it('should allow a new compiled type to be committed', function() {
-            var type = new bali.Catalog();
+            const type = new bali.Catalog();
             type.setValue('$foo', '"bar"');
-            var documentCitation = merchantClient.createDraft(type);
+            const documentCitation = merchantClient.createDraft(type);
             typeCitation = merchantClient.commitType(documentCitation, type);
             expect(typeCitation).to.exist;  // jshint ignore:line
         });
 
         it('should allow a compiled type to be retrieved', function() {
-            var expected = merchantClient.retrieveType(typeCitation);
+            const expected = merchantClient.retrieveType(typeCitation);
             expect(expected).to.exist;  // jshint ignore:line
-            var type = consumerClient.retrieveType(typeCitation);
+            const type = consumerClient.retrieveType(typeCitation);
             expect(type).to.exist;  // jshint ignore:line
             expect(type.toString()).to.equal(expected.toString());
         });
@@ -213,8 +213,8 @@ describe('Bali Nebula API™', function() {
     });
 
     describe('Test Messages', function() {
-        var queue = new bali.Tag('#QSZNT8ABGSF75XR8FWHMYQCKTVK2WCPY');
-        var source =
+        const queue = new bali.Tag('#QSZNT8ABGSF75XR8FWHMYQCKTVK2WCPY');
+        const source =
             '[\n' +
             '    $date: <2018-04-01>\n' +
             '    $product: "Snickers Bar"\n' +
@@ -225,7 +225,7 @@ describe('Bali Nebula API™', function() {
             ']\n';
 
         it('should allow the merchant to verify that the queue is empty', function() {
-            var message = merchantClient.receiveMessage(queue);
+            const message = merchantClient.receiveMessage(queue);
             expect(message).to.not.exist;  // jshint ignore:line
         });
 
@@ -256,14 +256,14 @@ describe('Bali Nebula API™', function() {
     });
 
     describe('Test Events', function() {
-        var source =
+        const source =
             '[\n' +
             '    $type: $TransactionPosted\n' +
             '    $transaction: <bali:[$protocol:v1,$tag:#WTFL0GLK7V5SJBZKCX9NH0KQWH0JYBL9,$version:v1,$hash:\'R5BXA11KMC4W117RNY197MQVJ78VND18FXTXPT1A0PL2TYKYPHZTAAVVA6FHBRZ9N46P7102GSY8PVTQBBFTF3QYS8Q02H9S3ZLP8L8\']>\n' +
             ']\n';
 
         it('should allow the merchant to publish an event', function() {
-            var event = bali.parser.parseDocument(source);
+            const event = bali.parser.parseDocument(source);
             merchantClient.publishEvent(event);
         });
 
