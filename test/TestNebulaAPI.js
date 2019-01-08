@@ -213,7 +213,7 @@ describe('Bali Nebula API™', function() {
     });
 
     describe('Test Messages', function() {
-        const queue = new bali.Tag('#QSZNT8ABGSF75XR8FWHMYQCKTVK2WCPY');
+        const queue = bali.Tag.from('#QSZNT8ABGSF75XR8FWHMYQCKTVK2WCPY');
         const source =
             '[\n' +
             '    $date: <2018-04-01>\n' +
