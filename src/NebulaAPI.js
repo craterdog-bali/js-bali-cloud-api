@@ -31,8 +31,8 @@ const NotarizedDocument = require('bali-digital-notary/src/NotarizedDocument').N
  * @returns {Object} An object that implements the API for the Bali Nebula™.
  */
 exports.api = function(notary, repository) {
-    const SEND_QUEUE_TAG = bali.Tag.from('#JXT095QY01HBLHPAW04ZR5WSH41MWG4H');
-    const EVENT_QUEUE_TAG = bali.Tag.from('#3RMGDVN7D6HLAPFXQNPF7DV71V3MAL43');
+    const SEND_QUEUE_TAG = bali.Tag.fromLiteral('#JXT095QY01HBLHPAW04ZR5WSH41MWG4H');
+    const EVENT_QUEUE_TAG = bali.Tag.fromLiteral('#3RMGDVN7D6HLAPFXQNPF7DV71V3MAL43');
 
     // return the client API instance
     return {
@@ -132,7 +132,7 @@ exports.api = function(notary, repository) {
             const citation = notary.createCitation(tag);
             const draftId = extractId(citation);
             const notarizedDraft = notary.notarizeDocument(citation, draft);
-            citation.setValue('$digest', bali.Pattern.from('none'));  // drafts are mutable so no digest
+            citation.setValue('$digest', bali.Pattern.fromLiteral('none'));  // drafts are mutable so no digest
             repository.storeDraft(draftId, notarizedDraft);
             // we don't cache drafts since they are mutable
             return citation;
@@ -173,7 +173,7 @@ exports.api = function(notary, repository) {
                 throw new Error('API: The draft being saved is already committed: ' + documentId);
             }
             const notarizedDraft = notary.notarizeDocument(citation, draft);
-            citation.setValue('$digest', bali.Pattern.from('none'));  // drafts are mutable so no digest
+            citation.setValue('$digest', bali.Pattern.fromLiteral('none'));  // drafts are mutable so no digest
             repository.storeDraft(documentId, notarizedDraft);
             // we don't cache drafts since they are mutable
             return citation;
@@ -262,7 +262,7 @@ exports.api = function(notary, repository) {
             draftCitation.setValue('$protocol', citation.getValue('$protocol'));
             draftCitation.setValue('$tag', citation.getValue('$tag'));
             draftCitation.setValue('$version', draftVersion);
-            draftCitation.setValue('$digest', bali.Pattern.from('none'));
+            draftCitation.setValue('$digest', bali.Pattern.fromLiteral('none'));
 
             // make sure that there is no document already referenced by the draft citation
             const draftId = extractId(draftCitation);
@@ -287,7 +287,7 @@ exports.api = function(notary, repository) {
             // store a draft copy of the document in the repository (NOTE: drafts are not cached)
             const reference = notary.createReference(citation);
             const draft = notary.notarizeDocument(draftCitation, content, reference);
-            draftCitation.setValue('$digest', bali.Pattern.from('none'));  // drafts are mutable so no digest
+            draftCitation.setValue('$digest', bali.Pattern.fromLiteral('none'));  // drafts are mutable so no digest
             repository.storeDraft(draftId, draft);
 
             return draftCitation;
@@ -423,7 +423,7 @@ function validateCertificate(notary, citation, document) {
  */
 function validateDocument(notary, repository, document) {
     var certificateCitation = notary.extractCitation(document.certificate);
-    while (!certificateCitation.getValue('$digest').isEqualTo(bali.Pattern.from('none'))) {
+    while (!certificateCitation.getValue('$digest').isEqualTo(bali.Pattern.fromLiteral('none'))) {
         const certificateId = extractId(certificateCitation);
         var certificate = cache.fetchCertificate(certificateId);
         if (!certificate) {
