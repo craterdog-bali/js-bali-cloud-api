@@ -11,7 +11,7 @@
 const mocha = require('mocha');
 const expect = require('chai').expect;
 const bali = require('bali-component-framework');
-const notary = require('bali-digital-notary');
+const digitalNotary = require('bali-digital-notary');
 const nebula = require('../src/NebulaAPI');
 const repository = require('../src/LocalRepository').api('test/config/');
 
@@ -32,7 +32,7 @@ describe('Bali Nebula API™', function() {
         });
 
         it('should setup the digital notary for the consumer', function() {
-            consumerNotary = notary.api('test/config/consumer/');
+            consumerNotary = digitalNotary.api('test/config/consumer/');
             expect(consumerNotary).to.exist;  // jshint ignore:line
             consumerCertificate = consumerNotary.generateKeys();
             expect(consumerCertificate).to.exist;  // jshint ignore:line
@@ -43,7 +43,7 @@ describe('Bali Nebula API™', function() {
         });
 
         it('should setup the digital notary for the merchant', function() {
-            merchantNotary = notary.api('test/config/merchant/');
+            merchantNotary = digitalNotary.api('test/config/merchant/');
             expect(merchantNotary).to.exist;  // jshint ignore:line
             merchantCertificate = merchantNotary.generateKeys();
             expect(merchantCertificate).to.exist;  // jshint ignore:line

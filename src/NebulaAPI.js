@@ -20,7 +20,7 @@
  * This library provides useful functions for accessing the Bali Environment™.
  */
 const bali = require('bali-component-framework');
-const NotarizedDocument = require('bali-digital-notary/src/NotarizedDocument').NotarizedDocument;
+const digitalNotary = require('bali-digital-notary');
 
 
 /**
@@ -62,7 +62,7 @@ exports.api = function(notary, repository) {
             if (!certificate) {
                 const source = repository.fetchCertificate(certificateId);
                 if (source) {
-                    const notarizedCertificate = NotarizedDocument.fromString(source);
+                    const notarizedCertificate = digitalNotary.NotarizedDocument.fromString(source);
                     validateCertificate(notary, citation, notarizedCertificate);
                     certificate = bali.parser.parseDocument(notarizedCertificate.content);
                     cache.storeCertificate(certificateId, certificate);
@@ -86,7 +86,7 @@ exports.api = function(notary, repository) {
             if (!type) {
                 const source = repository.fetchType(typeId);
                 if (source) {
-                    const notarizedType = NotarizedDocument.fromString(source);
+                    const notarizedType = digitalNotary.NotarizedDocument.fromString(source);
                     validateDocument(notary, repository, notarizedType);
                     type = bali.parser.parseDocument(notarizedType.content);
                     cache.storeType(typeId, type);
@@ -150,7 +150,7 @@ exports.api = function(notary, repository) {
             const documentId = extractId(citation);
             const source = repository.fetchDraft(documentId);
             if (source) {
-                const notarizedDraft = NotarizedDocument.fromString(source);
+                const notarizedDraft = digitalNotary.NotarizedDocument.fromString(source);
                 validateDocument(notary, repository, notarizedDraft);
                 const draft = bali.parser.parseDocument(notarizedDraft.content);
                 // we don't cache drafts since they are mutable
@@ -226,7 +226,7 @@ exports.api = function(notary, repository) {
             if (!document) {
                 const source = repository.fetchDocument(documentId);
                 if (source) {
-                    const notarizedDocument = NotarizedDocument.fromString(source);
+                    const notarizedDocument = digitalNotary.NotarizedDocument.fromString(source);
                     validateCitation(notary, citation, notarizedDocument);
                     validateDocument(notary, repository, notarizedDocument);
                     document = bali.parser.parseDocument(notarizedDocument.content);
@@ -278,7 +278,7 @@ exports.api = function(notary, repository) {
             }
 
             // validate and cache the document
-            const document = NotarizedDocument.fromString(source);
+            const document = digitalNotary.NotarizedDocument.fromString(source);
             validateCitation(notary, citation, document);
             validateDocument(notary, repository, document);
             const content = bali.parser.parseDocument(document.content);
@@ -357,7 +357,7 @@ exports.api = function(notary, repository) {
             const source = repository.dequeueMessage(queue);
             if (source) {
                 // validate the document
-                const notarizedMessage = NotarizedDocument.fromString(source);
+                const notarizedMessage = digitalNotary.NotarizedDocument.fromString(source);
                 validateDocument(notary, repository, notarizedMessage);
                 const message = bali.parser.parseDocument(notarizedMessage.content);
                 return message;
@@ -429,7 +429,7 @@ function validateDocument(notary, repository, document) {
         if (!certificate) {
             const source = repository.fetchCertificate(certificateId);
             if (source) {
-                const certificateDocument = NotarizedDocument.fromString(source);
+                const certificateDocument = digitalNotary.NotarizedDocument.fromString(source);
                 validateCertificate(notary, certificateCitation, certificateDocument);
                 certificate = bali.parser.parseDocument(certificateDocument.content);
                 cache.storeCertificate(certificateId, certificate);
