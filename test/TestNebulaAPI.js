@@ -231,7 +231,7 @@ describe('Bali Nebula API™', function() {
 
         it('should allow the consumer to place some transactions on the queue', function() {
             for (var i = 0; i < 3; i++) {
-                transaction = bali.parser.parseDocument(source);
+                transaction = bali.parse(source);
                 consumerClient.queueMessage(queue, transaction);
             }
         });
@@ -263,7 +263,7 @@ describe('Bali Nebula API™', function() {
             ']\n';
 
         it('should allow the merchant to publish an event', function() {
-            const event = bali.parser.parseDocument(source);
+            const event = bali.parse(source);
             merchantClient.publishEvent(event);
         });
 

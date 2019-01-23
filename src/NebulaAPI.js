@@ -64,7 +64,7 @@ exports.api = function(notary, repository) {
                 if (source) {
                     const notarizedCertificate = NotarizedDocument.fromString(source);
                     validateCertificate(notary, citation, notarizedCertificate);
-                    certificate = bali.parser.parseDocument(notarizedCertificate.content);
+                    certificate = bali.parse(notarizedCertificate.content);
                     cache.storeCertificate(certificateId, certificate);
                 }
             }
@@ -88,7 +88,7 @@ exports.api = function(notary, repository) {
                 if (source) {
                     const notarizedType = NotarizedDocument.fromString(source);
                     validateDocument(notary, repository, notarizedType);
-                    type = bali.parser.parseDocument(notarizedType.content);
+                    type = bali.parse(notarizedType.content);
                     cache.storeType(typeId, type);
                 }
             }
@@ -152,7 +152,7 @@ exports.api = function(notary, repository) {
             if (source) {
                 const notarizedDraft = NotarizedDocument.fromString(source);
                 validateDocument(notary, repository, notarizedDraft);
-                const draft = bali.parser.parseDocument(notarizedDraft.content);
+                const draft = bali.parse(notarizedDraft.content);
                 // we don't cache drafts since they are mutable
                 return draft;
             }
@@ -229,7 +229,7 @@ exports.api = function(notary, repository) {
                     const notarizedDocument = NotarizedDocument.fromString(source);
                     validateCitation(notary, citation, notarizedDocument);
                     validateDocument(notary, repository, notarizedDocument);
-                    document = bali.parser.parseDocument(notarizedDocument.content);
+                    document = bali.parse(notarizedDocument.content);
                     cache.storeDocument(documentId, document);
                 }
             }
@@ -281,7 +281,7 @@ exports.api = function(notary, repository) {
             const document = NotarizedDocument.fromString(source);
             validateCitation(notary, citation, document);
             validateDocument(notary, repository, document);
-            const content = bali.parser.parseDocument(document.content);
+            const content = bali.parse(document.content);
             cache.storeDocument(documentId, content);
 
             // store a draft copy of the document in the repository (NOTE: drafts are not cached)
@@ -359,7 +359,7 @@ exports.api = function(notary, repository) {
                 // validate the document
                 const notarizedMessage = NotarizedDocument.fromString(source);
                 validateDocument(notary, repository, notarizedMessage);
-                const message = bali.parser.parseDocument(notarizedMessage.content);
+                const message = bali.parse(notarizedMessage.content);
                 return message;
             }
         }
@@ -406,7 +406,7 @@ function validateCertificate(notary, citation, document) {
     if (!notary.documentMatches(citation, document)) {
         throw new Error('API: The following certificate has been modified since it was committed: ' + document);
     }
-    const certificate = bali.parser.parseDocument(document.content);
+    const certificate = bali.parse(document.content);
     if (!notary.documentIsValid(certificate, document)) {
         throw new Error('API: The following certificate is invalid:\n' + document);
     }
@@ -431,7 +431,7 @@ function validateDocument(notary, repository, document) {
             if (source) {
                 const certificateDocument = NotarizedDocument.fromString(source);
                 validateCertificate(notary, certificateCitation, certificateDocument);
-                certificate = bali.parser.parseDocument(certificateDocument.content);
+                certificate = bali.parse(certificateDocument.content);
                 cache.storeCertificate(certificateId, certificate);
             } else {
                 throw new Error('API: The certificate for the document does not exist:\n' + certificateId);
