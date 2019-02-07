@@ -36,7 +36,7 @@ describe('Bali Nebula API™', function() {
             expect(consumerNotary).to.exist;  // jshint ignore:line
             consumerCertificate = consumerNotary.generateKeys();
             expect(consumerCertificate).to.exist;  // jshint ignore:line
-            consumerCitation = consumerNotary.getNotaryCitation();
+            consumerCitation = consumerNotary.getCitation();
             expect(consumerCitation).to.exist;  // jshint ignore:line
             const certificateId = '' + consumerCitation.getValue('$tag') + consumerCitation.getValue('$version');
             repository.storeCertificate(certificateId, consumerCertificate);
@@ -47,7 +47,7 @@ describe('Bali Nebula API™', function() {
             expect(merchantNotary).to.exist;  // jshint ignore:line
             merchantCertificate = merchantNotary.generateKeys();
             expect(merchantCertificate).to.exist;  // jshint ignore:line
-            merchantCitation = merchantNotary.getNotaryCitation();
+            merchantCitation = merchantNotary.getCitation();
             expect(merchantCitation).to.exist;  // jshint ignore:line
             const certificateId = '' + merchantCitation.getValue('$tag') + merchantCitation.getValue('$version');
             repository.storeCertificate(certificateId, merchantCertificate);
@@ -125,7 +125,7 @@ describe('Bali Nebula API™', function() {
         var documentCitation;
 
         it('should create a new draft document from a component', function() {
-            const catalog = new bali.Catalog();
+            const catalog = bali.catalog();
             catalog.setValue('$foo', '"bar"');
             draftCitation = consumerClient.createDraft(catalog);
             draft = consumerClient.retrieveDraft(draftCitation);
@@ -195,7 +195,7 @@ describe('Bali Nebula API™', function() {
         var typeCitation;
 
         it('should allow a new compiled type to be committed', function() {
-            const type = new bali.Catalog();
+            const type = bali.catalog();
             type.setValue('$foo', '"bar"');
             const documentCitation = merchantClient.createDraft(type);
             typeCitation = merchantClient.commitType(documentCitation, type);
@@ -213,7 +213,7 @@ describe('Bali Nebula API™', function() {
     });
 
     describe('Test Messages', function() {
-        const queue = bali.Tag.fromLiteral('#QSZNT8ABGSF75XR8FWHMYQCKTVK2WCPY');
+        const queue = bali.parse('#QSZNT8ABGSF75XR8FWHMYQCKTVK2WCPY');
         const source =
             '[\n' +
             '    $date: <2018-04-01>\n' +

@@ -20,7 +20,6 @@
  * This library provides useful functions for accessing the Bali Environment™.
  */
 const bali = require('bali-component-framework');
-const NotarizedDocument = require('bali-digital-notary').NotarizedDocument;
 
 
 /**
@@ -31,8 +30,8 @@ const NotarizedDocument = require('bali-digital-notary').NotarizedDocument;
  * @returns {Object} An object that implements the API for the Bali Nebula™.
  */
 exports.api = function(notary, repository) {
-    const SEND_QUEUE_TAG = bali.Tag.fromLiteral('#JXT095QY01HBLHPAW04ZR5WSH41MWG4H');
-    const EVENT_QUEUE_TAG = bali.Tag.fromLiteral('#3RMGDVN7D6HLAPFXQNPF7DV71V3MAL43');
+    const SEND_QUEUE_TAG = bali.parse('#JXT095QY01HBLHPAW04ZR5WSH41MWG4H');
+    const EVENT_QUEUE_TAG = bali.parse('#3RMGDVN7D6HLAPFXQNPF7DV71V3MAL43');
 
     // return the client API instance
     return {
@@ -44,7 +43,7 @@ exports.api = function(notary, repository) {
          * @returns {Catalog} The certificate citation for this client.
          */
         retrieveCitation: function() {
-            const citation = notary.getNotaryCitation();
+            const citation = notary.getCitation();
             return citation;
         },
         
@@ -62,7 +61,7 @@ exports.api = function(notary, repository) {
             if (!certificate) {
                 const source = repository.fetchCertificate(certificateId);
                 if (source) {
-                    const notarizedCertificate = NotarizedDocument.fromString(source);
+                    const notarizedCertificate = notary.parseDocument(source);
                     validateCertificate(notary, citation, notarizedCertificate);
                     certificate = bali.parse(notarizedCertificate.content);
                     cache.storeCertificate(certificateId, certificate);
@@ -86,7 +85,7 @@ exports.api = function(notary, repository) {
             if (!type) {
                 const source = repository.fetchType(typeId);
                 if (source) {
-                    const notarizedType = NotarizedDocument.fromString(source);
+                    const notarizedType = notary.parseDocument(source);
                     validateDocument(notary, repository, notarizedType);
                     type = bali.parse(notarizedType.content);
                     cache.storeType(typeId, type);
@@ -127,12 +126,12 @@ exports.api = function(notary, repository) {
          * @returns {Catalog} A document citation for the new draft document.
          */
         createDraft: function(draft) {
-            draft = draft || new bali.Catalog();
-            const tag = new bali.Tag();
+            draft = draft || bali.catalog();
+            const tag = bali.tag();
             const citation = notary.createCitation(tag);
             const draftId = extractId(citation);
             const notarizedDraft = notary.notarizeDocument(citation, draft);
-            citation.setValue('$digest', bali.Pattern.fromLiteral('none'));  // drafts are mutable so no digest
+            citation.setValue('$digest', bali.NONE);  // drafts are mutable so no digest
             repository.storeDraft(draftId, notarizedDraft);
             // we don't cache drafts since they are mutable
             return citation;
@@ -150,7 +149,7 @@ exports.api = function(notary, repository) {
             const documentId = extractId(citation);
             const source = repository.fetchDraft(documentId);
             if (source) {
-                const notarizedDraft = NotarizedDocument.fromString(source);
+                const notarizedDraft = notary.parseDocument(source);
                 validateDocument(notary, repository, notarizedDraft);
                 const draft = bali.parse(notarizedDraft.content);
                 // we don't cache drafts since they are mutable
@@ -173,7 +172,7 @@ exports.api = function(notary, repository) {
                 throw new Error('API: The draft being saved is already committed: ' + documentId);
             }
             const notarizedDraft = notary.notarizeDocument(citation, draft);
-            citation.setValue('$digest', bali.Pattern.fromLiteral('none'));  // drafts are mutable so no digest
+            citation.setValue('$digest', bali.NONE);  // drafts are mutable so no digest
             repository.storeDraft(documentId, notarizedDraft);
             // we don't cache drafts since they are mutable
             return citation;
@@ -226,7 +225,7 @@ exports.api = function(notary, repository) {
             if (!document) {
                 const source = repository.fetchDocument(documentId);
                 if (source) {
-                    const notarizedDocument = NotarizedDocument.fromString(source);
+                    const notarizedDocument = notary.parseDocument(source);
                     validateCitation(notary, citation, notarizedDocument);
                     validateDocument(notary, repository, notarizedDocument);
                     document = bali.parse(notarizedDocument.content);
@@ -257,12 +256,12 @@ exports.api = function(notary, repository) {
 
             // create the draft citation
             const documentVersion = citation.getValue('$version');
-            const draftVersion = bali.Version.nextVersion(documentVersion, level);
-            const draftCitation = new bali.Catalog();
+            const draftVersion = bali.version.nextVersion(documentVersion, level);
+            const draftCitation = bali.catalog();
             draftCitation.setValue('$protocol', citation.getValue('$protocol'));
             draftCitation.setValue('$tag', citation.getValue('$tag'));
             draftCitation.setValue('$version', draftVersion);
-            draftCitation.setValue('$digest', bali.Pattern.fromLiteral('none'));
+            draftCitation.setValue('$digest', bali.NONE);
 
             // make sure that there is no document already referenced by the draft citation
             const draftId = extractId(draftCitation);
@@ -278,7 +277,7 @@ exports.api = function(notary, repository) {
             }
 
             // validate and cache the document
-            const document = NotarizedDocument.fromString(source);
+            const document = notary.parseDocument(source);
             validateCitation(notary, citation, document);
             validateDocument(notary, repository, document);
             const content = bali.parse(document.content);
@@ -287,7 +286,7 @@ exports.api = function(notary, repository) {
             // store a draft copy of the document in the repository (NOTE: drafts are not cached)
             const reference = notary.createReference(citation);
             const draft = notary.notarizeDocument(draftCitation, content, reference);
-            draftCitation.setValue('$digest', bali.Pattern.fromLiteral('none'));  // drafts are mutable so no digest
+            draftCitation.setValue('$digest', bali.NONE);  // drafts are mutable so no digest
             repository.storeDraft(draftId, draft);
 
             return draftCitation;
@@ -301,7 +300,7 @@ exports.api = function(notary, repository) {
          * @param {Catalog} event The Bali catalog documenting the event.
          */
         publishEvent: function(event) {
-            const eventId = new bali.Tag();
+            const eventId = bali.tag();
             event.setValue('$tag', eventId);
             const citation = notary.createCitation(eventId);
             const notarizedEvent = notary.notarizeDocument(citation, event);
@@ -318,7 +317,7 @@ exports.api = function(notary, repository) {
          * @param {Catalog} message The message to be sent to the target component.
          */
         sendMessage: function(targetCitation, message) {
-            const messageId = new bali.Tag();
+            const messageId = bali.tag();
             message.setValue('$tag', messageId);
             message.setValue('$target', targetCitation);
             const citation = notary.createCitation(messageId);
@@ -336,7 +335,7 @@ exports.api = function(notary, repository) {
          * @param {Catalog} message The message to be placed on the queue.
          */
         queueMessage: function(queue, message) {
-            const messageId = new bali.Tag();
+            const messageId = bali.tag();
             message.setValue('$tag', messageId);
             const citation = notary.createCitation(messageId);
             const notarizedMessage = notary.notarizeDocument(citation, message);
@@ -357,7 +356,7 @@ exports.api = function(notary, repository) {
             const source = repository.dequeueMessage(queue);
             if (source) {
                 // validate the document
-                const notarizedMessage = NotarizedDocument.fromString(source);
+                const notarizedMessage = notary.parseDocument(source);
                 validateDocument(notary, repository, notarizedMessage);
                 const message = bali.parse(notarizedMessage.content);
                 return message;
@@ -423,13 +422,13 @@ function validateCertificate(notary, citation, document) {
  */
 function validateDocument(notary, repository, document) {
     var certificateCitation = notary.extractCitation(document.certificate);
-    while (!certificateCitation.getValue('$digest').isEqualTo(bali.Pattern.fromLiteral('none'))) {
+    while (!certificateCitation.getValue('$digest').isEqualTo(bali.NONE)) {
         const certificateId = extractId(certificateCitation);
         var certificate = cache.fetchCertificate(certificateId);
         if (!certificate) {
             const source = repository.fetchCertificate(certificateId);
             if (source) {
-                const certificateDocument = NotarizedDocument.fromString(source);
+                const certificateDocument = notary.parseDocument(source);
                 validateCertificate(notary, certificateCitation, certificateDocument);
                 certificate = bali.parse(certificateDocument.content);
                 cache.storeCertificate(certificateId, certificate);
@@ -484,7 +483,7 @@ const cache = {
     storeCertificate: function(certificateId, certificate) {
         if (this.certificates.size > this.MAX_CERTIFICATES) {
             // delete the first (oldest) cached certificate
-            const key = this.certificates.keys().next().value;
+            const key = this.certificates.keys().next().getValue();
             this.certificates.delete(key);
         }
         this.certificates.set(certificateId, certificate);
@@ -501,7 +500,7 @@ const cache = {
     storeDocument: function(documentId, document) {
         if (this.documents.size > this.MAX_DOCUMENTS) {
             // delete the first (oldest) cached document
-            const key = this.documents.keys().next().value;
+            const key = this.documents.keys().next().getValue();
             this.documents.delete(key);
         }
         this.documents.set(documentId, document);
@@ -518,7 +517,7 @@ const cache = {
     storeType: function(typeId, type) {
         if (this.types.size > this.MAX_TYPES) {
             // delete the first (oldest) cached type
-            const key = this.types.keys().next().value;
+            const key = this.types.keys().next().getValue();
             this.types.delete(key);
         }
         this.types.set(typeId, type);
