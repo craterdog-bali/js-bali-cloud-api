@@ -55,7 +55,7 @@ exports.api = function(notary, repository) {
          * @returns {Catalog} The desired notary certificate.
          */
         retrieveCertificate: function(citation) {
-            citation = citation.type === bali.types.REFERENCE ? notary.extractCitation(citation) : citation;
+            citation = citation.getType() === bali.types.REFERENCE ? notary.extractCitation(citation) : citation;
             const certificateId = extractId(citation);
             var certificate = cache.fetchCertificate(certificateId);
             if (!certificate) {
@@ -79,7 +79,7 @@ exports.api = function(notary, repository) {
          * @returns {Catalog} The compiled type document.
          */
         retrieveType: function(citation) {
-            citation = citation.type === bali.types.REFERENCE ? notary.extractCitation(citation) : citation;
+            citation = citation.getType() === bali.types.REFERENCE ? notary.extractCitation(citation) : citation;
             const typeId = extractId(citation);
             var type = cache.fetchType(typeId);
             if (!type) {
@@ -104,7 +104,7 @@ exports.api = function(notary, repository) {
          * @returns {Catalog} The new citation for the compiled type document.
          */
         commitType: function(citation, type) {
-            citation = citation.type === bali.types.REFERENCE ? notary.extractCitation(citation) : citation;
+            citation = citation.getType() === bali.types.REFERENCE ? notary.extractCitation(citation) : citation;
             const typeId = extractId(citation);
             // store the new version of the type in the repository
             if (repository.typeExists(typeId)) {
@@ -145,7 +145,7 @@ exports.api = function(notary, repository) {
          * @returns {Component} The desired draft document.
          */
         retrieveDraft: function(citation) {
-            citation = citation.type === bali.types.REFERENCE ? notary.extractCitation(citation) : citation;
+            citation = citation.getType() === bali.types.REFERENCE ? notary.extractCitation(citation) : citation;
             const documentId = extractId(citation);
             const source = repository.fetchDraft(documentId);
             if (source) {
@@ -166,7 +166,7 @@ exports.api = function(notary, repository) {
          * @returns {Catalog} A document citation for the updated draft document.
          */
         saveDraft: function(citation, draft) {
-            citation = citation.type === bali.types.REFERENCE ? notary.extractCitation(citation) : citation;
+            citation = citation.getType() === bali.types.REFERENCE ? notary.extractCitation(citation) : citation;
             const documentId = extractId(citation);
             if (cache.documentExists(documentId) || repository.documentExists(documentId)) {
                 throw new Error('API: The draft being saved is already committed: ' + documentId);
@@ -185,7 +185,7 @@ exports.api = function(notary, repository) {
          * @param {Reference|Catalog} citation The document citation for the draft document to be deleted.
          */
         discardDraft: function(citation) {
-            citation = citation.type === bali.types.REFERENCE ? notary.extractCitation(citation) : citation;
+            citation = citation.getType() === bali.types.REFERENCE ? notary.extractCitation(citation) : citation;
             const documentId = extractId(citation);
             repository.deleteDraft(documentId);
         },
@@ -199,7 +199,7 @@ exports.api = function(notary, repository) {
          * @returns {Catalog} The updated citation for the committed document.
          */
         commitDocument: function(citation, document) {
-            citation = citation.type === bali.types.REFERENCE ? notary.extractCitation(citation) : citation;
+            citation = citation.getType() === bali.types.REFERENCE ? notary.extractCitation(citation) : citation;
             const documentId = extractId(citation);
             if (cache.documentExists(documentId) || repository.documentExists(documentId)) {
                 throw new Error('API: The draft document being committed has already been committed: ' + documentId);
@@ -219,7 +219,7 @@ exports.api = function(notary, repository) {
          * @returns {Component} The desired document.
          */
         retrieveDocument: function(citation) {
-            citation = citation.type === bali.types.REFERENCE ? notary.extractCitation(citation) : citation;
+            citation = citation.getType() === bali.types.REFERENCE ? notary.extractCitation(citation) : citation;
             const documentId = extractId(citation);
             var document = cache.fetchDocument(documentId);
             if (!document) {
@@ -252,7 +252,7 @@ exports.api = function(notary, repository) {
          * @returns {Catalog} The document citation for the new draft document.
          */
         checkoutDocument: function(citation, level) {
-            citation = citation.type === bali.types.REFERENCE ? notary.extractCitation(citation) : citation;
+            citation = citation.getType() === bali.types.REFERENCE ? notary.extractCitation(citation) : citation;
 
             // create the draft citation
             const documentVersion = citation.getValue('$version');
