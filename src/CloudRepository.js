@@ -20,9 +20,9 @@
  * This function returns an object that implements the API for the AWS cloud document
  * repository.
  * 
- * @returns {Object} An object containing the functions that the repository supports.
+ * @returns {Object} An object implementing the document repository interface.
  */
-exports.api = function() {
+exports.repository = function() {
 
     return {
 

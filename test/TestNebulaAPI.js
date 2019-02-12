@@ -8,12 +8,13 @@
  * Source Initiative. (See http://opensource.org/licenses/MIT)          *
  ************************************************************************/
 
+const testDirectory = 'test/config/';
 const mocha = require('mocha');
 const expect = require('chai').expect;
 const bali = require('bali-component-framework');
 const notary = require('bali-digital-notary');
-const nebula = require('../src/NebulaAPI');
-const repository = require('../src/LocalRepository').api('test/config/');
+const nebula = require('../');
+const repository = nebula.repository(testDirectory);
 
 describe('Bali Nebula API™', function() {
     var consumerNotary;
@@ -32,7 +33,7 @@ describe('Bali Nebula API™', function() {
         });
 
         it('should setup the digital notary for the consumer', function() {
-            consumerNotary = notary.api('test/config/consumer/');
+            consumerNotary = notary.api(testDirectory + 'consumer/');
             expect(consumerNotary).to.exist;  // jshint ignore:line
             consumerCertificate = consumerNotary.generateKeys();
             expect(consumerCertificate).to.exist;  // jshint ignore:line
@@ -43,7 +44,7 @@ describe('Bali Nebula API™', function() {
         });
 
         it('should setup the digital notary for the merchant', function() {
-            merchantNotary = notary.api('test/config/merchant/');
+            merchantNotary = notary.api(testDirectory + 'merchant/');
             expect(merchantNotary).to.exist;  // jshint ignore:line
             merchantCertificate = merchantNotary.generateKeys();
             expect(merchantCertificate).to.exist;  // jshint ignore:line

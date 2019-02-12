@@ -9,6 +9,29 @@
  ************************************************************************/
 'use strict';
 
-exports.api = require('./src/NebulaAPI').api;
-exports.local = require('./src/LocalRepository').api;
-exports.repository = require('./src/CloudRepository').api;
+/**
+ * This function initializes the document repository for the Bali Nebula™.
+ * 
+ * @param {String} testDirectory An optional test directory to be used as a local
+ * document repository.
+ * @returns {Object} A singleton object containing the initialized document repository.
+ */
+exports.repository = function(testDirectory) {
+    const repository = testDirectory ?
+        require('./src/LocalRepository').repository(testDirectory) :
+        require('./src/CloudRepository').repository();
+    return repository;
+};
+
+/**
+ * This function initializes the Bali Nebula™ API. It requires that a digital notary
+ * and document repository be specified.
+ * 
+ * @param {Object} notary An object that implements the digital notary API.
+ * @param {Object} repository An object that implements the document repository API.
+ * @returns {Object} A singleton object containing the initialized Bali Nebula™ API.
+ */
+exports.api = function(notary, repository) {
+    const api = require('./src/NebulaAPI').api(notary, repository);
+    return api;
+};

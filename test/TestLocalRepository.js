@@ -10,7 +10,7 @@
 
 const mocha = require('mocha');
 const expect = require('chai').expect;
-const repository = require('../src/LocalRepository').api('test/config/');
+const repository = require('../').repository('test/config/');
 
 const source =
     '[\n' +

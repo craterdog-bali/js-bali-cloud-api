@@ -33,9 +33,9 @@ const bali = require('bali-component-framework');
  * 
  * @param {String} testDirectory The location of the test directory to be used for the
  * repository. If not specified, the location of the repository is in '~/.bali/repository/'.
- * @returns {Object} An object containing the functions that the repository supports.
+ * @returns {Object} An object implementing the document repository interface.
  */
-exports.api = function(testDirectory) {
+exports.repository = function(testDirectory) {
     // create the config directory if necessary
     const configDirectory = testDirectory || os.homedir() + '/.bali/';
     const repositoryDirectory = configDirectory + 'repository/';
