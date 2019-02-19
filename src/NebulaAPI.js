@@ -20,6 +20,7 @@
  * This library provides useful functions for accessing the Bali Environment™.
  */
 const bali = require('bali-component-framework');
+const notary = require('bali-digital-notary');
 
 
 /**
@@ -51,7 +52,7 @@ exports.api = function(notary, repository) {
          * This method retrieves from the Bali Nebula™ the notary certificate
          * for the specified certificate citation.
          * 
-         * @param {Reference|Catalog} citation The certificate citation for the desired notary certificate.
+         * @param {Catalog} citation The certificate citation for the desired notary certificate.
          * @returns {Catalog} The desired notary certificate.
          */
         retrieveCertificate: function(citation) {
@@ -60,9 +61,9 @@ exports.api = function(notary, repository) {
             if (!certificate) {
                 const source = repository.fetchCertificate(certificateId);
                 if (source) {
-                    const notarizedCertificate = notary.parseDocument(source);
+                    const notarizedCertificate = bali.parse(source);
                     validateCertificate(notary, citation, notarizedCertificate);
-                    certificate = bali.parse(notarizedCertificate.content);
+                    certificate = notarizedCertificate.getValue('$content');
                     cache.storeCertificate(certificateId, certificate);
                 }
             }
@@ -73,7 +74,7 @@ exports.api = function(notary, repository) {
          * This method retrieves from the Bali Nebula™ the compiled type document
          * for the specified document citation.
          * 
-         * @param {Reference|Catalog} citation The document citation for the desired compiled
+         * @param {Catalog} citation The document citation for the desired compiled
          * type document.
          * @returns {Catalog} The compiled type document.
          */
@@ -83,9 +84,9 @@ exports.api = function(notary, repository) {
             if (!type) {
                 const source = repository.fetchType(typeId);
                 if (source) {
-                    const notarizedType = notary.parseDocument(source);
+                    const notarizedType = bali.parse(source);
                     validateDocument(notary, repository, notarizedType);
-                    type = bali.parse(notarizedType.content);
+                    type = notarizedType.getValue('$content');
                     cache.storeType(typeId, type);
                 }
             }
@@ -97,21 +98,26 @@ exports.api = function(notary, repository) {
          * document to be associated with the specified document citation. This method requires
          * the account calling it to have additional privileges.
          * 
-         * @param {Reference|Catalog} citation The document citation for the compiled type document.
          * @param {Catalog} type A catalog containing the compiled type to be committed.
-         * @returns {Catalog} The new citation for the compiled type document.
+         * @param {Catalog} previous A document citation for the previous version of the type.
+         * @returns {Catalog} A document citation for the committed type document.
          */
-        commitType: function(citation, type) {
-            const typeId = extractId(citation);
-            // store the new version of the type in the repository
+        commitType: function(type, previous) {
+            const notarizedType = notary.notarizeComponent(type, previous);
+            const typeCitation = notary.citeDocument(notarizedType);
+            const typeId = extractId(typeCitation);
             if (repository.typeExists(typeId)) {
-                throw new Error('API: The type being committed is already committed: ' + typeId);
+                throw bali.exception({
+                    $exception: '$typeExists',
+                    $tag: typeCitation.getValue('$tag'),
+                    $version: typeCitation.getValue('$version'),
+                    $message: '"The version of the type being committed already exists."'
+                });
             }
-            const notarizedType = notary.notarizeDocument(type, citation);
             repository.storeType(typeId, notarizedType);
+            type = notarizedType.getValue('$content');
             cache.storeType(typeId, type);
-
-            return citation;
+            return typeCitation;
         },
 
         /**
@@ -123,31 +129,30 @@ exports.api = function(notary, repository) {
          * @returns {Catalog} A document citation for the new draft document.
          */
         createDraft: function(draft) {
-            draft = draft || bali.catalog();
+            draft = draft || bali.catalog({}, bali.parameters({}));
             const tag = bali.tag();
-            const citation = notary.createCitation(tag);
-            const draftId = extractId(citation);
-            const notarizedDraft = notary.notarizeDocument(draft, citation);
-            citation.setValue('$digest', bali.NONE);  // drafts are mutable so no digest
+            const notarizedDraft = notary.notarizeComponent(draft);
+            const draftCitation = notary.citeDocument(notarizedDraft);
+            const draftId = extractId(draftCitation);
             repository.storeDraft(draftId, notarizedDraft);
             // we don't cache drafts since they are mutable
-            return citation;
+            return draftCitation;
         },
 
         /**
          * This method retrieves from the Bali Nebula™ the saved draft document
          * associated with the specified document citation.
          * 
-         * @param {Reference|Catalog} citation The document citation for the desired draft document.
+         * @param {Catalog} citation The document citation for the desired draft document.
          * @returns {Component} The desired draft document.
          */
         retrieveDraft: function(citation) {
             const documentId = extractId(citation);
             const source = repository.fetchDraft(documentId);
             if (source) {
-                const notarizedDraft = notary.parseDocument(source);
+                const notarizedDraft = bali.parse(source);
                 validateDocument(notary, repository, notarizedDraft);
-                const draft = bali.parse(notarizedDraft.content);
+                const draft = notarizedDraft.getValue('$content');
                 // we don't cache drafts since they are mutable
                 return draft;
             }
@@ -157,27 +162,33 @@ exports.api = function(notary, repository) {
          * This method saves to the Bali Nebula™ the specified draft document
          * to be associated with the specified document citation.
          * 
-         * @param {Reference|Catalog} citation The document citation for the draft document.
          * @param {Component} draft The draft document to be saved.
          * @returns {Catalog} A document citation for the updated draft document.
          */
-        saveDraft: function(citation, draft) {
-            const documentId = extractId(citation);
+        saveDraft: function(draft) {
+            const notarizedDraft = notary.notarizeComponent(draft);
+            const draftCitation = notary.citeDocument(notarizedDraft);
+            const documentId = extractId(draftCitation);
             if (cache.documentExists(documentId) || repository.documentExists(documentId)) {
-                throw new Error('API: The draft being saved is already committed: ' + documentId);
+                throw bali.exception({
+                    $module: '$NebulaAPI',
+                    $procedure: '$saveDraft',
+                    $exception: '$typeExists',
+                    $tag: draftCitation.getValue('$tag'),
+                    $version: draftCitation.getValue('$version'),
+                    $message: '"The version of the type being committed already exists."'
+                });
             }
-            const notarizedDraft = notary.notarizeDocument(draft, citation);
-            citation.setValue('$digest', bali.NONE);  // drafts are mutable so no digest
             repository.storeDraft(documentId, notarizedDraft);
             // we don't cache drafts since they are mutable
-            return citation;
+            return draftCitation;
         },
 
         /**
          * This method deletes from the Bali Nebula™ the saved draft document
          * associated with the specified document citation.
          * 
-         * @param {Reference|Catalog} citation The document citation for the draft document to be deleted.
+         * @param {Catalog} citation The document citation for the draft document to be deleted.
          */
         discardDraft: function(citation) {
             const documentId = extractId(citation);
@@ -188,27 +199,29 @@ exports.api = function(notary, repository) {
          * This method commits to the Bali Nebula™ the specified draft document
          * to be associated with the specified document citation.
          * 
-         * @param {Reference|Catalog} citation The document citation for the draft document.
          * @param {Component} document The draft document to be committed.
+         * @param {Catalog} previous A document citation for the previous version of the document.
          * @returns {Catalog} The updated citation for the committed document.
          */
-        commitDocument: function(citation, document) {
-            const documentId = extractId(citation);
+        commitDocument: function(document, previous) {
+            const notarizedDocument = notary.notarizeComponent(document, previous);
+            const documentCitation = notary.citeDocument(notarizedDocument);
+            const documentId = extractId(documentCitation);
             if (cache.documentExists(documentId) || repository.documentExists(documentId)) {
                 throw new Error('API: The draft document being committed has already been committed: ' + documentId);
             }
-            const notarizedDocument = notary.notarizeDocument(document, citation);
             repository.storeDocument(documentId, notarizedDocument);
+            document = notarizedDocument.getValue('$content');
             cache.storeDocument(documentId, document);
             if (repository.draftExists(documentId)) repository.deleteDraft(documentId);
-            return citation;
+            return documentCitation;
         },
 
         /**
          * This method retrieves from the Bali Nebula™ the committed document
          * for the specified document citation.
          * 
-         * @param {Reference|Catalog} citation The document citation for the desired document.
+         * @param {Catalog} citation The document citation for the desired document.
          * @returns {Component} The desired document.
          */
         retrieveDocument: function(citation) {
@@ -217,10 +230,10 @@ exports.api = function(notary, repository) {
             if (!document) {
                 const source = repository.fetchDocument(documentId);
                 if (source) {
-                    const notarizedDocument = notary.parseDocument(source);
+                    const notarizedDocument = bali.parse(source);
                     validateCitation(notary, citation, notarizedDocument);
                     validateDocument(notary, repository, notarizedDocument);
-                    document = bali.parse(notarizedDocument.content);
+                    document = notarizedDocument.getValue('$content');
                     cache.storeDocument(documentId, document);
                 }
             }
@@ -238,7 +251,7 @@ exports.api = function(notary, repository) {
          *     level 2:    v5.7              v5.7.1     (changes being tested)
          * </pre>
          * 
-         * @param {Reference|Catalog} citation The document citation for the committed document.
+         * @param {Catalog} citation The document citation for the committed document.
          * @param {Number} level The (optional) version level that should be incremented. If no
          * level is specified, the last number in the document version string is incremented.
          * @returns {Catalog} The document citation for the new draft document.
@@ -248,15 +261,10 @@ exports.api = function(notary, repository) {
             // create the draft citation
             const documentVersion = citation.getValue('$version');
             const draftVersion = bali.version.nextVersion(documentVersion, level);
-            const draftCitation = bali.catalog();
-            draftCitation.setValue('$protocol', citation.getValue('$protocol'));
-            draftCitation.setValue('$tag', citation.getValue('$tag'));
-            draftCitation.setValue('$version', draftVersion);
-            draftCitation.setValue('$digest', bali.NONE);
 
             // make sure that there is no document already referenced by the draft citation
-            const draftId = extractId(draftCitation);
-            if (cache.documentExists(draftId) || repository.documentExists(draftId) || repository.draftExists(draftCitation)) {
+            const draftId = citation.getValue('$tag').toString() + draftVersion.toString();
+            if (cache.documentExists(draftId) || repository.documentExists(draftId) || repository.draftExists(draftId)) {
                 throw new Error('API: A version of the document referenced by the draft citation already exists: ' + draftId);
             }
 
@@ -264,20 +272,22 @@ exports.api = function(notary, repository) {
             const documentId = extractId(citation);
             const source = repository.fetchDocument(documentId);
             if (source === undefined) {
-                throw new Error('API: The document being checked does not exist: ' + documentId);
+                throw new Error('API: The document being checked out does not exist: ' + documentId);
             }
+            const notarizedDocument = bali.parse(source);
 
             // validate and cache the document
-            const document = notary.parseDocument(source);
-            validateCitation(notary, citation, document);
-            validateDocument(notary, repository, document);
-            const content = bali.parse(document.content);
-            cache.storeDocument(documentId, content);
+            validateCitation(notary, citation, notarizedDocument);
+            validateDocument(notary, repository, notarizedDocument);
+            const document = notarizedDocument.getValue('$content');
+            cache.storeDocument(documentId, document);
 
             // store a draft copy of the document in the repository (NOTE: drafts are not cached)
-            const draft = notary.notarizeDocument(content, draftCitation, citation);
-            draftCitation.setValue('$digest', bali.NONE);  // drafts are mutable so no digest
-            repository.storeDraft(draftId, draft);
+            const draft = bali.duplicate(document);
+            draft.getParameters().setParameter('$version', draftVersion);
+            const notarizedDraft = notary.notarizeComponent(draft, citation);
+            const draftCitation = notary.citeDocument(notarizedDraft);
+            repository.storeDraft(draftId, notarizedDraft);
 
             return draftCitation;
         },
@@ -290,10 +300,9 @@ exports.api = function(notary, repository) {
          * @param {Catalog} event The Bali catalog documenting the event.
          */
         publishEvent: function(event) {
-            const eventId = bali.tag();
-            event.setValue('$tag', eventId);
-            const citation = notary.createCitation(eventId);
-            const notarizedEvent = notary.notarizeDocument(event, citation);
+            const notarizedEvent = notary.notarizeComponent(event);
+            const eventCitation = notary.citeDocument(notarizedEvent);
+            const eventId = extractId(eventCitation);
             repository.queueMessage(EVENT_QUEUE_TAG, eventId, notarizedEvent);
         },
 
@@ -307,11 +316,10 @@ exports.api = function(notary, repository) {
          * @param {Catalog} message The message to be sent to the target component.
          */
         sendMessage: function(targetCitation, message) {
-            const messageId = bali.tag();
-            message.setValue('$tag', messageId);
             message.setValue('$target', targetCitation);
-            const citation = notary.createCitation(messageId);
-            const notarizedMessage = notary.notarizeDocument(message, citation);
+            const notarizedMessage = notary.notarizeComponent(message);
+            const messageCitation = notary.citeDocument(notarizedMessage);
+            const messageId = extractId(messageCitation);
             repository.queueMessage(SEND_QUEUE_TAG, messageId, notarizedMessage);
         },
 
@@ -325,10 +333,9 @@ exports.api = function(notary, repository) {
          * @param {Catalog} message The message to be placed on the queue.
          */
         queueMessage: function(queue, message) {
-            const messageId = bali.tag();
-            message.setValue('$tag', messageId);
-            const citation = notary.createCitation(messageId);
-            const notarizedMessage = notary.notarizeDocument(message, citation);
+            const notarizedMessage = notary.notarizeComponent(message);
+            const messageCitation = notary.citeDocument(notarizedMessage);
+            const messageId = extractId(messageCitation);
             repository.queueMessage(queue, messageId, notarizedMessage);
         },
 
@@ -346,9 +353,9 @@ exports.api = function(notary, repository) {
             const source = repository.dequeueMessage(queue);
             if (source) {
                 // validate the document
-                const notarizedMessage = notary.parseDocument(source);
+                const notarizedMessage = bali.parse(source);
                 validateDocument(notary, repository, notarizedMessage);
-                const message = bali.parse(notarizedMessage.content);
+                const message = notarizedMessage.getValue('$content');
                 return message;
             }
         }
@@ -359,18 +366,56 @@ exports.api = function(notary, repository) {
 // PRIVATE HELPER FUNCTIONS
 
 /**
- * This function extracts the '$tag' and '$version' attributes from the specified document
- * citation and uses them to form a unique identification string.
+ * This function extracts the '$tag' and '$version' attributes from the specified catalog
+ * and uses them to form a unique identification string.
  * 
- * @param {Catalog} citation A document citation.
- * @returns {String} A unique identification string for the citation.
+ * @param {Catalog} catalog A catalog component.
+ * @returns {String} A unique identification string for the component.
  */
-function extractId(citation) {
-    const id = citation.getValue('$tag').toString() + citation.getValue('$version').toString();
+function extractId(catalog) {
+    const id = catalog.getValue('$tag').toString() + catalog.getValue('$version').toString();
     return id;
 }
 
 
+/**
+ * This function extracts a document citation from the parameters for the specified
+ * component.
+ * 
+ * @param {Component} component The component to be cited.
+ * @returns {Catalog} The document citation for the component.
+ */
+function extractCitation(component) {
+    var protocol, tag, version, digest;
+    const parameters = component.getParameters();
+    if (parameters) {
+        protocol = parameters.getParameter('$protocol') || bali.version();
+        tag = parameters.getParameter('$tag') || bali.tag();
+        version = parameters.getParameter('$version') || bali.version();
+        digest = parameters.getParameter('$digest') || bali.NONE;
+    }
+    const citation = bali.catalog({
+        $protocol: protocol,
+        $tag: tag,
+        $version: version,
+        $digest: digest
+    });
+    return citation;
+}
+
+
+/**
+ * This function validates the specified document citation against a document to make sure
+ * that the citation digest was generated from the same document.  If not, an exception is
+ * thrown.
+ * 
+ * @param {Object} notary The notary to be used when validating the document citation.
+ * @param {Catalog} citation The document citation to be validated.
+ * @param {Component} document The document that supposedly was used to generate the
+ * document citation.
+ * @throws {Exception} The digest generated for the document does not match the digest
+ * contained within the document citation.
+ */
 function validateCitation(notary, citation, document) {
     if (!notary.documentMatches(document, citation)) {
         throw new Error('API: The following document has been modified since it was committed: ' + document);
@@ -388,16 +433,15 @@ function validateCitation(notary, citation, document) {
  * @param {Object} notary The notary to be used for validating the certificate.
  * @param {Catalog} citation A document citation for the notary certificate that is
  * specified.
- * @param {NotarizedDocument} document A self-notarized document containing the public key
+ * @param {Catalog} certificate A self-notarized certificate containing the public key
  * associated with the private notary key that notarized the certificate.
  */
-function validateCertificate(notary, citation, document) {
-    if (!notary.documentMatches(document, citation)) {
-        throw new Error('API: The following certificate has been modified since it was committed: ' + document);
+function validateCertificate(notary, citation, certificate) {
+    if (!notary.documentMatches(certificate, citation)) {
+        throw new Error('API: The following certificate has been modified since it was committed: ' + certificate);
     }
-    const certificate = bali.parse(document.content);
-    if (!notary.documentIsValid(document, certificate)) {
-        throw new Error('API: The following certificate is invalid:\n' + document);
+    if (!notary.documentIsValid(certificate, certificate.getValue('$content'))) {
+        throw new Error('API: The following certificate is invalid:\n' + certificate);
     }
 }
 
@@ -408,19 +452,19 @@ function validateCertificate(notary, citation, document) {
  * 
  * @param {Object} notary The notary to be used for validating the document.
  * @param {Object} repository The document repository containing the certificates.
- * @param {NotarizedDocument} document The notarized document to be validated.
+ * @param {Catalog} document The notarized document to be validated.
  */
 function validateDocument(notary, repository, document) {
-    var certificateCitation = document.certificate;
-    while (!certificateCitation.getValue('$digest').isEqualTo(bali.NONE)) {
+    var certificateCitation = document.getValue('$certificate');
+    while (certificateCitation && !certificateCitation.getValue('$digest').isEqualTo(bali.NONE)) {
         const certificateId = extractId(certificateCitation);
         var certificate = cache.fetchCertificate(certificateId);
         if (!certificate) {
             const source = repository.fetchCertificate(certificateId);
             if (source) {
-                const certificateDocument = notary.parseDocument(source);
+                const certificateDocument = bali.parse(source);
                 validateCertificate(notary, certificateCitation, certificateDocument);
-                certificate = bali.parse(certificateDocument.content);
+                certificate = certificateDocument.getValue('$content');
                 cache.storeCertificate(certificateId, certificate);
             } else {
                 throw new Error('API: The certificate for the document does not exist:\n' + certificateId);
@@ -430,8 +474,8 @@ function validateDocument(notary, repository, document) {
             throw new Error('API: The following document is invalid:\n' + document);
         }
         try {
-            document = notary.NotaryDocument.fromString(document.content);
-            certificateCitation = document.certificate;
+            document = document.getValue('$content');
+            certificateCitation = document.getValue('$certificate');
         } catch (e) {
             // we have reached the root content so we are done
             break;

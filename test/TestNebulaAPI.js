@@ -16,6 +16,12 @@ const notary = require('bali-digital-notary');
 const nebula = require('../');
 const repository = nebula.repository(testDirectory);
 
+function extractId(component) {
+    const tag = component.getValue('$tag');
+    const version = component.getValue('$version');
+    return '' + tag + version;
+}
+
 describe('Bali Nebula API™', function() {
     var consumerNotary;
     var consumerClient;
@@ -39,7 +45,7 @@ describe('Bali Nebula API™', function() {
             expect(consumerCertificate).to.exist;  // jshint ignore:line
             consumerCitation = consumerNotary.getCitation();
             expect(consumerCitation).to.exist;  // jshint ignore:line
-            const certificateId = '' + consumerCitation.getValue('$tag') + consumerCitation.getValue('$version');
+            const certificateId = extractId(consumerCitation);
             repository.storeCertificate(certificateId, consumerCertificate);
         });
 
@@ -50,7 +56,7 @@ describe('Bali Nebula API™', function() {
             expect(merchantCertificate).to.exist;  // jshint ignore:line
             merchantCitation = merchantNotary.getCitation();
             expect(merchantCitation).to.exist;  // jshint ignore:line
-            const certificateId = '' + merchantCitation.getValue('$tag') + merchantCitation.getValue('$version');
+            const certificateId = extractId(merchantCitation);
             repository.storeCertificate(certificateId, merchantCertificate);
         });
 
@@ -89,7 +95,7 @@ describe('Bali Nebula API™', function() {
         });
 
         it('should save a new draft document in the repository', function() {
-            consumerClient.saveDraft(draftCitation, draft);
+            draftCitation = consumerClient.saveDraft(draft);
             expect(draft.toString()).to.equal(draftSource);
         });
 
@@ -101,7 +107,7 @@ describe('Bali Nebula API™', function() {
 
         it('should save an updated draft document in the repository', function() {
             draft.setValue('$bar', '"baz"');
-            consumerClient.saveDraft(draftCitation, draft);
+            draftCitation = consumerClient.saveDraft(draft);
             expect(draft.toString()).to.not.equal(draftSource);
             expect(draft.getValue('$foo').toString()).to.equal('"bar"');
             expect(draft.getValue('$bar').toString()).to.equal('"baz"');
@@ -135,7 +141,7 @@ describe('Bali Nebula API™', function() {
 
 
         it('should commit a draft of a new document to the repository', function() {
-            documentCitation = consumerClient.commitDocument(draftCitation, draft);
+            documentCitation = consumerClient.commitDocument(draft);
             expect(documentCitation.getValue('$tag').isEqualTo(draftCitation.getValue('$tag'))).to.equal(true);
             expect(documentCitation.getValue('$version').isEqualTo(draftCitation.getValue('$version'))).to.equal(true);
             document = consumerClient.retrieveDocument(documentCitation);
@@ -158,8 +164,7 @@ describe('Bali Nebula API™', function() {
 
         it('should commit an updated version of the document to the repository', function() {
             draft.setValue('$bar', '"baz"');
-            documentCitation = consumerClient.commitDocument(draftCitation, draft);
-            expect(documentCitation.toString()).to.equal(draftCitation.toString());
+            documentCitation = consumerClient.commitDocument(draft);
             expect(draft.getValue('$bar').toString()).to.equal('"baz"');
         });
 
@@ -199,7 +204,7 @@ describe('Bali Nebula API™', function() {
             const type = bali.catalog();
             type.setValue('$foo', '"bar"');
             const documentCitation = merchantClient.createDraft(type);
-            typeCitation = merchantClient.commitType(documentCitation, type);
+            typeCitation = merchantClient.commitType(type);
             expect(typeCitation).to.exist;  // jshint ignore:line
         });
 
@@ -243,12 +248,10 @@ describe('Bali Nebula API™', function() {
             while (transaction) {
                 count++;
 
-                var tag = transaction.getValue('$tag');
-                var transactionCitation = merchantNotary.createCitation(tag);
-                var documentCitation = merchantClient.commitDocument(transactionCitation, transaction);
+                var tag = transaction.getParameters().getParameter('$tag');
+                var documentCitation = merchantClient.commitDocument(transaction);
                 expect(documentCitation.getValue('$tag').isEqualTo(tag)).to.equal(true);
-                expect(documentCitation.getValue('$version').isEqualTo(transactionCitation.getValue('$version'))).to.equal(true);
-
+                expect(documentCitation.getValue('$version').toString()).to.equal('v1');
                 transaction = merchantClient.receiveMessage(queue);
             }
             expect(count).to.equal(3);
