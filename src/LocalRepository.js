@@ -72,7 +72,7 @@ exports.repository = function(testDirectory) {
 
         certificateExists: function(certificateId) {
             try {
-                const filename = certificates + certificateId + '.bdoc';
+                const filename = certificates + certificateId + '.ndoc';
                 return fs.existsSync(filename);
             } catch (e) {
                 throw bali.exception({
@@ -87,7 +87,7 @@ exports.repository = function(testDirectory) {
 
         fetchCertificate: function(certificateId) {
             try {
-                const filename = certificates + certificateId + '.bdoc';
+                const filename = certificates + certificateId + '.ndoc';
                 if (fs.existsSync(filename)) {
                     const certificate = fs.readFileSync(filename).toString().slice(0, -1);  // remove POSIX compliant <EOL>
                     return certificate;
@@ -105,7 +105,7 @@ exports.repository = function(testDirectory) {
 
         storeCertificate: function(certificateId, certificate) {
             try {
-                const filename = certificates + certificateId + '.bdoc';
+                const filename = certificates + certificateId + '.ndoc';
                 const exists = fs.existsSync(filename);
                 if (exists) {
                     throw bali.exception({
@@ -113,7 +113,7 @@ exports.repository = function(testDirectory) {
                         $function: '$storeCertificate',
                         $exception: '$fileExists',
                         $directory: '"' + certificates + '"',
-                        $file: '"' + certificateId + '.bdoc"',
+                        $file: '"' + certificateId + '.ndoc"',
                         $message: '"The file to be written already exists."'
                     });
                 }
@@ -132,7 +132,7 @@ exports.repository = function(testDirectory) {
 
         draftExists: function(draftId) {
             try {
-                const filename = drafts + draftId + '.bdoc';
+                const filename = drafts + draftId + '.ndoc';
                 return fs.existsSync(filename);
             } catch (e) {
                 throw bali.exception({
@@ -147,7 +147,7 @@ exports.repository = function(testDirectory) {
 
         fetchDraft: function(draftId) {
             try {
-                const filename = drafts + draftId + '.bdoc';
+                const filename = drafts + draftId + '.ndoc';
                 if (fs.existsSync(filename)) {
                     const draft = fs.readFileSync(filename).toString().slice(0, -1);  // remove POSIX compliant <EOL>
                     return draft;
@@ -165,7 +165,7 @@ exports.repository = function(testDirectory) {
 
         storeDraft: function(draftId, draft) {
             try {
-                const filename = drafts + draftId + '.bdoc';
+                const filename = drafts + draftId + '.ndoc';
                 const document = draft.toString() + '\n';  // add POSIX compliant <EOL>
                 fs.writeFileSync(filename, document, {encoding: 'utf8', mode: 384});
             } catch (e) {
@@ -181,7 +181,7 @@ exports.repository = function(testDirectory) {
 
         deleteDraft: function(draftId) {
             try {
-                const filename = drafts + draftId + '.bdoc';
+                const filename = drafts + draftId + '.ndoc';
                 if (fs.existsSync(filename)) {
                     fs.unlinkSync(filename);
                 }
@@ -198,7 +198,7 @@ exports.repository = function(testDirectory) {
 
         documentExists: function(documentId) {
             try {
-                const filename = documents + documentId + '.bdoc';
+                const filename = documents + documentId + '.ndoc';
                 return fs.existsSync(filename);
             } catch (e) {
                 throw bali.exception({
@@ -213,7 +213,7 @@ exports.repository = function(testDirectory) {
 
         fetchDocument: function(documentId) {
             try {
-                const filename = documents + documentId + '.bdoc';
+                const filename = documents + documentId + '.ndoc';
                 if (fs.existsSync(filename)) {
                     const document = fs.readFileSync(filename).toString().slice(0, -1);  // remove POSIX compliant <EOL>
                     return document;
@@ -231,7 +231,7 @@ exports.repository = function(testDirectory) {
 
         storeDocument: function(documentId, document) {
             try {
-                const filename = documents + documentId + '.bdoc';
+                const filename = documents + documentId + '.ndoc';
                 const exists = fs.existsSync(filename);
                 if (exists) {
                     throw bali.exception({
@@ -239,7 +239,7 @@ exports.repository = function(testDirectory) {
                         $function: '$storeDocument',
                         $exception: '$fileExists',
                         $directory: '"' + documents + '"',
-                        $file: '"' + documentId + '.bdoc"',
+                        $file: '"' + documentId + '.ndoc"',
                         $message: '"The file to be written already exists."'
                     });
                 }
@@ -258,7 +258,7 @@ exports.repository = function(testDirectory) {
 
         typeExists: function(typeId) {
             try {
-                const filename = types + typeId + '.bdoc';
+                const filename = types + typeId + '.ndoc';
                 return fs.existsSync(filename);
             } catch (e) {
                 throw bali.exception({
@@ -273,7 +273,7 @@ exports.repository = function(testDirectory) {
 
         fetchType: function(typeId) {
             try {
-                const filename = types + typeId + '.bdoc';
+                const filename = types + typeId + '.ndoc';
                 if (fs.existsSync(filename)) {
                     const type = fs.readFileSync(filename).toString().slice(0, -1);  // remove POSIX compliant <EOL>
                     return type;
@@ -291,7 +291,7 @@ exports.repository = function(testDirectory) {
 
         storeType: function(typeId, type) {
             try {
-                const filename = types + typeId + '.bdoc';
+                const filename = types + typeId + '.ndoc';
                 const exists = fs.existsSync(filename);
                 if (exists) {
                     throw bali.exception({
@@ -299,7 +299,7 @@ exports.repository = function(testDirectory) {
                         $function: '$storeType',
                         $exception: '$fileExists',
                         $directory: '"' + types + '"',
-                        $file: '"' + typeId + '.bdoc"',
+                        $file: '"' + typeId + '.ndoc"',
                         $message: '"The file to be written already exists."'
                     });
                 }
@@ -319,7 +319,7 @@ exports.repository = function(testDirectory) {
         queueMessage: function(queue, messageId, message) {
             try {
                 const directory = queues + queue + '/';
-                const filename = directory + messageId + '.bdoc';
+                const filename = directory + messageId + '.ndoc';
                 if (!fs.existsSync(directory)) fs.mkdirSync(directory);
                 const exists = fs.existsSync(filename);
                 if (exists) {
@@ -328,7 +328,7 @@ exports.repository = function(testDirectory) {
                         $function: '$queueMessage',
                         $exception: '$fileExists',
                         $directory: '"' + directory + '"',
-                        $file: '"' + messageId + '.bdoc"',
+                        $file: '"' + messageId + '.ndoc"',
                         $message: '"The file to be written already exists."'
                     });
                 }
