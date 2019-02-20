@@ -54,7 +54,13 @@ exports.repository = function(testDirectory) {
         if (!fs.existsSync(types)) fs.mkdirSync(types, 448);
         if (!fs.existsSync(queues)) fs.mkdirSync(queues, 448);
     } catch (e) {
-        throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
+        throw bali.exception({
+            $module: '$LocalRepository',
+            $function: '$repository',
+            $exception: '$directoryAccess',
+            $directory: '"' + configDirectory + '"',
+            $message: '"The local configuration directory could not be accessed."'
+        });
     }
 
     return {
@@ -69,7 +75,13 @@ exports.repository = function(testDirectory) {
                 const filename = certificates + certificateId + '.bdoc';
                 return fs.existsSync(filename);
             } catch (e) {
-                throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
+                throw bali.exception({
+                    $module: '$LocalRepository',
+                    $function: '$certificateExists',
+                    $exception: '$directoryAccess',
+                    $directory: '"' + certificates + '"',
+                    $message: '"The local configuration directory could not be accessed."'
+                });
             }
         },
 
@@ -81,7 +93,13 @@ exports.repository = function(testDirectory) {
                     return certificate;
                 }
             } catch (e) {
-                throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
+                throw bali.exception({
+                    $module: '$LocalRepository',
+                    $function: '$fetchCertificate',
+                    $exception: '$directoryAccess',
+                    $directory: '"' + certificates + '"',
+                    $message: '"The local configuration directory could not be accessed."'
+                });
             }
         },
 
@@ -90,12 +108,25 @@ exports.repository = function(testDirectory) {
                 const filename = certificates + certificateId + '.bdoc';
                 const exists = fs.existsSync(filename);
                 if (exists) {
-                    throw new Error('REPOSITORY: The following certificate already exists in the filesystem: ' + certificateId);
+                    throw bali.exception({
+                        $module: '$LocalRepository',
+                        $function: '$storeCertificate',
+                        $exception: '$fileExists',
+                        $directory: '"' + certificates + '"',
+                        $file: '"' + certificateId + '.bdoc"',
+                        $message: '"The file to be written already exists."'
+                    });
                 }
                 const document = certificate.toString() + '\n';  // add POSIX compliant <EOL>
                 fs.writeFileSync(filename, document, {encoding: 'utf8', mode: 256});
             } catch (e) {
-                throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
+                throw bali.exception({
+                    $module: '$LocalRepository',
+                    $function: '$storeCertificate',
+                    $exception: '$directoryAccess',
+                    $directory: '"' + certificates + '"',
+                    $message: '"The local configuration directory could not be accessed."'
+                });
             }
         },
 
@@ -104,7 +135,13 @@ exports.repository = function(testDirectory) {
                 const filename = drafts + draftId + '.bdoc';
                 return fs.existsSync(filename);
             } catch (e) {
-                throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
+                throw bali.exception({
+                    $module: '$LocalRepository',
+                    $function: '$draftExists',
+                    $exception: '$directoryAccess',
+                    $directory: '"' + drafts + '"',
+                    $message: '"The local configuration directory could not be accessed."'
+                });
             }
         },
 
@@ -116,7 +153,13 @@ exports.repository = function(testDirectory) {
                     return draft;
                 }
             } catch (e) {
-                throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
+                throw bali.exception({
+                    $module: '$LocalRepository',
+                    $function: '$fetchDraft',
+                    $exception: '$directoryAccess',
+                    $directory: '"' + drafts + '"',
+                    $message: '"The local configuration directory could not be accessed."'
+                });
             }
         },
 
@@ -126,7 +169,13 @@ exports.repository = function(testDirectory) {
                 const document = draft.toString() + '\n';  // add POSIX compliant <EOL>
                 fs.writeFileSync(filename, document, {encoding: 'utf8', mode: 384});
             } catch (e) {
-                throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
+                throw bali.exception({
+                    $module: '$LocalRepository',
+                    $function: '$storeDraft',
+                    $exception: '$directoryAccess',
+                    $directory: '"' + drafts + '"',
+                    $message: '"The local configuration directory could not be accessed."'
+                });
             }
         },
 
@@ -137,7 +186,13 @@ exports.repository = function(testDirectory) {
                     fs.unlinkSync(filename);
                 }
             } catch (e) {
-                throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
+                throw bali.exception({
+                    $module: '$LocalRepository',
+                    $function: '$deleteDraft',
+                    $exception: '$directoryAccess',
+                    $directory: '"' + drafts + '"',
+                    $message: '"The local configuration directory could not be accessed."'
+                });
             }
         },
 
@@ -146,7 +201,13 @@ exports.repository = function(testDirectory) {
                 const filename = documents + documentId + '.bdoc';
                 return fs.existsSync(filename);
             } catch (e) {
-                throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
+                throw bali.exception({
+                    $module: '$LocalRepository',
+                    $function: '$documentExists',
+                    $exception: '$directoryAccess',
+                    $directory: '"' + documents + '"',
+                    $message: '"The local configuration directory could not be accessed."'
+                });
             }
         },
 
@@ -158,7 +219,13 @@ exports.repository = function(testDirectory) {
                     return document;
                 }
             } catch (e) {
-                throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
+                throw bali.exception({
+                    $module: '$LocalRepository',
+                    $function: '$fetchDocument',
+                    $exception: '$directoryAccess',
+                    $directory: '"' + documents + '"',
+                    $message: '"The local configuration directory could not be accessed."'
+                });
             }
         },
 
@@ -167,12 +234,25 @@ exports.repository = function(testDirectory) {
                 const filename = documents + documentId + '.bdoc';
                 const exists = fs.existsSync(filename);
                 if (exists) {
-                    throw new Error('REPOSITORY: The following document already exists in the filesystem: ' + documentId);
+                    throw bali.exception({
+                        $module: '$LocalRepository',
+                        $function: '$storeDocument',
+                        $exception: '$fileExists',
+                        $directory: '"' + documents + '"',
+                        $file: '"' + documentId + '.bdoc"',
+                        $message: '"The file to be written already exists."'
+                    });
                 }
                 document = document.toString() + '\n';  // add POSIX compliant <EOL>
                 fs.writeFileSync(filename, document, {encoding: 'utf8', mode: 256});
             } catch (e) {
-                throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
+                throw bali.exception({
+                    $module: '$LocalRepository',
+                    $function: '$storeDocument',
+                    $exception: '$directoryAccess',
+                    $directory: '"' + documents + '"',
+                    $message: '"The local configuration directory could not be accessed."'
+                });
             }
         },
 
@@ -181,7 +261,13 @@ exports.repository = function(testDirectory) {
                 const filename = types + typeId + '.bdoc';
                 return fs.existsSync(filename);
             } catch (e) {
-                throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
+                throw bali.exception({
+                    $module: '$LocalRepository',
+                    $function: '$typeExists',
+                    $exception: '$directoryAccess',
+                    $directory: '"' + types + '"',
+                    $message: '"The local configuration directory could not be accessed."'
+                });
             }
         },
 
@@ -193,7 +279,13 @@ exports.repository = function(testDirectory) {
                     return type;
                 }
             } catch (e) {
-                throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
+                throw bali.exception({
+                    $module: '$LocalRepository',
+                    $function: '$fetchType',
+                    $exception: '$directoryAccess',
+                    $directory: '"' + types + '"',
+                    $message: '"The local configuration directory could not be accessed."'
+                });
             }
         },
 
@@ -202,12 +294,25 @@ exports.repository = function(testDirectory) {
                 const filename = types + typeId + '.bdoc';
                 const exists = fs.existsSync(filename);
                 if (exists) {
-                    throw new Error('REPOSITORY: The following type already exists in the filesystem: ' + typeId);
+                    throw bali.exception({
+                        $module: '$LocalRepository',
+                        $function: '$storeType',
+                        $exception: '$fileExists',
+                        $directory: '"' + types + '"',
+                        $file: '"' + typeId + '.bdoc"',
+                        $message: '"The file to be written already exists."'
+                    });
                 }
                 const document = type.toString() + '\n';  // add POSIX compliant <EOL>
                 fs.writeFileSync(filename, document, {encoding: 'utf8', mode: 256});
             } catch (e) {
-                throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
+                throw bali.exception({
+                    $module: '$LocalRepository',
+                    $function: '$storeType',
+                    $exception: '$directoryAccess',
+                    $directory: '"' + types + '"',
+                    $message: '"The local configuration directory could not be accessed."'
+                });
             }
         },
 
@@ -218,12 +323,25 @@ exports.repository = function(testDirectory) {
                 if (!fs.existsSync(directory)) fs.mkdirSync(directory);
                 const exists = fs.existsSync(filename);
                 if (exists) {
-                    throw new Error('REPOSITORY: The following message already exists in the queue: ' + messageId);
+                    throw bali.exception({
+                        $module: '$LocalRepository',
+                        $function: '$queueMessage',
+                        $exception: '$fileExists',
+                        $directory: '"' + directory + '"',
+                        $file: '"' + messageId + '.bdoc"',
+                        $message: '"The file to be written already exists."'
+                    });
                 }
                 const document = message.toString() + '\n';  // add POSIX compliant <EOL>
                 fs.writeFileSync(filename, document, {encoding: 'utf8', mode: 384});
             } catch (e) {
-                throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
+                throw bali.exception({
+                    $module: '$LocalRepository',
+                    $function: '$queueMessage',
+                    $exception: '$directoryAccess',
+                    $directory: '"' + queues + queue + '/"',
+                    $message: '"The local configuration directory could not be accessed."'
+                });
             }
         },
 
@@ -253,7 +371,13 @@ exports.repository = function(testDirectory) {
                 }
                 return message;
             } catch (e) {
-                throw new Error('REPOSITORY: The filesystem is not currently accessible:\n' + e);
+                throw bali.exception({
+                    $module: '$LocalRepository',
+                    $function: '$dequeueMessage',
+                    $exception: '$directoryAccess',
+                    $directory: '"' + queues + queue + '/"',
+                    $message: '"The local configuration directory could not be accessed."'
+                });
             }
         }
 

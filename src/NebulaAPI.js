@@ -20,7 +20,6 @@
  * This library provides useful functions for accessing the Bali Environment™.
  */
 const bali = require('bali-component-framework');
-const notary = require('bali-digital-notary');
 
 
 /**
@@ -208,7 +207,13 @@ exports.api = function(notary, repository) {
             const documentCitation = notary.citeDocument(notarizedDocument);
             const documentId = extractId(documentCitation);
             if (cache.documentExists(documentId) || repository.documentExists(documentId)) {
-                throw new Error('API: The draft document being committed has already been committed: ' + documentId);
+                throw exception({
+                    $module: '$NebulaAPI',
+                    $function: '$commitDocument',
+                    $exception: '$documentExists',
+                    $documentId: '"' + documentId + '"',
+                    $message: '"Attempted to commit a draft document that has already been committed."'
+                });
             }
             repository.storeDocument(documentId, notarizedDocument);
             document = notarizedDocument.getValue('$content');
@@ -265,14 +270,26 @@ exports.api = function(notary, repository) {
             // make sure that there is no document already referenced by the draft citation
             const draftId = citation.getValue('$tag').toString() + draftVersion.toString();
             if (cache.documentExists(draftId) || repository.documentExists(draftId) || repository.draftExists(draftId)) {
-                throw new Error('API: A version of the document referenced by the draft citation already exists: ' + draftId);
+                throw exception({
+                    $module: '$NebulaAPI',
+                    $function: '$checkoutDocument',
+                    $exception: '$documentExists',
+                    $documentId: '"' + draftId + '"',
+                    $message: '"A committed version of the document referenced by the draft citation already exists."'
+                });
             }
 
             // retrieve the document to be checked out
             const documentId = extractId(citation);
             const source = repository.fetchDocument(documentId);
             if (source === undefined) {
-                throw new Error('API: The document being checked out does not exist: ' + documentId);
+                throw exception({
+                    $module: '$NebulaAPI',
+                    $function: '$checkoutDocument',
+                    $exception: '$documentMissing',
+                    $documentId: '"' + documentId + '"',
+                    $message: '"A committed version of the document referenced by the draft citation already exists."'
+                });
             }
             const notarizedDocument = bali.parse(source);
 
@@ -418,7 +435,14 @@ function extractCitation(component) {
  */
 function validateCitation(notary, citation, document) {
     if (!notary.documentMatches(document, citation)) {
-        throw new Error('API: The following document has been modified since it was committed: ' + document);
+        throw exception({
+            $module: '$NebulaAPI',
+            $function: '$validateCitation',
+            $exception: '$documentModified',
+            $citation: citation,
+            $document: document,
+            $message: '"The cited document was modified after it was committed."'
+        });
     }
 }
 
@@ -438,10 +462,23 @@ function validateCitation(notary, citation, document) {
  */
 function validateCertificate(notary, citation, certificate) {
     if (!notary.documentMatches(certificate, citation)) {
-        throw new Error('API: The following certificate has been modified since it was committed: ' + certificate);
+        throw exception({
+            $module: '$NebulaAPI',
+            $function: '$validateCertificate',
+            $exception: '$documentModified',
+            $citation: citation,
+            $certificate: certificate,
+            $message: '"The certificate was modified after it was committed."'
+        });
     }
     if (!notary.documentIsValid(certificate, certificate.getValue('$content'))) {
-        throw new Error('API: The following certificate is invalid:\n' + certificate);
+        throw exception({
+            $module: '$NebulaAPI',
+            $function: '$validateCertificate',
+            $exception: '$documentInvalid',
+            $certificate: certificate,
+            $message: '"The signature on the certificate is invalid."'
+        });
     }
 }
 
@@ -467,11 +504,23 @@ function validateDocument(notary, repository, document) {
                 certificate = certificateDocument.getValue('$content');
                 cache.storeCertificate(certificateId, certificate);
             } else {
-                throw new Error('API: The certificate for the document does not exist:\n' + certificateId);
+                throw exception({
+                    $module: '$NebulaAPI',
+                    $function: '$validateDocument',
+                    $exception: '$certificateMissing',
+                    $certificateId: '"' + certificateId + '"',
+                    $message: '"The certificate for the document does not exist."'
+                });
             }
         }
         if (!notary.documentIsValid(document, certificate)) {
-            throw new Error('API: The following document is invalid:\n' + document);
+            throw exception({
+                $module: '$NebulaAPI',
+                $function: '$validateDocument',
+                $exception: '$documentInvalid',
+                $document: document,
+                $message: '"The signature on the document is invalid."'
+            });
         }
         try {
             document = document.getValue('$content');
