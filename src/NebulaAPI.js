@@ -107,10 +107,10 @@ exports.api = function(notary, repository) {
             const typeId = extractId(typeCitation);
             if (repository.typeExists(typeId)) {
                 throw bali.exception({
-                    $exception: '$typeExists',
+                    $exception: '$versionExists',
                     $tag: typeCitation.getValue('$tag'),
                     $version: typeCitation.getValue('$version'),
-                    $message: '"The version of the type being committed already exists."'
+                    $message: '"A committed version of the type document referenced by the citation already exists."'
                 });
             }
             repository.storeType(typeId, notarizedType);
@@ -172,10 +172,10 @@ exports.api = function(notary, repository) {
                 throw bali.exception({
                     $module: '$NebulaAPI',
                     $procedure: '$saveDraft',
-                    $exception: '$typeExists',
+                    $exception: '$versionExists',
                     $tag: draftCitation.getValue('$tag'),
                     $version: draftCitation.getValue('$version'),
-                    $message: '"The version of the type being committed already exists."'
+                    $message: '"A committed version of the document referenced by the citation already exists."'
                 });
             }
             repository.storeDraft(documentId, notarizedDraft);
@@ -210,9 +210,9 @@ exports.api = function(notary, repository) {
                 throw exception({
                     $module: '$NebulaAPI',
                     $function: '$commitDocument',
-                    $exception: '$documentExists',
+                    $exception: '$versionExists',
                     $documentId: '"' + documentId + '"',
-                    $message: '"Attempted to commit a draft document that has already been committed."'
+                    $message: '"A committed version of the document referenced by the citation already exists."'
                 });
             }
             repository.storeDocument(documentId, notarizedDocument);
@@ -273,9 +273,9 @@ exports.api = function(notary, repository) {
                 throw exception({
                     $module: '$NebulaAPI',
                     $function: '$checkoutDocument',
-                    $exception: '$documentExists',
+                    $exception: '$versionExists',
                     $documentId: '"' + draftId + '"',
-                    $message: '"A committed version of the document referenced by the draft citation already exists."'
+                    $message: '"A committed version of the document referenced by the citation already exists."'
                 });
             }
 
