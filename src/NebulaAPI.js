@@ -62,7 +62,7 @@ exports.api = function(notary, repository) {
                 if (source) {
                     const notarizedCertificate = bali.parse(source);
                     validateCertificate(notary, citation, notarizedCertificate);
-                    certificate = notarizedCertificate.getValue('$content');
+                    certificate = notarizedCertificate.getValue('$component');
                     cache.storeCertificate(certificateId, certificate);
                 }
             }
@@ -85,7 +85,7 @@ exports.api = function(notary, repository) {
                 if (source) {
                     const notarizedType = bali.parse(source);
                     validateDocument(notary, repository, notarizedType);
-                    type = notarizedType.getValue('$content');
+                    type = notarizedType.getValue('$component');
                     cache.storeType(typeId, type);
                 }
             }
@@ -102,7 +102,7 @@ exports.api = function(notary, repository) {
          * @returns {Catalog} A document citation for the committed type document.
          */
         commitType: function(type, previous) {
-            const notarizedType = notary.notarizeComponent(type, previous);
+            const notarizedType = notary.notarizeDocument(type, previous);
             const typeCitation = notary.citeDocument(notarizedType);
             const typeId = extractId(typeCitation);
             if (repository.typeExists(typeId)) {
@@ -114,7 +114,7 @@ exports.api = function(notary, repository) {
                 });
             }
             repository.storeType(typeId, notarizedType);
-            type = notarizedType.getValue('$content');
+            type = notarizedType.getValue('$component');
             cache.storeType(typeId, type);
             return typeCitation;
         },
@@ -130,7 +130,7 @@ exports.api = function(notary, repository) {
         createDraft: function(draft) {
             draft = draft || bali.catalog({}, bali.parameters({}));
             const tag = bali.tag();
-            const notarizedDraft = notary.notarizeComponent(draft);
+            const notarizedDraft = notary.notarizeDocument(draft);
             const draftCitation = notary.citeDocument(notarizedDraft);
             const draftId = extractId(draftCitation);
             repository.storeDraft(draftId, notarizedDraft);
@@ -151,7 +151,7 @@ exports.api = function(notary, repository) {
             if (source) {
                 const notarizedDraft = bali.parse(source);
                 validateDocument(notary, repository, notarizedDraft);
-                const draft = notarizedDraft.getValue('$content');
+                const draft = notarizedDraft.getValue('$component');
                 // we don't cache drafts since they are mutable
                 return draft;
             }
@@ -165,7 +165,7 @@ exports.api = function(notary, repository) {
          * @returns {Catalog} A document citation for the updated draft document.
          */
         saveDraft: function(draft) {
-            const notarizedDraft = notary.notarizeComponent(draft);
+            const notarizedDraft = notary.notarizeDocument(draft);
             const draftCitation = notary.citeDocument(notarizedDraft);
             const documentId = extractId(draftCitation);
             if (cache.documentExists(documentId) || repository.documentExists(documentId)) {
@@ -203,7 +203,7 @@ exports.api = function(notary, repository) {
          * @returns {Catalog} The updated citation for the committed document.
          */
         commitDocument: function(document, previous) {
-            const notarizedDocument = notary.notarizeComponent(document, previous);
+            const notarizedDocument = notary.notarizeDocument(document, previous);
             const documentCitation = notary.citeDocument(notarizedDocument);
             const documentId = extractId(documentCitation);
             if (cache.documentExists(documentId) || repository.documentExists(documentId)) {
@@ -216,7 +216,7 @@ exports.api = function(notary, repository) {
                 });
             }
             repository.storeDocument(documentId, notarizedDocument);
-            document = notarizedDocument.getValue('$content');
+            document = notarizedDocument.getValue('$component');
             cache.storeDocument(documentId, document);
             if (repository.draftExists(documentId)) repository.deleteDraft(documentId);
             return documentCitation;
@@ -238,7 +238,7 @@ exports.api = function(notary, repository) {
                     const notarizedDocument = bali.parse(source);
                     validateCitation(notary, citation, notarizedDocument);
                     validateDocument(notary, repository, notarizedDocument);
-                    document = notarizedDocument.getValue('$content');
+                    document = notarizedDocument.getValue('$component');
                     cache.storeDocument(documentId, document);
                 }
             }
@@ -296,13 +296,13 @@ exports.api = function(notary, repository) {
             // validate and cache the document
             validateCitation(notary, citation, notarizedDocument);
             validateDocument(notary, repository, notarizedDocument);
-            const document = notarizedDocument.getValue('$content');
+            const document = notarizedDocument.getValue('$component');
             cache.storeDocument(documentId, document);
 
             // store a draft copy of the document in the repository (NOTE: drafts are not cached)
             const draft = bali.duplicate(document);
             draft.getParameters().setParameter('$version', draftVersion);
-            const notarizedDraft = notary.notarizeComponent(draft, citation);
+            const notarizedDraft = notary.notarizeDocument(draft, citation);
             const draftCitation = notary.citeDocument(notarizedDraft);
             repository.storeDraft(draftId, notarizedDraft);
 
@@ -317,7 +317,7 @@ exports.api = function(notary, repository) {
          * @param {Catalog} event The Bali catalog documenting the event.
          */
         publishEvent: function(event) {
-            const notarizedEvent = notary.notarizeComponent(event);
+            const notarizedEvent = notary.notarizeDocument(event);
             const eventCitation = notary.citeDocument(notarizedEvent);
             const eventId = extractId(eventCitation);
             repository.queueMessage(EVENT_QUEUE_TAG, eventId, notarizedEvent);
@@ -334,7 +334,7 @@ exports.api = function(notary, repository) {
          */
         sendMessage: function(targetCitation, message) {
             message.setValue('$target', targetCitation);
-            const notarizedMessage = notary.notarizeComponent(message);
+            const notarizedMessage = notary.notarizeDocument(message);
             const messageCitation = notary.citeDocument(notarizedMessage);
             const messageId = extractId(messageCitation);
             repository.queueMessage(SEND_QUEUE_TAG, messageId, notarizedMessage);
@@ -350,7 +350,7 @@ exports.api = function(notary, repository) {
          * @param {Catalog} message The message to be placed on the queue.
          */
         queueMessage: function(queue, message) {
-            const notarizedMessage = notary.notarizeComponent(message);
+            const notarizedMessage = notary.notarizeDocument(message);
             const messageCitation = notary.citeDocument(notarizedMessage);
             const messageId = extractId(messageCitation);
             repository.queueMessage(queue, messageId, notarizedMessage);
@@ -372,7 +372,7 @@ exports.api = function(notary, repository) {
                 // validate the document
                 const notarizedMessage = bali.parse(source);
                 validateDocument(notary, repository, notarizedMessage);
-                const message = notarizedMessage.getValue('$content');
+                const message = notarizedMessage.getValue('$component');
                 return message;
             }
         }
@@ -471,7 +471,7 @@ function validateCertificate(notary, citation, certificate) {
             $message: '"The certificate was modified after it was committed."'
         });
     }
-    if (!notary.documentIsValid(certificate, certificate.getValue('$content'))) {
+    if (!notary.documentIsValid(certificate, certificate.getValue('$component'))) {
         throw exception({
             $module: '$NebulaAPI',
             $function: '$validateCertificate',
@@ -492,7 +492,7 @@ function validateCertificate(notary, citation, certificate) {
  * @param {Catalog} document The notarized document to be validated.
  */
 function validateDocument(notary, repository, document) {
-    var certificateCitation = document.getValue('$certificate');
+    var certificateCitation = document.getValue('$citation');
     while (certificateCitation && !certificateCitation.getValue('$digest').isEqualTo(bali.NONE)) {
         const certificateId = extractId(certificateCitation);
         var certificate = cache.fetchCertificate(certificateId);
@@ -501,7 +501,7 @@ function validateDocument(notary, repository, document) {
             if (source) {
                 const certificateDocument = bali.parse(source);
                 validateCertificate(notary, certificateCitation, certificateDocument);
-                certificate = certificateDocument.getValue('$content');
+                certificate = certificateDocument.getValue('$component');
                 cache.storeCertificate(certificateId, certificate);
             } else {
                 throw exception({
@@ -523,8 +523,8 @@ function validateDocument(notary, repository, document) {
             });
         }
         try {
-            document = document.getValue('$content');
-            certificateCitation = document.getValue('$certificate');
+            document = document.getValue('$component');
+            certificateCitation = document.getValue('$citation');
         } catch (e) {
             // we have reached the root content so we are done
             break;
