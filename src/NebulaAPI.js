@@ -209,7 +209,7 @@ exports.api = function(notary, repository) {
             if (cache.documentExists(documentId) || repository.documentExists(documentId)) {
                 throw exception({
                     $module: '$NebulaAPI',
-                    $function: '$commitDocument',
+                    $procedure: '$commitDocument',
                     $exception: '$versionExists',
                     $documentId: '"' + documentId + '"',
                     $message: '"A committed version of the document referenced by the citation already exists."'
@@ -272,7 +272,7 @@ exports.api = function(notary, repository) {
             if (cache.documentExists(draftId) || repository.documentExists(draftId) || repository.draftExists(draftId)) {
                 throw exception({
                     $module: '$NebulaAPI',
-                    $function: '$checkoutDocument',
+                    $procedure: '$checkoutDocument',
                     $exception: '$versionExists',
                     $documentId: '"' + draftId + '"',
                     $message: '"A committed version of the document referenced by the citation already exists."'
@@ -285,7 +285,7 @@ exports.api = function(notary, repository) {
             if (source === undefined) {
                 throw exception({
                     $module: '$NebulaAPI',
-                    $function: '$checkoutDocument',
+                    $procedure: '$checkoutDocument',
                     $exception: '$documentMissing',
                     $documentId: '"' + documentId + '"',
                     $message: '"A committed version of the document referenced by the draft citation already exists."'
@@ -437,7 +437,7 @@ function validateCitation(notary, citation, document) {
     if (!notary.documentMatches(document, citation)) {
         throw exception({
             $module: '$NebulaAPI',
-            $function: '$validateCitation',
+            $procedure: '$validateCitation',
             $exception: '$documentModified',
             $citation: citation,
             $document: document,
@@ -464,7 +464,7 @@ function validateCertificate(notary, citation, certificate) {
     if (!notary.documentMatches(certificate, citation)) {
         throw exception({
             $module: '$NebulaAPI',
-            $function: '$validateCertificate',
+            $procedure: '$validateCertificate',
             $exception: '$documentModified',
             $citation: citation,
             $certificate: certificate,
@@ -474,7 +474,7 @@ function validateCertificate(notary, citation, certificate) {
     if (!notary.documentIsValid(certificate, certificate.getValue('$component'))) {
         throw exception({
             $module: '$NebulaAPI',
-            $function: '$validateCertificate',
+            $procedure: '$validateCertificate',
             $exception: '$documentInvalid',
             $certificate: certificate,
             $message: '"The signature on the certificate is invalid."'
@@ -506,7 +506,7 @@ function validateDocument(notary, repository, document) {
             } else {
                 throw exception({
                     $module: '$NebulaAPI',
-                    $function: '$validateDocument',
+                    $procedure: '$validateDocument',
                     $exception: '$certificateMissing',
                     $certificateId: '"' + certificateId + '"',
                     $message: '"The certificate for the document does not exist."'
@@ -516,7 +516,7 @@ function validateDocument(notary, repository, document) {
         if (!notary.documentIsValid(document, certificate)) {
             throw exception({
                 $module: '$NebulaAPI',
-                $function: '$validateDocument',
+                $procedure: '$validateDocument',
                 $exception: '$documentInvalid',
                 $document: document,
                 $message: '"The signature on the document is invalid."'
