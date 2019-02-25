@@ -32,7 +32,7 @@
     "webpack": "^4.28.2"
   },
   "dependencies": {
-    "bali-component-framework": "^1.9.4",
-    "bali-digital-notary": "^1.4.3"
+    "bali-component-framework": "^1.9.5",
+    "bali-digital-notary": "^1.4.5"
   }
 }

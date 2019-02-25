@@ -207,7 +207,7 @@ exports.api = function(notary, repository) {
             const documentCitation = notary.citeDocument(notarizedDocument);
             const documentId = extractId(documentCitation);
             if (cache.documentExists(documentId) || repository.documentExists(documentId)) {
-                throw exception({
+                throw bali.exception({
                     $module: '$NebulaAPI',
                     $procedure: '$commitDocument',
                     $exception: '$versionExists',
@@ -270,7 +270,7 @@ exports.api = function(notary, repository) {
             // make sure that there is no document already referenced by the draft citation
             const draftId = citation.getValue('$tag').toString() + draftVersion.toString();
             if (cache.documentExists(draftId) || repository.documentExists(draftId) || repository.draftExists(draftId)) {
-                throw exception({
+                throw bali.exception({
                     $module: '$NebulaAPI',
                     $procedure: '$checkoutDocument',
                     $exception: '$versionExists',
@@ -283,7 +283,7 @@ exports.api = function(notary, repository) {
             const documentId = extractId(citation);
             const source = repository.fetchDocument(documentId);
             if (source === undefined) {
-                throw exception({
+                throw bali.exception({
                     $module: '$NebulaAPI',
                     $procedure: '$checkoutDocument',
                     $exception: '$documentMissing',
@@ -435,7 +435,7 @@ function extractCitation(component) {
  */
 function validateCitation(notary, citation, document) {
     if (!notary.documentMatches(document, citation)) {
-        throw exception({
+        throw bali.exception({
             $module: '$NebulaAPI',
             $procedure: '$validateCitation',
             $exception: '$documentModified',
@@ -462,7 +462,7 @@ function validateCitation(notary, citation, document) {
  */
 function validateCertificate(notary, citation, certificate) {
     if (!notary.documentMatches(certificate, citation)) {
-        throw exception({
+        throw bali.exception({
             $module: '$NebulaAPI',
             $procedure: '$validateCertificate',
             $exception: '$documentModified',
@@ -472,7 +472,7 @@ function validateCertificate(notary, citation, certificate) {
         });
     }
     if (!notary.documentIsValid(certificate, certificate.getValue('$component'))) {
-        throw exception({
+        throw bali.exception({
             $module: '$NebulaAPI',
             $procedure: '$validateCertificate',
             $exception: '$documentInvalid',
@@ -504,7 +504,7 @@ function validateDocument(notary, repository, document) {
                 certificate = certificateDocument.getValue('$component');
                 cache.storeCertificate(certificateId, certificate);
             } else {
-                throw exception({
+                throw bali.exception({
                     $module: '$NebulaAPI',
                     $procedure: '$validateDocument',
                     $exception: '$certificateMissing',
@@ -514,7 +514,7 @@ function validateDocument(notary, repository, document) {
             }
         }
         if (!notary.documentIsValid(document, certificate)) {
-            throw exception({
+            throw bali.exception({
                 $module: '$NebulaAPI',
                 $procedure: '$validateDocument',
                 $exception: '$documentInvalid',
