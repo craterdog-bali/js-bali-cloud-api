@@ -39,7 +39,8 @@ describe('Bali Nebula API™', function() {
         });
 
         it('should setup the digital notary for the consumer', function() {
-            consumerNotary = notary.api(testDirectory + 'consumer/');
+            const consumerTag = bali.tag();
+            consumerNotary = notary.api(consumerTag, testDirectory);
             expect(consumerNotary).to.exist;  // jshint ignore:line
             consumerCertificate = consumerNotary.generateKeys();
             expect(consumerCertificate).to.exist;  // jshint ignore:line
@@ -50,7 +51,8 @@ describe('Bali Nebula API™', function() {
         });
 
         it('should setup the digital notary for the merchant', function() {
-            merchantNotary = notary.api(testDirectory + 'merchant/');
+            const merchantTag = bali.tag();
+            merchantNotary = notary.api(merchantTag, testDirectory);
             expect(merchantNotary).to.exist;  // jshint ignore:line
             merchantCertificate = merchantNotary.generateKeys();
             expect(merchantCertificate).to.exist;  // jshint ignore:line

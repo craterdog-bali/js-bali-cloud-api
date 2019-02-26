@@ -33,6 +33,6 @@
   },
   "dependencies": {
     "bali-component-framework": "^1.9.5",
-    "bali-digital-notary": "^1.4.5"
+    "bali-digital-notary": "^1.4.7"
   }
 }
