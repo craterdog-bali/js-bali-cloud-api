@@ -318,9 +318,7 @@ exports.api = function(notary, repository) {
          */
         publishEvent: function(event) {
             const notarizedEvent = notary.notarizeDocument(event);
-            const eventCitation = notary.citeDocument(notarizedEvent);
-            const eventId = extractId(eventCitation);
-            repository.queueMessage(EVENT_QUEUE_TAG, eventId, notarizedEvent);
+            repository.queueMessage(EVENT_QUEUE_TAG, notarizedEvent);
         },
 
         /**
@@ -335,9 +333,7 @@ exports.api = function(notary, repository) {
         sendMessage: function(targetCitation, message) {
             message.setValue('$target', targetCitation);
             const notarizedMessage = notary.notarizeDocument(message);
-            const messageCitation = notary.citeDocument(notarizedMessage);
-            const messageId = extractId(messageCitation);
-            repository.queueMessage(SEND_QUEUE_TAG, messageId, notarizedMessage);
+            repository.queueMessage(SEND_QUEUE_TAG, notarizedMessage);
         },
 
         /**
@@ -351,9 +347,7 @@ exports.api = function(notary, repository) {
          */
         queueMessage: function(queue, message) {
             const notarizedMessage = notary.notarizeDocument(message);
-            const messageCitation = notary.citeDocument(notarizedMessage);
-            const messageId = extractId(messageCitation);
-            repository.queueMessage(queue, messageId, notarizedMessage);
+            repository.queueMessage(queue, notarizedMessage);
         },
 
         /**
@@ -392,32 +386,6 @@ exports.api = function(notary, repository) {
 function extractId(catalog) {
     const id = catalog.getValue('$tag').toString() + catalog.getValue('$version').toString();
     return id;
-}
-
-
-/**
- * This function extracts a document citation from the parameters for the specified
- * component.
- * 
- * @param {Component} component The component to be cited.
- * @returns {Catalog} The document citation for the component.
- */
-function extractCitation(component) {
-    var protocol, tag, version, digest;
-    const parameters = component.getParameters();
-    if (parameters) {
-        protocol = parameters.getParameter('$protocol') || bali.version();
-        tag = parameters.getParameter('$tag') || bali.tag();
-        version = parameters.getParameter('$version') || bali.version();
-        digest = parameters.getParameter('$digest') || bali.NONE;
-    }
-    const citation = bali.catalog({
-        $protocol: protocol,
-        $tag: tag,
-        $version: version,
-        $digest: digest
-    });
-    return citation;
 }
 
 

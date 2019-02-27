@@ -316,9 +316,10 @@ exports.repository = function(testDirectory) {
             }
         },
 
-        queueMessage: function(queue, messageId, message) {
+        queueMessage: function(queue, message) {
             try {
                 const directory = queues + queue + '/';
+                const messageId = bali.tag();
                 const filename = directory + messageId + '.ndoc';
                 if (!fs.existsSync(directory)) fs.mkdirSync(directory);
                 const exists = fs.existsSync(filename);
@@ -355,8 +356,8 @@ exports.repository = function(testDirectory) {
                     if (count) {
                         // select a message a random since a distributed queue cannot guarantee FIFO
                         const index = bali.random.index(count) - 1;  // convert to zero based indexing
-                        const messageId = messages[index];
-                        const filename = directory + messageId;
+                        const messageFile = messages[index];
+                        const filename = directory + messageFile;
                         message = fs.readFileSync(filename).toString().slice(0, -1);  // remove POSIX compliant <EOL>
                         try {
                             fs.unlinkSync(filename);

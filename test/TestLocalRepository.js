@@ -93,10 +93,7 @@ describe('Bali Nebula API™', function() {
             for (var i = 0; i < 3; i++) {
                 // place a new message on the queue
                 message = i.toString();
-                repository.queueMessage(queue, i, message);
-
-                // attempt to place the same message on the queue
-                expect(repository.queueMessage.bind(repository, queue, message)).to.throw();
+                repository.queueMessage(queue, message);
             }
 
             // dequeue the messages

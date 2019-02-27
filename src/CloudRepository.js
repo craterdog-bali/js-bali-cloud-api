@@ -14,21 +14,25 @@
  * that is used to access an AWS cloud based document repository. It treats documents
  * as UTF-8 encoded strings.
  */
-
-
+const bali = require('bali-component-framework');
+const http = require('http');
 /**
  * This function returns an object that implements the API for the AWS cloud document
  * repository.
  * 
+ * @param {Object} notary An object that implements the API for the digital notary.
  * @returns {Object} An object implementing the document repository interface.
  */
-exports.repository = function() {
+exports.repository = function(notary) {
 
     return {
 
         toString: function() {
-            // TODO: print out the AWS cloud account information for this client
-            throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
+            const catalog = bali.catalog({
+                $citation: notary.getCitation(),
+                $cloudURL: 'https://bali-nebula.net'
+            });
+            return catalog.toString();
         },
 
         certificateExists: function(certificateId) {
@@ -40,7 +44,7 @@ exports.repository = function() {
         },
 
         storeCertificate: function(certificateId, certificate) {
-            throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
+            return postDocument('storeCertificate', 'certificate', certificateId, certificate);
         },
 
         draftExists: function(draftId) {
@@ -52,7 +56,7 @@ exports.repository = function() {
         },
 
         storeDraft: function(draftId, draft) {
-            throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
+            return postDocument('storeDraft', 'draft', draftId, draft);
         },
 
         deleteDraft: function(draftId) {
@@ -68,7 +72,7 @@ exports.repository = function() {
         },
 
         storeDocument: function(documentId, document) {
-            throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
+            return postDocument('storeDocument', 'document', documentId, document);
         },
 
         typeExists: function(typeId) {
@@ -80,11 +84,11 @@ exports.repository = function() {
         },
 
         storeType: function(typeId, type) {
-            throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
+            return postDocument('storeType', 'type', typeId, type);
         },
 
-        queueMessage: function(queue, messageId, message) {
-            throw new Error('REPOSITORY: The cloud based repository is not yet implemented.');
+        queueMessage: function(queue, message) {
+            return postDocument('queueMessage', 'message', queue, message);
         },
 
         dequeueMessage: function(queue) {
@@ -92,4 +96,196 @@ exports.repository = function() {
         }
 
     };
+};
+
+
+// PRIVATE FUNCTIONS
+
+const keepAliveAgent = new http.Agent({
+    keepAlive: true,
+    maxSockets: 256,
+    maxFreeSockets: 128,
+    timeout: 100
+});
+
+
+const getDocument = function(procedure, notary, type, identifier) {
+
+    // analyze the parameters
+    switch (type) {
+        case 'certificate':
+            break;
+        case 'draft':
+            break;
+        case 'document':
+            break;
+        case 'type':
+            break;
+        case 'message':
+            break;
+        default:
+            throw bali.exception({
+                $module: '$CloudRepository',
+                $procedure: procedure,
+                $exception: '$invalidParameter',
+                $parameter: type,
+                $message: '"An invalid document type was specified."'
+            });
+    }
+    if (!identifier || identifier.getTypeId() !== bali.types.TAG) {
+        throw bali.exception({
+            $module: '$CloudRepository',
+            $procedure: procedure,
+            $exception: '$invalidParameter',
+            $parameter: identifier,
+            $message: '"An invalid document identifier was specified."'
+        });
+    }
+
+    const citation = notary.getCitation();
+    const credentials = notary.notarizeDocument(citation);
+    const options = {
+        protocol: 'https',
+        host: 'bali-nebula.net',
+        port: 443,
+        path: '/' + type + identifier,
+        method: 'GET',
+        agent: keepAliveAgent,
+        timeout: 100,
+        headers: {
+            'Bali-Credentials': '"' + bali.format(credentials, -1) + '"'  // inlined quoted string
+        }
+    };
+
+    var result = '';
+    const request = http.request(options, function(response) {
+        response.setEncoding('utf8');
+        response.on('data', function(chunk) {
+            result += chunk;
+        });
+    });
+
+    request.on('error', function(error) {
+        throw bali.exception({
+            $module: '$CloudRepository',
+            $procedure: procedure,
+            $exception: '$remoteRequest',
+            $type: type,
+            $identifier: identifier,
+            $credentials: credentials,
+            $message: '"\nThe following communication error occurred:\n ' + error.message + '\n"'
+        });
+    });
+
+    // write data to request body
+    request.end();
+
+    // process the resulting document
+    try {
+        return bali.parse(result);
+    } catch (e) {
+        throw bali.exception({
+            $module: '$CloudRepository',
+            $procedure: procedure,
+            $exception: '$invalidResponse',
+            $response: '"\n' + result + '\n"',
+            $message: '"The response is not a valid component."'
+        });
+    }
+};
+
+
+const postDocument = function(procedure, type, identifier, document) {
+
+    // analyze the parameters
+    switch (type) {
+        case 'certificate':
+            break;
+        case 'draft':
+            break;
+        case 'document':
+            break;
+        case 'type':
+            break;
+        case 'message':
+            break;
+        default:
+            throw bali.exception({
+                $module: '$CloudRepository',
+                $procedure: procedure,
+                $exception: '$invalidParameter',
+                $parameter: type,
+                $message: '"An invalid document type was specified."'
+            });
+    }
+    if (!identifier || identifier.getTypeId() !== bali.types.TAG) {
+        throw bali.exception({
+            $module: '$CloudRepository',
+            $procedure: procedure,
+            $exception: '$invalidParameter',
+            $parameter: identifier,
+            $message: '"An invalid document identifier was specified."'
+        });
+    }
+    if (!document || document.getTypeId() !== bali.types.CATALOG) {
+        throw bali.exception({
+            $module: '$CloudRepository',
+            $procedure: procedure,
+            $exception: '$invalidParameter',
+            $parameter: document,
+            $message: '"An invalid document was specified."'
+        });
+    }
+
+    const data = document.toString();
+    const options = {
+        protocol: 'https',
+        host: 'bali-nebula.net',
+        port: 443,
+        path: '/' + type + identifier,
+        method: 'POST',
+        agent: keepAliveAgent,
+        timeout: 100,
+        headers: {
+            'Content-Type': 'application/bali',
+            'Content-Length': Buffer.byteLength(data)
+        }
+    };
+
+    var result = '';
+    const request = http.request(options, function(response) {
+        response.setEncoding('utf8');
+        response.on('data', function(chunk) {
+            result += chunk;
+        });
+    });
+
+    request.on('error', function(error) {
+        throw bali.exception({
+            $module: '$CloudRepository',
+            $procedure: procedure,
+            $exception: '$remoteRequest',
+            $type: type,
+            $identifier: identifier,
+            $document: document,
+            $message: '"\nThe following communication error occurred:\n ' + error.message + '\n"'
+        });
+    });
+
+    // write data to request body
+    request.write(data);
+    request.end();
+
+    // process the resulting document
+    try {
+        return bali.parse(result);
+    } catch (e) {
+        throw bali.exception({
+            $module: '$CloudRepository',
+            $procedure: procedure,
+            $exception: '$invalidResponse',
+            $response: '"\n' + result + '\n"',
+            $message: '"The response is not a valid component."'
+        });
+    }
 };
