@@ -30,8 +30,8 @@ const bali = require('bali-component-framework');
  * @returns {Object} An object that implements the API for the Bali Nebula™.
  */
 exports.api = function(notary, repository) {
-    const SEND_QUEUE_TAG = bali.parse('#JXT095QY01HBLHPAW04ZR5WSH41MWG4H');
-    const EVENT_QUEUE_TAG = bali.parse('#3RMGDVN7D6HLAPFXQNPF7DV71V3MAL43');
+    const SEND_QUEUE_ID = 'JXT095QY01HBLHPAW04ZR5WSH41MWG4H';
+    const EVENT_QUEUE_ID = '3RMGDVN7D6HLAPFXQNPF7DV71V3MAL43';
 
     // return the client API instance
     return {
@@ -128,7 +128,10 @@ exports.api = function(notary, repository) {
          * @returns {Catalog} A document citation for the new draft document.
          */
         createDraft: function(draft) {
-            draft = draft || bali.catalog({}, bali.parameters({}));
+            draft = draft || bali.catalog({}, bali.parameters({
+                $tag: bali.tag(),
+                $version: bali.version()
+            }));
             const tag = bali.tag();
             const notarizedDraft = notary.notarizeDocument(draft);
             const draftCitation = notary.citeDocument(notarizedDraft);
@@ -167,8 +170,8 @@ exports.api = function(notary, repository) {
         saveDraft: function(draft) {
             const notarizedDraft = notary.notarizeDocument(draft);
             const draftCitation = notary.citeDocument(notarizedDraft);
-            const documentId = extractId(draftCitation);
-            if (cache.documentExists(documentId) || repository.documentExists(documentId)) {
+            const draftId = extractId(draftCitation);
+            if (cache.documentExists(draftId) || repository.documentExists(draftId)) {
                 throw bali.exception({
                     $module: '$NebulaAPI',
                     $procedure: '$saveDraft',
@@ -178,7 +181,7 @@ exports.api = function(notary, repository) {
                     $message: '"A committed version of the document referenced by the citation already exists."'
                 });
             }
-            repository.storeDraft(documentId, notarizedDraft);
+            repository.storeDraft(draftId, notarizedDraft);
             // we don't cache drafts since they are mutable
             return draftCitation;
         },
@@ -268,7 +271,7 @@ exports.api = function(notary, repository) {
             const draftVersion = bali.version.nextVersion(documentVersion, level);
 
             // make sure that there is no document already referenced by the draft citation
-            const draftId = citation.getValue('$tag').toString() + draftVersion.toString();
+            const draftId = citation.getValue('$tag').getValue() + draftVersion;
             if (cache.documentExists(draftId) || repository.documentExists(draftId) || repository.draftExists(draftId)) {
                 throw bali.exception({
                     $module: '$NebulaAPI',
@@ -318,7 +321,7 @@ exports.api = function(notary, repository) {
          */
         publishEvent: function(event) {
             const notarizedEvent = notary.notarizeDocument(event);
-            repository.queueMessage(EVENT_QUEUE_TAG, notarizedEvent);
+            repository.queueMessage(EVENT_QUEUE_ID, notarizedEvent);
         },
 
         /**
@@ -333,7 +336,7 @@ exports.api = function(notary, repository) {
         sendMessage: function(targetCitation, message) {
             message.setValue('$target', targetCitation);
             const notarizedMessage = notary.notarizeDocument(message);
-            repository.queueMessage(SEND_QUEUE_TAG, notarizedMessage);
+            repository.queueMessage(SEND_QUEUE_ID, notarizedMessage);
         },
 
         /**
@@ -347,7 +350,8 @@ exports.api = function(notary, repository) {
          */
         queueMessage: function(queue, message) {
             const notarizedMessage = notary.notarizeDocument(message);
-            repository.queueMessage(queue, notarizedMessage);
+            const queueId = queue.getValue();
+            repository.queueMessage(queueId, notarizedMessage);
         },
 
         /**
@@ -361,7 +365,8 @@ exports.api = function(notary, repository) {
          * @returns {Component} The message received from the queue.
          */
         receiveMessage: function(queue) {
-            const source = repository.dequeueMessage(queue);
+            const queueId = queue.getValue();
+            const source = repository.dequeueMessage(queueId);
             if (source) {
                 // validate the document
                 const notarizedMessage = bali.parse(source);
@@ -384,7 +389,7 @@ exports.api = function(notary, repository) {
  * @returns {String} A unique identification string for the component.
  */
 function extractId(catalog) {
-    const id = catalog.getValue('$tag').toString() + catalog.getValue('$version').toString();
+    const id = catalog.getValue('$tag').getValue() + catalog.getValue('$version');
     return id;
 }
 

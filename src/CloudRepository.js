@@ -109,14 +109,29 @@ exports.repository = function(notary, cloudURL) {
             sendRequest(credentials, 'storeType', cloudURL, 'POST', 'type', typeId, type);
         },
 
+        queueExists: function(queueId) {
+            const credentials = generateCredentials(notary);
+            sendRequest(credentials, 'queueExists', cloudURL, 'HEAD', 'queue', queueId);
+        },
+
+        createQueue: function(queueId) {
+            const credentials = generateCredentials(notary);
+            sendRequest(credentials, 'createQueue', cloudURL, 'POST', 'queue', queueId);
+        },
+
+        deleteQueue: function(queueId) {
+            const credentials = generateCredentials(notary);
+            sendRequest(credentials, 'deleteQueue', cloudURL, 'DELETE', 'queue', queueId);
+        },
+
         queueMessage: function(queueId, message) {
             const credentials = generateCredentials(notary);
-            sendRequest(credentials, 'queueMessage', cloudURL, 'POST', 'message', queueId, message);
+            sendRequest(credentials, 'queueMessage', cloudURL, 'PUT', 'queue', queueId, message);
         },
 
         dequeueMessage: function(queueId) {
             const credentials = generateCredentials(notary);
-            const message = sendRequest(credentials, 'dequeueMessage', cloudURL, 'DELETE', 'message', queueId);
+            const message = sendRequest(credentials, 'dequeueMessage', cloudURL, 'GET', 'queue', queueId);
             return message;
         }
 
@@ -214,8 +229,11 @@ const sendRequest = function(credentials, procedure, url, method, type, identifi
                     });
             }
             break;
-        case 'message':
+        case 'queue':
             switch (method) {
+                case 'HEAD':
+                case 'GET':
+                case 'PUT':
                 case 'POST':
                 case 'DELETE':
                     break;
@@ -259,7 +277,7 @@ const sendRequest = function(credentials, procedure, url, method, type, identifi
     }
 
     const options = {
-        path: '/' + type + identifier,
+        path: '/' + type + '/' + identifier,
         method: method,
         agent: keepAliveAgent,
         timeout: 100,
@@ -271,7 +289,7 @@ const sendRequest = function(credentials, procedure, url, method, type, identifi
     const data = document ? document.toString() : undefined;
     if (data) {
         options.headers['Content-Type'] = 'application/bali';
-        options.headers['Content-Length'] = Buffer.byteLength(data);
+        options.headers['Content-Length'] = data.length;
     }
 
     var status = false;
@@ -295,7 +313,7 @@ const sendRequest = function(credentials, procedure, url, method, type, identifi
         });
     });
 
-    request.on('information', (response) => {
+    request.on('information', function(response) {
         status = response.statusCode === 200;
     });
 

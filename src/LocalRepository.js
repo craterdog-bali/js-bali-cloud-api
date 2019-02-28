@@ -316,9 +316,63 @@ exports.repository = function(testDirectory) {
             }
         },
 
-        queueMessage: function(queue, message) {
+        queueExists: function(queueId) {
+            const directory = queues + queueId;
             try {
-                const directory = queues + queue + '/';
+                return fs.existsSync(directory);
+            } catch (e) {
+                throw bali.exception({
+                    $module: '$LocalRepository',
+                    $procedure: '$queueExists',
+                    $exception: '$directoryAccess',
+                    $directory: '"' + directory + '"',
+                    $message: '"The local configuration directory could not be accessed."'
+                });
+            }
+        },
+
+        createQueue: function(queueId) {
+            const directory = queues + queueId;
+            try {
+                if (fs.existsSync(directory)) {
+                    throw bali.exception({
+                        $module: '$LocalRepository',
+                        $procedure: '$createQueue',
+                        $exception: '$queueExists',
+                        $directory: '"' + directory + '"',
+                        $message: '"The queue to be created already exists."'
+                    });
+                }
+                fs.mkdirSync(directory);
+            } catch (e) {
+                throw bali.exception({
+                    $module: '$LocalRepository',
+                    $procedure: '$createQueue',
+                    $exception: '$directoryAccess',
+                    $directory: '"' + directory + '"',
+                    $message: '"The local configuration directory could not be accessed."'
+                });
+            }
+        },
+
+        deleteQueue: function(queueId) {
+            const directory = queues + queueId;
+            try {
+                if (fs.existsSync(directory)) fs.unlinkSync(directory);
+            } catch (e) {
+                throw bali.exception({
+                    $module: '$LocalRepository',
+                    $procedure: '$deleteQueue',
+                    $exception: '$directoryAccess',
+                    $directory: '"' + directory + '"',
+                    $message: '"The local configuration directory could not be accessed."'
+                });
+            }
+        },
+
+        queueMessage: function(queueId, message) {
+            try {
+                const directory = queues + queueId + '/';
                 const messageId = bali.tag();
                 const filename = directory + messageId + '.ndoc';
                 if (!fs.existsSync(directory)) fs.mkdirSync(directory);
@@ -340,16 +394,16 @@ exports.repository = function(testDirectory) {
                     $module: '$LocalRepository',
                     $procedure: '$queueMessage',
                     $exception: '$directoryAccess',
-                    $directory: '"' + queues + queue + '/"',
+                    $directory: '"' + queues + queueId + '/"',
                     $message: '"The local configuration directory could not be accessed."'
                 });
             }
         },
 
-        dequeueMessage: function(queue) {
+        dequeueMessage: function(queueId) {
             try {
                 var message;
-                const directory = queues + queue + '/';
+                const directory = queues + queueId + '/';
                 while (fs.existsSync(directory)) {
                     const messages = fs.readdirSync(directory);
                     const count = messages.length;
@@ -376,7 +430,7 @@ exports.repository = function(testDirectory) {
                     $module: '$LocalRepository',
                     $procedure: '$dequeueMessage',
                     $exception: '$directoryAccess',
-                    $directory: '"' + queues + queue + '/"',
+                    $directory: '"' + queues + queueId + '/"',
                     $message: '"The local configuration directory could not be accessed."'
                 });
             }

@@ -27,7 +27,7 @@ describe('Bali Nebula API™', function() {
     describe('Test LocalRepository', function() {
 
         it('should perform a draft document lifecycle', function() {
-            const identifier = '#NZRRDAB94B4ZH0WDRT5N3TGX2ZTVMSV2v1.2.3';
+            const identifier = 'NZRRDAB94B4ZH0WDRT5N3TGX2ZTVMSV2v1.2.3';
 
             // store a new draft in the repository
             repository.storeDraft(identifier, source);
@@ -56,7 +56,7 @@ describe('Bali Nebula API™', function() {
         });
 
         it('should perform a committed document lifecycle', function() {
-            const identifier = '#YK4KPZHX2ZPVS0NNK2YH368XP7FR05Y9v3.4';
+            const identifier = 'YK4KPZHX2ZPVS0NNK2YH368XP7FR05Y9v3.4';
 
             // store a new document in the repository
             repository.storeDocument(identifier, source);
@@ -82,7 +82,7 @@ describe('Bali Nebula API™', function() {
         });
 
         it('should perform a message queue lifecycle', function() {
-            const queue = '#QSZNT8ABGSF75XR8FWHMYQCKTVK2WCPY';
+            const queue = 'QSZNT8ABGSF75XR8FWHMYQCKTVK2WCPY';
 
             // make sure the message queue is empty
             var none = repository.dequeueMessage(queue);

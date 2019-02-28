@@ -17,9 +17,9 @@ const nebula = require('../');
 const repository = nebula.repository(testDirectory);
 
 function extractId(component) {
-    const tag = component.getValue('$tag');
+    const identifier = component.getValue('$tag').getValue();
     const version = component.getValue('$version');
-    return '' + tag + version;
+    return '' + identifier + version;
 }
 
 describe('Bali Nebula API™', function() {
@@ -221,7 +221,7 @@ describe('Bali Nebula API™', function() {
     });
 
     describe('Test Messages', function() {
-        const queue = bali.parse('#QSZNT8ABGSF75XR8FWHMYQCKTVK2WCPY');
+        const queue = bali.tag('QSZNT8ABGSF75XR8FWHMYQCKTVK2WCPY');
         const source =
             '[\n' +
             '    $date: <2018-04-01>\n' +
