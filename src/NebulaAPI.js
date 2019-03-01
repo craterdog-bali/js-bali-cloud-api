@@ -132,7 +132,6 @@ exports.api = function(notary, repository) {
                 $tag: bali.tag(),
                 $version: bali.version()
             }));
-            const tag = bali.tag();
             const notarizedDraft = notary.notarizeDocument(draft);
             const draftCitation = notary.citeDocument(notarizedDraft);
             const draftId = extractId(draftCitation);
@@ -313,6 +312,17 @@ exports.api = function(notary, repository) {
         },
 
         /**
+         * This method creates a new message queue in the Bali Nebula™.
+         * 
+         * @returns {Tag} The unique tag for the new queue.
+         */
+        createQueue: function() {
+            const queueId = repository.createQueue();
+            const queue = bali.tag(queueId);
+            return queue;
+        },
+
+        /**
          * This method publishes the specified event in the Bali Nebula™.
          * Any component that has registered event handlers for this type of event
          * will be automatically notified.
@@ -374,6 +384,16 @@ exports.api = function(notary, repository) {
                 const message = notarizedMessage.getValue('$component');
                 return message;
             }
+        },
+
+        /**
+         * This method deletes the specified queue from the Bali Nebula™.
+         * 
+         * @param {Tag} queue The unique tag for the queue to be deleted.
+         */
+        deleteQueue: function(queue) {
+            const queueId = queue.getValue();
+            repository.deleteQueue(queueId);
         }
     };
 };

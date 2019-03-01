@@ -130,8 +130,8 @@ const postDraft = function(request, response) {
     try {
         const draftId = request.params.identifier;
         const draft = bali.parse(request.body);
-        if (repository.draftExists(draftId)) {
-            response.writeHead(409, 'Draft ' + draftId + ' already exists.');
+        if (repository.documentExists(draftId)) {
+            response.writeHead(409, 'Committed document ' + draftId + ' already exists.');
             response.end();
         } else {
             repository.storeDraft(draftId, draft);
@@ -318,10 +318,11 @@ const pingQueue = function(request, response) {
 
 const postQueue = function(request, response) {
     try {
-        const queueId = bali.tag();
+        const queue = bali.tag();
+        const queueId = queue.getValue();
         repository.createQueue(queueId);
         response.writeHead(201, 'Queue ' + queueId + ' was created.');
-        response.end(queueId);
+        response.end(queue);
     } catch (e) {
         response.writeHead(400, 'This was a badly formed request.');
         response.end();

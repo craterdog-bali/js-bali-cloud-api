@@ -373,7 +373,7 @@ exports.repository = function(testDirectory) {
         queueMessage: function(queueId, message) {
             try {
                 const directory = queues + queueId + '/';
-                const messageId = bali.tag();
+                const messageId = bali.tag().getValue();
                 const filename = directory + messageId + '.ndoc';
                 if (!fs.existsSync(directory)) fs.mkdirSync(directory);
                 const exists = fs.existsSync(filename);
