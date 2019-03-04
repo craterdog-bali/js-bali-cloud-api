@@ -380,8 +380,8 @@ exports.repository = function(testDirectory) {
         },
 
         queueExists: async function(queueId) {
+            const directory = queues + queueId;
             try {
-                const directory = queues + queueId;
                 const exists = await doesExist(directory);
                 return exists;
             } catch (exception) {
@@ -389,22 +389,22 @@ exports.repository = function(testDirectory) {
                     $module: '$LocalRepository',
                     $procedure: '$queueExists',
                     $exception: '$directoryAccess',
-                    $directory: '"' + queues + '"',
+                    $directory: '"' + directory + '"',
                     $message: '"The local configuration directory could not be accessed."'
                 });
             }
         },
 
         createQueue: async function(queueId) {
+            const directory = queues + queueId;
             try {
-                const directory = queues + queueId;
                 const exists = await doesExist(directory);
                 if (exists) {
                     throw bali.exception({
                         $module: '$LocalRepository',
                         $procedure: '$createQueue',
                         $exception: '$directoryExists',
-                        $directory: '"' + queues + '"',
+                        $directory: '"' + directory + '"',
                         $file: '"' + queueId + '.ndoc"',
                         $message: '"The directory to be created already exists."'
                     });
@@ -422,8 +422,8 @@ exports.repository = function(testDirectory) {
         },
 
         deleteQueue: async function(queueId) {
+            const directory = queues + queueId;
             try {
-                const directory = queues + queueId;
                 const exists = await doesExist(directory);
                 if (exists) {
                     await pfs.rmdirSync(directory);
@@ -441,9 +441,9 @@ exports.repository = function(testDirectory) {
         },
 
         queueMessage: async function(queueId, message) {
+            const directory = queues + queueId + '/';
             try {
                 const messageId = bali.tag().getValue();
-                const directory = queues + queueId + '/';
                 const filename = directory + messageId + '.ndoc';
                 const exists = await doesExist(filename);
                 if (exists) {
@@ -463,16 +463,16 @@ exports.repository = function(testDirectory) {
                     $module: '$LocalRepository',
                     $procedure: '$queueMessage',
                     $exception: '$directoryAccess',
-                    $directory: '"' + queues + queueId + '/"',
+                    $directory: '"' + directory + '"',
                     $message: '"The local configuration directory could not be accessed."'
                 });
             }
         },
 
         dequeueMessage: async function(queueId) {
+            const directory = queues + queueId + '/';
             try {
                 var message;
-                const directory = queues + queueId + '/';
                 while (await doesExist(directory)) {
                     const messages = await pfs.readdir(directory);
                     const count = messages.length;
@@ -499,7 +499,7 @@ exports.repository = function(testDirectory) {
                     $module: '$LocalRepository',
                     $procedure: '$dequeueMessage',
                     $exception: '$directoryAccess',
-                    $directory: '"' + queues + queueId + '/"',
+                    $directory: '"' + directory + '"',
                     $message: '"The local configuration directory could not be accessed."'
                 });
             }
