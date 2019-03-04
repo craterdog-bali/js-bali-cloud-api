@@ -627,14 +627,6 @@ const getMessage = async function(request, response) {
 
 // SERVICE INITIALIZATION
 
-const defaultErrorHandler = console.error;
-
-const asyncRoute = function(route) {
-    return function(req, res, next = defaultErrorHandler) {
-        return Promise.resolve(route(req, res)).catch(next);
-    };
-};
-
 const certificateRouter = express.Router();
 certificateRouter.head('/:identifier', pingCertificate);
 certificateRouter.post('/:identifier', postCertificate);
