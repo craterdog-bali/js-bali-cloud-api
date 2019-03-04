@@ -88,7 +88,7 @@ const postCertificate = async function(request, response) {
             response.writeHead(409, message);
             response.end();
         } else {
-            await repository.storeCertificate(certificateId, certificate);
+            await repository.createCertificate(certificateId, certificate);
             message = 'Service: certificate ' + certificateId + ' was stored.';
             if (isLogging) console.log(message);
             response.writeHead(201, message);
@@ -200,7 +200,7 @@ const postDraft = async function(request, response) {
             response.writeHead(409, message);
             response.end();
         } else {
-            await repository.storeDraft(draftId, draft);
+            await repository.createDraft(draftId, draft);
             message = 'Service: draft ' + draftId + ' was stored.';
             if (isLogging) console.log(message);
             response.writeHead(201, message);
@@ -232,7 +232,7 @@ const putDraft = async function(request, response) {
             response.writeHead(404, message);
             response.end();
         } else {
-            await repository.storeDraft(draftId, draft);
+            await repository.createDraft(draftId, draft);
             message = 'Service: draft ' + draftId + ' was updated.';
             if (isLogging) console.log(message);
             response.writeHead(201, message);
@@ -344,7 +344,7 @@ const postDocument = async function(request, response) {
             response.writeHead(409, message);
             response.end();
         } else {
-            await repository.storeDocument(documentId, document);
+            await repository.createDocument(documentId, document);
             message = 'Service: document ' + documentId + ' was stored.';
             if (isLogging) console.log(message);
             response.writeHead(201, message);
@@ -451,7 +451,7 @@ const postType = async function(request, response) {
             response.writeHead(409, message);
             response.end();
         } else {
-            await repository.storeDocument(typeId, type);
+            await repository.createDocument(typeId, type);
             message = 'Service: type ' + typeId + ' was stored.';
             if (isLogging) console.log(message);
             response.writeHead(201, message);

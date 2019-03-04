@@ -31,7 +31,7 @@ describe('Bali Nebula API™', function() {
             const identifier = 'BXC15F9H0V4AJVTHJHN1B6VA8PZP4S51v1.2.3';
 
             // store a new draft in the repository
-            await repository.storeDraft(identifier, source);
+            await repository.createDraft(identifier, source);
 
             // make sure the new draft exists in the repository
             var exists = await repository.draftExists(identifier);
@@ -61,7 +61,7 @@ describe('Bali Nebula API™', function() {
             const identifier = '454J79TXY3799ZL8VNG2G4SBMVDFVPBVv3.4';
 
             // store a new document in the repository
-            await repository.storeDocument(identifier, source);
+            await repository.createDocument(identifier, source);
 
             // make sure the same draft does not exist in the repository
             var exists = await repository.draftExists(identifier);
@@ -80,9 +80,9 @@ describe('Bali Nebula API™', function() {
             expect(exists).is.true;  // jshint ignore:line
 
             // attempt to store the same document in the repository
-            //expect(repository.storeDocument.bind(repository, identifier, source)).to.throw();
+            //expect(repository.createDocument.bind(repository, identifier, source)).to.throw();
             try {
-                await repository.storeDocument(identifier, source);
+                await repository.createDocument(identifier, source);
                 assert.fail('The attempt to store the same document should have failed.');
             } catch(error) {
                 // expected

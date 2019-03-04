@@ -63,7 +63,7 @@ exports.api = function(notary, repository) {
                     const notarizedCertificate = bali.parse(source);
                     validateCertificate(notary, citation, notarizedCertificate);
                     certificate = notarizedCertificate.getValue('$component');
-                    cache.storeCertificate(certificateId, certificate);
+                    cache.createCertificate(certificateId, certificate);
                 }
             }
             return certificate;
@@ -86,7 +86,7 @@ exports.api = function(notary, repository) {
                     const notarizedType = bali.parse(source);
                     validateDocument(notary, repository, notarizedType);
                     type = notarizedType.getValue('$component');
-                    cache.storeType(typeId, type);
+                    cache.createType(typeId, type);
                 }
             }
             return type;
@@ -113,9 +113,9 @@ exports.api = function(notary, repository) {
                     $message: '"A committed version of the type document referenced by the citation already exists."'
                 });
             }
-            await repository.storeType(typeId, notarizedType);
+            await repository.createType(typeId, notarizedType);
             type = notarizedType.getValue('$component');
-            cache.storeType(typeId, type);
+            cache.createType(typeId, type);
             return typeCitation;
         },
 
@@ -135,7 +135,7 @@ exports.api = function(notary, repository) {
             const notarizedDraft = await notary.notarizeDocument(draft);
             const draftCitation = await notary.citeDocument(notarizedDraft);
             const draftId = extractId(draftCitation);
-            await repository.storeDraft(draftId, notarizedDraft);
+            await repository.createDraft(draftId, notarizedDraft);
             // we don't cache drafts since they are mutable
             return draftCitation;
         },
@@ -166,14 +166,14 @@ exports.api = function(notary, repository) {
          * @param {Component} draft The draft document to be saved.
          * @returns {Catalog} A document citation for the updated draft document.
          */
-        saveDraft: async function(draft) {
+        updateDraft: async function(draft) {
             const notarizedDraft = await notary.notarizeDocument(draft);
             const draftCitation = await notary.citeDocument(notarizedDraft);
             const draftId = extractId(draftCitation);
             if (cache.documentExists(draftId) || await repository.documentExists(draftId)) {
                 throw bali.exception({
                     $module: '$NebulaAPI',
-                    $procedure: '$saveDraft',
+                    $procedure: '$updateDraft',
                     $exception: '$versionExists',
                     $tag: draftCitation.getValue('$tag'),
                     $version: draftCitation.getValue('$version'),
@@ -217,9 +217,9 @@ exports.api = function(notary, repository) {
                     $message: '"A committed version of the document referenced by the citation already exists."'
                 });
             }
-            await repository.storeDocument(documentId, notarizedDocument);
+            await repository.createDocument(documentId, notarizedDocument);
             document = notarizedDocument.getValue('$component');
-            cache.storeDocument(documentId, document);
+            cache.createDocument(documentId, document);
             if (await repository.draftExists(documentId)) await repository.deleteDraft(documentId);
             return documentCitation;
         },
@@ -241,7 +241,7 @@ exports.api = function(notary, repository) {
                     validateCitation(notary, citation, notarizedDocument);
                     validateDocument(notary, repository, notarizedDocument);
                     document = notarizedDocument.getValue('$component');
-                    cache.storeDocument(documentId, document);
+                    cache.createDocument(documentId, document);
                 }
             }
             return document;
@@ -299,14 +299,14 @@ exports.api = function(notary, repository) {
             validateCitation(notary, citation, notarizedDocument);
             validateDocument(notary, repository, notarizedDocument);
             const document = notarizedDocument.getValue('$component');
-            cache.storeDocument(documentId, document);
+            cache.createDocument(documentId, document);
 
             // store a draft copy of the document in the repository (NOTE: drafts are not cached)
             const draft = bali.duplicate(document);
             draft.getParameters().setParameter('$version', draftVersion);
             const notarizedDraft = await notary.notarizeDocument(draft, citation);
             const draftCitation = await notary.citeDocument(notarizedDraft);
-            await repository.storeDraft(draftId, notarizedDraft);
+            await repository.createDraft(draftId, notarizedDraft);
 
             return draftCitation;
         },
@@ -500,7 +500,7 @@ const validateDocument = async function(notary, repository, document) {
                 const certificateDocument = bali.parse(source);
                 validateCertificate(notary, certificateCitation, certificateDocument);
                 certificate = certificateDocument.getValue('$component');
-                cache.storeCertificate(certificateId, certificate);
+                cache.createCertificate(certificateId, certificate);
             } else {
                 throw bali.exception({
                     $module: '$NebulaAPI',
@@ -562,7 +562,7 @@ const cache = {
         return this.certificates.get(certificateId);
     },
 
-    storeCertificate: function(certificateId, certificate) {
+    createCertificate: function(certificateId, certificate) {
         if (this.certificates.size > this.MAX_CERTIFICATES) {
             // delete the first (oldest) cached certificate
             const key = this.certificates.keys().next().getValue();
@@ -579,7 +579,7 @@ const cache = {
         return this.documents.get(documentId);
     },
 
-    storeDocument: function(documentId, document) {
+    createDocument: function(documentId, document) {
         if (this.documents.size > this.MAX_DOCUMENTS) {
             // delete the first (oldest) cached document
             const key = this.documents.keys().next().getValue();
@@ -596,7 +596,7 @@ const cache = {
         return this.types.get(typeId);
     },
 
-    storeType: function(typeId, type) {
+    createType: function(typeId, type) {
         if (this.types.size > this.MAX_TYPES) {
             // delete the first (oldest) cached type
             const key = this.types.keys().next().getValue();

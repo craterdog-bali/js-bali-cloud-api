@@ -122,14 +122,14 @@ exports.repository = function(testDirectory) {
             }
         },
 
-        storeCertificate: async function(certificateId, certificate) {
+        createCertificate: async function(certificateId, certificate) {
             try {
                 const filename = certificates + certificateId + '.ndoc';
                 const exists = await doesExist(filename);
                 if (exists) {
                     throw bali.exception({
                         $module: '$LocalRepository',
-                        $procedure: '$storeCertificate',
+                        $procedure: '$createCertificate',
                         $exception: '$fileExists',
                         $directory: '"' + certificates + '"',
                         $file: '"' + certificateId + '.ndoc"',
@@ -141,7 +141,7 @@ exports.repository = function(testDirectory) {
             } catch (exception) {
                 throw bali.exception({
                     $module: '$LocalRepository',
-                    $procedure: '$storeCertificate',
+                    $procedure: '$createCertificate',
                     $exception: '$directoryAccess',
                     $directory: '"' + certificates + '"',
                     $message: '"The local configuration directory could not be accessed."'
@@ -186,14 +186,14 @@ exports.repository = function(testDirectory) {
             }
         },
 
-        storeDraft: async function(draftId, draft) {
+        createDraft: async function(draftId, draft) {
             try {
                 const filename = drafts + draftId + '.ndoc';
                 const exists = await doesExist(filename);
                 if (exists) {
                     throw bali.exception({
                         $module: '$LocalRepository',
-                        $procedure: '$storeDraft',
+                        $procedure: '$createDraft',
                         $exception: '$fileExists',
                         $directory: '"' + drafts + '"',
                         $file: '"' + draftId + '.ndoc"',
@@ -205,7 +205,7 @@ exports.repository = function(testDirectory) {
             } catch (exception) {
                 throw bali.exception({
                     $module: '$LocalRepository',
-                    $procedure: '$storeDraft',
+                    $procedure: '$createDraft',
                     $exception: '$directoryAccess',
                     $directory: '"' + drafts + '"',
                     $message: '"The local configuration directory could not be accessed."'
@@ -295,14 +295,14 @@ exports.repository = function(testDirectory) {
             }
         },
 
-        storeDocument: async function(documentId, document) {
+        createDocument: async function(documentId, document) {
             try {
                 const filename = documents + documentId + '.ndoc';
                 const exists = await doesExist(filename);
                 if (exists) {
                     throw bali.exception({
                         $module: '$LocalRepository',
-                        $procedure: '$storeDocument',
+                        $procedure: '$createDocument',
                         $exception: '$fileExists',
                         $directory: '"' + documents + '"',
                         $file: '"' + documentId + '.ndoc"',
@@ -314,7 +314,7 @@ exports.repository = function(testDirectory) {
             } catch (exception) {
                 throw bali.exception({
                     $module: '$LocalRepository',
-                    $procedure: '$storeDocument',
+                    $procedure: '$createDocument',
                     $exception: '$directoryAccess',
                     $directory: '"' + documents + '"',
                     $message: '"The local configuration directory could not be accessed."'
@@ -359,14 +359,14 @@ exports.repository = function(testDirectory) {
             }
         },
 
-        storeType: async function(typeId, type) {
+        createType: async function(typeId, type) {
             try {
                 const filename = types + typeId + '.ndoc';
                 const exists = await doesExist(filename);
                 if (exists) {
                     throw bali.exception({
                         $module: '$LocalRepository',
-                        $procedure: '$storeType',
+                        $procedure: '$createType',
                         $exception: '$fileExists',
                         $directory: '"' + types + '"',
                         $file: '"' + typeId + '.ndoc"',
@@ -378,7 +378,7 @@ exports.repository = function(testDirectory) {
             } catch (exception) {
                 throw bali.exception({
                     $module: '$LocalRepository',
-                    $procedure: '$storeType',
+                    $procedure: '$createType',
                     $exception: '$directoryAccess',
                     $directory: '"' + types + '"',
                     $message: '"The local configuration directory could not be accessed."'

@@ -47,7 +47,7 @@ describe('Bali Nebula API™', function() {
             consumerCitation = consumerNotary.getCitation();
             expect(consumerCitation).to.exist;  // jshint ignore:line
             const certificateId = extractId(consumerCitation);
-            await repository.storeCertificate(certificateId, consumerCertificate);
+            await repository.createCertificate(certificateId, consumerCertificate);
         });
 
         it('should setup the digital notary for the merchant', async function() {
@@ -59,7 +59,7 @@ describe('Bali Nebula API™', function() {
             merchantCitation = merchantNotary.getCitation();
             expect(merchantCitation).to.exist;  // jshint ignore:line
             const certificateId = extractId(merchantCitation);
-            await repository.storeCertificate(certificateId, merchantCertificate);
+            await repository.createCertificate(certificateId, merchantCertificate);
         });
 
         it('should setup the client environment for the consumer', async function() {
@@ -97,7 +97,7 @@ describe('Bali Nebula API™', function() {
         });
 
         it('should save a new draft document in the repository', async function() {
-            draftCitation = await consumerClient.saveDraft(draft);
+            draftCitation = await consumerClient.updateDraft(draft);
             expect(draft.toString()).to.equal(draftSource);
         });
 
@@ -109,7 +109,7 @@ describe('Bali Nebula API™', function() {
 
         it('should save an updated draft document in the repository', async function() {
             draft.setValue('$bar', '"baz"');
-            draftCitation = await consumerClient.saveDraft(draft);
+            draftCitation = await consumerClient.updateDraft(draft);
             expect(draft.toString()).to.not.equal(draftSource);
             expect(draft.getValue('$foo').toString()).to.equal('"bar"');
             expect(draft.getValue('$bar').toString()).to.equal('"baz"');

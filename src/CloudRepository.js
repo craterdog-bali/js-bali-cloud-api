@@ -49,9 +49,9 @@ exports.repository = function(notary, cloudURL) {
             return certificate;
         },
 
-        storeCertificate: async function(certificateId, certificate) {
+        createCertificate: async function(certificateId, certificate) {
             const credentials = generateCredentials(notary);
-            await sendRequest(credentials, '$storeCertificate', cloudURL, 'POST', 'certificate', certificateId, certificate);
+            await sendRequest(credentials, '$createCertificate', cloudURL, 'POST', 'certificate', certificateId, certificate);
         },
 
         draftExists: async function(draftId) {
@@ -66,9 +66,9 @@ exports.repository = function(notary, cloudURL) {
             return draft;
         },
 
-        storeDraft: async function(draftId, draft) {
+        createDraft: async function(draftId, draft) {
             const credentials = generateCredentials(notary);
-            await sendRequest(credentials, '$storeDraft', cloudURL, 'POST', 'draft', draftId, draft);
+            await sendRequest(credentials, '$createDraft', cloudURL, 'POST', 'draft', draftId, draft);
         },
 
         updateDraft: async function(draftId, draft) {
@@ -93,9 +93,9 @@ exports.repository = function(notary, cloudURL) {
             return document;
         },
 
-        storeDocument: async function(documentId, document) {
+        createDocument: async function(documentId, document) {
             const credentials = generateCredentials(notary);
-            await sendRequest(credentials, '$storeDocument', cloudURL, 'POST', 'document', documentId, document);
+            await sendRequest(credentials, '$createDocument', cloudURL, 'POST', 'document', documentId, document);
         },
 
         typeExists: async function(typeId) {
@@ -110,9 +110,9 @@ exports.repository = function(notary, cloudURL) {
             return type;
         },
 
-        storeType: async function(typeId, type) {
+        createType: async function(typeId, type) {
             const credentials = generateCredentials(notary);
-            await sendRequest(credentials, '$storeType', cloudURL, 'POST', 'type', typeId, type);
+            await sendRequest(credentials, '$createType', cloudURL, 'POST', 'type', typeId, type);
         },
 
         queueExists: async function(queueId) {
