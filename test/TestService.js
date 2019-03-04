@@ -13,7 +13,7 @@ const repository = require('../').local('test/config/');
 const express = require("express");
 const bodyParser = require('body-parser');
 /* global Promise */
-const isLogging = true;
+const isLogging = false;
 
 
 // PRIVATE FUNCTIONS
@@ -81,7 +81,7 @@ const postCertificate = async function(request, response) {
     var message = 'Service: post certificate: ' + certificateId + '\n' + request.body;
     if (isLogging) console.log(message);
     try {
-        const certificate = bali.parse(request.body);
+        const certificate = request.body;
         if (await repository.certificateExists(certificateId)) {
             message = 'Service: certificate ' + certificateId + ' already exists.';
             if (isLogging) console.log(message);
@@ -188,7 +188,7 @@ const postDraft = async function(request, response) {
     var message = 'Service: post draft document: ' + draftId + '\n' + request.body;
     if (isLogging) console.log(message);
     try {
-        const draft = bali.parse(request.body);
+        const draft = request.body;
         if (await repository.documentExists(draftId)) {
             message = 'Service: a committed document ' + draftId + ' already exists.';
             if (isLogging) console.log(message);
@@ -220,7 +220,7 @@ const putDraft = async function(request, response) {
     var message = 'Service: put draft document: ' + draftId + '\n' + request.body;
     if (isLogging) console.log(message);
     try {
-        const draft = bali.parse(request.body);
+        const draft = request.body;
         if (await repository.documentExists(draftId)) {
             message = 'Service: a committed document ' + draftId + ' already exists.';
             if (isLogging) console.log(message);
@@ -337,7 +337,7 @@ const postDocument = async function(request, response) {
     var message = 'Service: post document: ' + documentId + '\n' + request.body;
     if (isLogging) console.log(message);
     try {
-        const document = bali.parse(request.body);
+        const document = request.body;
         if (await repository.documentExists(documentId)) {
             message = 'Service: document ' + documentId + ' already exists.';
             if (isLogging) console.log(message);
@@ -444,7 +444,7 @@ const postType = async function(request, response) {
     var message = 'Service: post type: ' + typeId + '\n' + request.body;
     if (isLogging) console.log(message);
     try {
-        const type = bali.parse(request.body);
+        const type = request.body;
         if (await repository.typeExists(typeId)) {
             message = 'Service: type ' + typeId + ' already exists.';
             if (isLogging) console.log(message);
@@ -564,7 +564,7 @@ const putMessage = async function(request, response) {
     if (isLogging) console.log(message);
     try {
         if (await repository.queueExists(queueId)) {
-            message = bali.parse(request.body);
+            message = request.body;
             await repository.queueMessage(queueId, message);
             message = 'Service: message was added to queue ' + queueId + '.';
             if (isLogging) console.log(message);
@@ -673,11 +673,11 @@ queueRouter.delete('/:identifier', deleteQueue);
 const service = express();
 
 service.use(bodyParser.text({ type: 'application/bali' }));
-service.use('/certificate', asyncRoute(certificateRouter));
-service.use('/draft', asyncRoute(draftRouter));
-service.use('/document', asyncRoute(documentRouter));
-service.use('/type', asyncRoute(typeRouter));
-service.use('/queue', asyncRoute(queueRouter));
+service.use('/certificate', certificateRouter);
+service.use('/draft', draftRouter);
+service.use('/document', documentRouter);
+service.use('/type', typeRouter);
+service.use('/queue', queueRouter);
 
 service.listen(3000, function() {
     var message = 'Service: Server running on port 3000';

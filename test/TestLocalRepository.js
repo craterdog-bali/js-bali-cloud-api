@@ -25,10 +25,10 @@ const source =
 
 describe('Bali Nebula API™', function() {
 
-    describe('Test LocalRepository', function() {
+    describe('Test Local Repository', function() {
 
         it('should perform a draft document lifecycle', async function() {
-            const identifier = 'NZRRDAB94B4ZH0WDRT5N3TGX2ZTVMSV2v1.2.3';
+            const identifier = 'BXC15F9H0V4AJVTHJHN1B6VA8PZP4S51v1.2.3';
 
             // store a new draft in the repository
             await repository.storeDraft(identifier, source);
@@ -58,7 +58,7 @@ describe('Bali Nebula API™', function() {
         });
 
         it('should perform a committed document lifecycle', async function() {
-            const identifier = 'YK4KPZHX2ZPVS0NNK2YH368XP7FR05Y9v3.4';
+            const identifier = '454J79TXY3799ZL8VNG2G4SBMVDFVPBVv3.4';
 
             // store a new document in the repository
             await repository.storeDocument(identifier, source);
@@ -81,16 +81,17 @@ describe('Bali Nebula API™', function() {
 
             // attempt to store the same document in the repository
             //expect(repository.storeDocument.bind(repository, identifier, source)).to.throw();
-            await repository.storeDocument(identifier, source).then(function() {
+            try {
+                await repository.storeDocument(identifier, source);
                 assert.fail('The attempt to store the same document should have failed.');
-            }).catch(function(error) {
+            } catch(error) {
                 // expected
-            });
+            };
 
         });
 
         it('should perform a message queue lifecycle', async function() {
-            const queueId = 'QSZNT8ABGSF75XR8FWHMYQCKTVK2WCPY';
+            const queueId = 'TGKQJ6B4Y5KPCQGRXB1817MLN2WSV6FM';
 
             // create a new queue
             await repository.createQueue(queueId);

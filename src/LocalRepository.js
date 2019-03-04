@@ -25,6 +25,7 @@
 const pfs = require('fs').promises;
 const os = require('os');
 const bali = require('bali-component-framework');
+const EOL = '\n';  // POSIX compliant end of line
 
 
 /**
@@ -46,30 +47,26 @@ exports.repository = function(testDirectory) {
     const queues = repositoryDirectory + 'queues/';
     try {
         // create the repository directory structure if necessary (with drwx------ permissions)
-        pfs.mkdir(configDirectory, 0o700).then(function() {
+        pfs.mkdir(configDirectory, 0o700)
+        .catch(function(exception) {
+        }).then(function() {
             return pfs.mkdir(repositoryDirectory, 0o700);
-        }).catch(function() {
-            console.error('config directory exists');
+        }).catch(function(exception) {
         }).then(function() {
             return pfs.mkdir(certificates, 0o700);
-        }).catch(function() {
-            console.error('certificates directory exists');
+        }).catch(function(exception) {
         }).then(function() {
             return pfs.mkdir(drafts, 0o700);
-        }).catch(function() {
-            console.error('drafts directory exists');
+        }).catch(function(exception) {
         }).then(function() {
             return pfs.mkdir(documents, 0o700);
-        }).catch(function() {
-            console.error('documents directory exists');
+        }).catch(function(exception) {
         }).then(function() {
             return pfs.mkdir(types, 0o700);
-        }).catch(function() {
-            console.error('types directory exists');
+        }).catch(function(exception) {
         }).then(function() {
             return pfs.mkdir(queues, 0o700);
-        }).catch(function() {
-            console.error('queues directory exists');
+        }).catch(function(exception) {
         });
     } catch (exception) {
         throw bali.exception({
@@ -106,9 +103,13 @@ exports.repository = function(testDirectory) {
 
         fetchCertificate: async function(certificateId) {
             try {
+                var certificate;
                 const filename = certificates + certificateId + '.ndoc';
                 const exists = await doesExist(filename);
-                const certificate = await pfs.readFile(filename).toString().slice(0, -1);  // remove POSIX compliant <EOL>
+                if (exists) {
+                    certificate = await pfs.readFile(filename);
+                    certificate = certificate.toString().slice(0, -1);  // remove POSIX compliant <EOL>
+                }
                 return certificate;
             } catch (exception) {
                 throw bali.exception({
@@ -135,7 +136,7 @@ exports.repository = function(testDirectory) {
                         $message: '"The file to be written already exists."'
                     });
                 }
-                const document = certificate.toString() + '\n';  // add POSIX compliant <EOL>
+                const document = certificate.toString() + EOL;  // add POSIX compliant <EOL>
                 await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o400});
             } catch (exception) {
                 throw bali.exception({
@@ -166,12 +167,14 @@ exports.repository = function(testDirectory) {
 
         fetchDraft: async function(draftId) {
             try {
+                var draft;
                 const filename = drafts + draftId + '.ndoc';
                 const exists = await doesExist(filename);
                 if (exists) {
-                    const draft = await pfs.readFile(filename).toString().slice(0, -1);  // remove POSIX compliant <EOL>
-                    return draft;
+                    draft = await pfs.readFile(filename);
+                    draft = draft.toString().slice(0, -1);  // remove POSIX compliant <EOL>
                 }
+                return draft;
             } catch (exception) {
                 throw bali.exception({
                     $module: '$LocalRepository',
@@ -197,7 +200,7 @@ exports.repository = function(testDirectory) {
                         $message: '"The file to be written already exists."'
                     });
                 }
-                const document = draft.toString() + '\n';  // add POSIX compliant <EOL>
+                const document = draft.toString() + EOL;  // add POSIX compliant <EOL>
                 await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o600});
             } catch (exception) {
                 throw bali.exception({
@@ -224,7 +227,7 @@ exports.repository = function(testDirectory) {
                         $message: '"The file to be updated does not exist."'
                     });
                 }
-                const document = draft.toString() + '\n';  // add POSIX compliant <EOL>
+                const document = draft.toString() + EOL;  // add POSIX compliant <EOL>
                 await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o600});
             } catch (exception) {
                 throw bali.exception({
@@ -273,12 +276,14 @@ exports.repository = function(testDirectory) {
 
         fetchDocument: async function(documentId) {
             try {
+                var document;
                 const filename = documents + documentId + '.ndoc';
                 const exists = await doesExist(filename);
                 if (exists) {
-                    const document = await pfs.readFile(filename).toString().slice(0, -1);  // remove POSIX compliant <EOL>
-                    return document;
+                    document = await pfs.readFile(filename);
+                    document = document.toString().slice(0, -1);  // remove POSIX compliant <EOL>
                 }
+                return document;
             } catch (exception) {
                 throw bali.exception({
                     $module: '$LocalRepository',
@@ -304,7 +309,7 @@ exports.repository = function(testDirectory) {
                         $message: '"The file to be written already exists."'
                     });
                 }
-                document = document.toString() + '\n';  // add POSIX compliant <EOL>
+                document = document.toString() + EOL;  // add POSIX compliant <EOL>
                 await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o400});
             } catch (exception) {
                 throw bali.exception({
@@ -335,12 +340,14 @@ exports.repository = function(testDirectory) {
 
         fetchType: async function(typeId) {
             try {
+                var type;
                 const filename = types + typeId + '.ndoc';
                 const exists = await doesExist(filename);
                 if (exists) {
-                    const type = await pfs.readFile(filename).toString().slice(0, -1);  // remove POSIX compliant <EOL>
-                    return type;
+                    type = await pfs.readFile(filename);
+                    type = type.toString().slice(0, -1);  // remove POSIX compliant <EOL>
                 }
+                return type;
             } catch (exception) {
                 throw bali.exception({
                     $module: '$LocalRepository',
@@ -366,7 +373,7 @@ exports.repository = function(testDirectory) {
                         $message: '"The file to be written already exists."'
                     });
                 }
-                const document = type.toString() + '\n';  // add POSIX compliant <EOL>
+                const document = type.toString() + EOL;  // add POSIX compliant <EOL>
                 await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o400});
             } catch (exception) {
                 throw bali.exception({
@@ -426,7 +433,7 @@ exports.repository = function(testDirectory) {
             try {
                 const exists = await doesExist(directory);
                 if (exists) {
-                    await pfs.rmdirSync(directory);
+                    await pfs.rmdir(directory);
                 }
             } catch (exception) {
                 throw bali.exception({
@@ -456,7 +463,7 @@ exports.repository = function(testDirectory) {
                         $message: '"The file to be written already exists."'
                     });
                 }
-                const document = message.toString() + '\n';  // add POSIX compliant <EOL>
+                const document = message.toString() + EOL;  // add POSIX compliant <EOL>
                 await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o600});
             } catch (exception) {
                 throw bali.exception({
@@ -481,7 +488,8 @@ exports.repository = function(testDirectory) {
                         const index = bali.random.index(count) - 1;  // convert to zero based indexing
                         const messageFile = messages[index];
                         const filename = directory + messageFile;
-                        message = await pfs.readFile(filename).toString().slice(0, -1);  // remove POSIX compliant <EOL>
+                        message = await pfs.readFile(filename);
+                        message = message.toString().slice(0, -1);  // remove POSIX compliant <EOL>
                         try {
                             await pfs.unlink(filename);
                             break; // we got there first

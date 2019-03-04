@@ -32,7 +32,7 @@ const source =
 
 describe('Bali Nebula API™', function() {
 
-    describe('Test LocalRepository', function() {
+    describe('Test Cloud Repository', function() {
 
         it('should perform a draft document lifecycle', async function() {
             const identifier = 'NZRRDAB94B4ZH0WDRT5N3TGX2ZTVMSV2v1.2.3';
