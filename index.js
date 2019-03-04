@@ -10,16 +10,25 @@
 'use strict';
 
 /**
- * This function initializes the document repository for the Bali Nebula™.
+ * This function initializes a test document repository for the Bali Nebula™.
  * 
- * @param {String} testDirectory An optional test directory to be used as a local
- * document repository.
+ * @param {String} testDirectory A test directory to be used as a local document repository.
  * @returns {Object} A singleton object containing the initialized document repository.
  */
-exports.repository = function(testDirectory) {
-    const repository = testDirectory ?
-        require('./src/LocalRepository').repository(testDirectory) :
-        require('./src/CloudRepository').repository();
+exports.local = function(testDirectory) {
+    const repository = require('./src/LocalRepository').repository(testDirectory);
+    return repository;
+};
+
+/**
+ * This function initializes a cloud based document repository for the Bali Nebula™.
+ * 
+ * @param {Object} notary An object that implements the digital notary API.
+ * @param {String|URL} cloudURL An object that defines the URL for the cloud repository.
+ * @returns {Object} A singleton object containing the initialized document repository.
+ */
+exports.cloud = function(notary, cloudURL) {
+    const repository = require('./src/CloudRepository').repository(notary, cloudURL);
     return repository;
 };
 

@@ -34,6 +34,7 @@
     "webpack": "^4.28.2"
   },
   "dependencies": {
+    "axios": "^0.18.0",
     "bali-component-framework": "^1.9.6",
     "bali-digital-notary": "^1.5.0"
   }

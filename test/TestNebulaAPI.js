@@ -14,7 +14,7 @@ const expect = require('chai').expect;
 const bali = require('bali-component-framework');
 const notary = require('bali-digital-notary');
 const nebula = require('../');
-const repository = nebula.repository(testDirectory);
+const repository = nebula.local(testDirectory);
 
 function extractId(component) {
     const identifier = component.getValue('$tag').getValue();

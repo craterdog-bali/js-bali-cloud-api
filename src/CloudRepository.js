@@ -15,7 +15,8 @@
  * as UTF-8 encoded strings.
  */
 const bali = require('bali-component-framework');
-const http = require('http');
+const axios = require('axios');
+
 /**
  * This function returns an object that implements the API for the AWS cloud document
  * repository.
@@ -36,102 +37,108 @@ exports.repository = function(notary, cloudURL) {
             return catalog.toString();
         },
 
-        certificateExists: function(certificateId) {
+        certificateExists: async function(certificateId) {
             const credentials = generateCredentials(notary);
-            const status = sendRequest(credentials, 'certificateExists', cloudURL, 'HEAD', 'certificate', certificateId);
+            const status = await sendRequest(credentials, '$certificateExists', cloudURL, 'HEAD', 'certificate', certificateId);
             return status;
         },
 
-        fetchCertificate: function(certificateId) {
+        fetchCertificate: async function(certificateId) {
             const credentials = generateCredentials(notary);
-            const certificate = sendRequest(credentials, 'fetchCertificate', cloudURL, 'GET', 'certificate', certificateId);
+            const certificate = await sendRequest(credentials, '$fetchCertificate', cloudURL, 'GET', 'certificate', certificateId);
             return certificate;
         },
 
-        storeCertificate: function(certificateId, certificate) {
+        storeCertificate: async function(certificateId, certificate) {
             const credentials = generateCredentials(notary);
-            sendRequest(credentials, 'storeCertificate', cloudURL, 'POST', 'certificate', certificateId, certificate);
+            await sendRequest(credentials, '$storeCertificate', cloudURL, 'POST', 'certificate', certificateId, certificate);
         },
 
-        draftExists: function(draftId) {
+        draftExists: async function(draftId) {
             const credentials = generateCredentials(notary);
-            const status = sendRequest(credentials, 'draftExists', cloudURL, 'HEAD', 'draft', draftId);
+            const status = await sendRequest(credentials, '$draftExists', cloudURL, 'HEAD', 'draft', draftId);
             return status;
         },
 
-        fetchDraft: function(draftId) {
+        fetchDraft: async function(draftId) {
             const credentials = generateCredentials(notary);
-            const draft = sendRequest(credentials, 'fetchDraft', cloudURL, 'GET', 'draft', draftId);
+            const draft = await sendRequest(credentials, '$fetchDraft', cloudURL, 'GET', 'draft', draftId);
             return draft;
         },
 
-        storeDraft: function(draftId, draft) {
+        storeDraft: async function(draftId, draft) {
             const credentials = generateCredentials(notary);
-            sendRequest(credentials, 'storeDraft', cloudURL, 'POST', 'draft', draftId, draft);
+            await sendRequest(credentials, '$storeDraft', cloudURL, 'POST', 'draft', draftId, draft);
         },
 
-        deleteDraft: function(draftId) {
+        updateDraft: async function(draftId, draft) {
             const credentials = generateCredentials(notary);
-            sendRequest(credentials, 'deleteDraft', cloudURL, 'DELETE', 'draft', draftId);
+            await sendRequest(credentials, '$updateDraft', cloudURL, 'PUT', 'draft', draftId, draft);
         },
 
-        documentExists: function(documentId) {
+        deleteDraft: async function(draftId) {
             const credentials = generateCredentials(notary);
-            const status = sendRequest(credentials, 'documentExists', cloudURL, 'HEAD', 'document', documentId);
+            await sendRequest(credentials, '$deleteDraft', cloudURL, 'DELETE', 'draft', draftId);
+        },
+
+        documentExists: async function(documentId) {
+            const credentials = generateCredentials(notary);
+            const status = await sendRequest(credentials, '$documentExists', cloudURL, 'HEAD', 'document', documentId);
             return status;
         },
 
-        fetchDocument: function(documentId) {
+        fetchDocument: async function(documentId) {
             const credentials = generateCredentials(notary);
-            const document = sendRequest(credentials, 'fetchDocument', cloudURL, 'GET', 'document', documentId);
+            const document = await sendRequest(credentials, '$fetchDocument', cloudURL, 'GET', 'document', documentId);
             return document;
         },
 
-        storeDocument: function(documentId, document) {
+        storeDocument: async function(documentId, document) {
             const credentials = generateCredentials(notary);
-            sendRequest(credentials, 'storeDocument', cloudURL, 'POST', 'document', documentId, document);
+            await sendRequest(credentials, '$storeDocument', cloudURL, 'POST', 'document', documentId, document);
         },
 
-        typeExists: function(typeId) {
+        typeExists: async function(typeId) {
             const credentials = generateCredentials(notary);
-            const status = sendRequest(credentials, 'typeExists', cloudURL, 'HEAD', 'type', typeId);
+            const status = await sendRequest(credentials, '$typeExists', cloudURL, 'HEAD', 'type', typeId);
             return status;
         },
 
-        fetchType: function(typeId) {
+        fetchType: async function(typeId) {
             const credentials = generateCredentials(notary);
-            const type = sendRequest(credentials, 'fetchType', cloudURL, 'GET', 'type', typeId);
+            const type = await sendRequest(credentials, '$fetchType', cloudURL, 'GET', 'type', typeId);
             return type;
         },
 
-        storeType: function(typeId, type) {
+        storeType: async function(typeId, type) {
             const credentials = generateCredentials(notary);
-            sendRequest(credentials, 'storeType', cloudURL, 'POST', 'type', typeId, type);
+            await sendRequest(credentials, '$storeType', cloudURL, 'POST', 'type', typeId, type);
         },
 
-        queueExists: function(queueId) {
+        queueExists: async function(queueId) {
             const credentials = generateCredentials(notary);
-            sendRequest(credentials, 'queueExists', cloudURL, 'HEAD', 'queue', queueId);
+            const status = await sendRequest(credentials, '$queueExists', cloudURL, 'HEAD', 'queue', queueId);
+            return status;
         },
 
-        createQueue: function(queueId) {
+        createQueue: async function(queueId) {
             const credentials = generateCredentials(notary);
-            sendRequest(credentials, 'createQueue', cloudURL, 'POST', 'queue', queueId);
+            await sendRequest(credentials, '$createQueue', cloudURL, 'POST', 'queue', queueId);
         },
 
-        deleteQueue: function(queueId) {
+        deleteQueue: async function(queueId) {
             const credentials = generateCredentials(notary);
-            sendRequest(credentials, 'deleteQueue', cloudURL, 'DELETE', 'queue', queueId);
+            await sendRequest(credentials, '$deleteQueue', cloudURL, 'DELETE', 'queue', queueId);
         },
 
-        queueMessage: function(queueId, message) {
+        queueMessage: async function(queueId, message) {
             const credentials = generateCredentials(notary);
-            sendRequest(credentials, 'queueMessage', cloudURL, 'PUT', 'queue', queueId, message);
+            await sendRequest(credentials, '$queueMessage', cloudURL, 'PUT', 'queue', queueId, message);
         },
 
-        dequeueMessage: function(queueId) {
+        dequeueMessage: async function(queueId) {
             const credentials = generateCredentials(notary);
-            const message = sendRequest(credentials, 'dequeueMessage', cloudURL, 'GET', 'queue', queueId);
+            const message = await sendRequest(credentials, '$dequeueMessage', cloudURL, 'GET', 'queue', queueId);
             return message;
         }
 
@@ -148,15 +155,7 @@ const generateCredentials = function(notary) {
 };
 
 
-const keepAliveAgent = new http.Agent({
-    keepAlive: true,
-    maxSockets: 256,
-    maxFreeSockets: 128,
-    timeout: 100
-});
-
-
-const sendRequest = function(credentials, procedure, url, method, type, identifier, document) {
+const sendRequest = async function(credentials, procedure, url, method, type, identifier, document) {
 
     // analyze the parameters
     switch (type) {
@@ -181,6 +180,7 @@ const sendRequest = function(credentials, procedure, url, method, type, identifi
             switch (method) {
                 case 'HEAD':
                 case 'GET':
+                case 'PUT':
                 case 'POST':
                 case 'DELETE':
                     break;
@@ -257,81 +257,78 @@ const sendRequest = function(credentials, procedure, url, method, type, identifi
                 $message: '"An invalid document type was specified."'
             });
     }
-    if (!identifier || identifier.getTypeId() !== bali.types.TAG) {
-        throw bali.exception({
-            $module: '$CloudRepository',
-            $procedure: procedure,
-            $exception: '$invalidParameter',
-            $parameter: '"\n' + identifier.toString() + '\n"',
-            $message: '"An invalid document identifier was specified."'
-        });
-    }
-    if (document && document.getTypeId() !== bali.types.CATALOG) {
-        throw bali.exception({
-            $module: '$CloudRepository',
-            $procedure: procedure,
-            $exception: '$invalidParameter',
-            $parameter: '"\n' + document.toString() + '\n"',
-            $message: '"An invalid document was specified."'
-        });
-    }
 
     const options = {
-        path: '/' + type + '/' + identifier,
+        url: url + '/' + type + '/' + identifier,
         method: method,
-        agent: keepAliveAgent,
-        timeout: 100,
+        //timeout: 1000,
+        responseType: 'text',
+        validateStatus: function (status) {
+            return status < 400 || status === 404;  // only flag unexpected server errors
+        },
         headers: {
+            //'User-Agent': 'Bali Nebula API™ 1.0',
             'Nebula-Credentials': '"' + bali.format(credentials, -1) + '"'  // inlined quoted string
         }
     };
 
     const data = document ? document.toString() : undefined;
     if (data) {
+        options.data = data;
         options.headers['Content-Type'] = 'application/bali';
         options.headers['Content-Length'] = data.length;
     }
 
-    var status = false;
-    var result = '';
-    const request = http.request(url, options, function(response) {
-        response.setEncoding('utf8');
-        response.on('data', function(chunk) {
-            result += chunk;
-        });
-    });
+    var result;
+    const response = await axios(options).catch(function(error) {
+        if (error.response) {
+            // the server responded with an error status
+            throw bali.exception({
+                $module: '$CloudRepository',
+                $procedure: procedure,
+                $exception: '$invalidRequest',
+                $url: '<' + options.url + '>',
+                $method: '"' + method + '"',
+                $status: error.response.status,
+                $details: '"' + error.response.statusText + '"',
+                $message: '"The request was rejected by the Bali Nebula™."'
+            });
+        }
 
-    request.on('error', function(error) {
+        if (error.request) {
+            // the request was sent but no response was received
+            throw bali.exception({
+                $module: '$CloudRepository',
+                $procedure: procedure,
+                $exception: '$serverDown',
+                $url: '<' + options.url + '>',
+                $method: '"' + method + '"',
+                $status: error.request.status,
+                $details: '"' + error.request.statusText + '"',
+                $message: '"The request received no response."'
+            });
+        } 
+
+        // the request could not be sent
         throw bali.exception({
             $module: '$CloudRepository',
             $procedure: procedure,
-            $exception: '$remoteRequest',
-            $credentials: credentials,
-            $type: type,
-            $identifier: identifier,
-            $message: '"\nThe following communication error occurred:\n ' + error.message + '\n"'
+            $exception: '$malformedRequest',
+            $url: '<' + options.url + '>',
+            $method: '"' + options.method + '"',
+            $message: '"The request was not formed correctly."'
         });
+
     });
 
-    request.on('information', function(response) {
-        status = response.statusCode === 200;
-    });
-
-    // send the request
-    if (data) request.write(data);
-    request.end();
-
-    // process the result
-    try {
-        if (result) return bali.parse(result);
-        return status;
-    } catch (e) {
-        throw bali.exception({
-            $module: '$CloudRepository',
-            $procedure: procedure,
-            $exception: '$invalidResponse',
-            $response: '"\n' + result + '\n"',
-            $message: '"The response is not a valid component."'
-        });
+    switch (method) {
+        case 'HEAD':
+        case 'DELETE':
+            result = (response.status !== 404);
+            break;
+        default:
+            result = response.data || undefined;
     }
+
+    return result;
 };

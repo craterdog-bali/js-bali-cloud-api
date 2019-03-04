@@ -22,7 +22,7 @@
  * and used as the repository. Otherwise, a repository directory will be created and
  * used within a '.bali/' directory in the home directory for the running process.
  */
-const fs = require('fs');
+const pfs = require('fs').promises;
 const os = require('os');
 const bali = require('bali-component-framework');
 
@@ -46,14 +46,32 @@ exports.repository = function(testDirectory) {
     const queues = repositoryDirectory + 'queues/';
     try {
         // create the repository directory structure if necessary (with drwx------ permissions)
-        if (!fs.existsSync(configDirectory)) fs.mkdirSync(configDirectory, 448);
-        if (!fs.existsSync(repositoryDirectory)) fs.mkdirSync(repositoryDirectory, 448);
-        if (!fs.existsSync(certificates)) fs.mkdirSync(certificates, 448);
-        if (!fs.existsSync(drafts)) fs.mkdirSync(drafts, 448);
-        if (!fs.existsSync(documents)) fs.mkdirSync(documents, 448);
-        if (!fs.existsSync(types)) fs.mkdirSync(types, 448);
-        if (!fs.existsSync(queues)) fs.mkdirSync(queues, 448);
-    } catch (e) {
+        pfs.mkdir(configDirectory, 0o700).then(function() {
+            return pfs.mkdir(repositoryDirectory, 0o700);
+        }).catch(function() {
+            console.error('config directory exists');
+        }).then(function() {
+            return pfs.mkdir(certificates, 0o700);
+        }).catch(function() {
+            console.error('certificates directory exists');
+        }).then(function() {
+            return pfs.mkdir(drafts, 0o700);
+        }).catch(function() {
+            console.error('drafts directory exists');
+        }).then(function() {
+            return pfs.mkdir(documents, 0o700);
+        }).catch(function() {
+            console.error('documents directory exists');
+        }).then(function() {
+            return pfs.mkdir(types, 0o700);
+        }).catch(function() {
+            console.error('types directory exists');
+        }).then(function() {
+            return pfs.mkdir(queues, 0o700);
+        }).catch(function() {
+            console.error('queues directory exists');
+        });
+    } catch (exception) {
         throw bali.exception({
             $module: '$LocalRepository',
             $procedure: '$repository',
@@ -70,11 +88,12 @@ exports.repository = function(testDirectory) {
             throw new Error('REPOSITORY: The toString() method is not yet implemented.');
         },
 
-        certificateExists: function(certificateId) {
+        certificateExists: async function(certificateId) {
             try {
                 const filename = certificates + certificateId + '.ndoc';
-                return fs.existsSync(filename);
-            } catch (e) {
+                const exists = await doesExist(filename);
+                return exists;
+            } catch (exception) {
                 throw bali.exception({
                     $module: '$LocalRepository',
                     $procedure: '$certificateExists',
@@ -85,14 +104,13 @@ exports.repository = function(testDirectory) {
             }
         },
 
-        fetchCertificate: function(certificateId) {
+        fetchCertificate: async function(certificateId) {
             try {
                 const filename = certificates + certificateId + '.ndoc';
-                if (fs.existsSync(filename)) {
-                    const certificate = fs.readFileSync(filename).toString().slice(0, -1);  // remove POSIX compliant <EOL>
-                    return certificate;
-                }
-            } catch (e) {
+                const exists = await doesExist(filename);
+                const certificate = await pfs.readFile(filename).toString().slice(0, -1);  // remove POSIX compliant <EOL>
+                return certificate;
+            } catch (exception) {
                 throw bali.exception({
                     $module: '$LocalRepository',
                     $procedure: '$fetchCertificate',
@@ -103,10 +121,10 @@ exports.repository = function(testDirectory) {
             }
         },
 
-        storeCertificate: function(certificateId, certificate) {
+        storeCertificate: async function(certificateId, certificate) {
             try {
                 const filename = certificates + certificateId + '.ndoc';
-                const exists = fs.existsSync(filename);
+                const exists = await doesExist(filename);
                 if (exists) {
                     throw bali.exception({
                         $module: '$LocalRepository',
@@ -118,8 +136,8 @@ exports.repository = function(testDirectory) {
                     });
                 }
                 const document = certificate.toString() + '\n';  // add POSIX compliant <EOL>
-                fs.writeFileSync(filename, document, {encoding: 'utf8', mode: 256});
-            } catch (e) {
+                await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o400});
+            } catch (exception) {
                 throw bali.exception({
                     $module: '$LocalRepository',
                     $procedure: '$storeCertificate',
@@ -130,11 +148,12 @@ exports.repository = function(testDirectory) {
             }
         },
 
-        draftExists: function(draftId) {
+        draftExists: async function(draftId) {
             try {
                 const filename = drafts + draftId + '.ndoc';
-                return fs.existsSync(filename);
-            } catch (e) {
+                const exists = await doesExist(filename);
+                return exists;
+            } catch (exception) {
                 throw bali.exception({
                     $module: '$LocalRepository',
                     $procedure: '$draftExists',
@@ -145,14 +164,15 @@ exports.repository = function(testDirectory) {
             }
         },
 
-        fetchDraft: function(draftId) {
+        fetchDraft: async function(draftId) {
             try {
                 const filename = drafts + draftId + '.ndoc';
-                if (fs.existsSync(filename)) {
-                    const draft = fs.readFileSync(filename).toString().slice(0, -1);  // remove POSIX compliant <EOL>
+                const exists = await doesExist(filename);
+                if (exists) {
+                    const draft = await pfs.readFile(filename).toString().slice(0, -1);  // remove POSIX compliant <EOL>
                     return draft;
                 }
-            } catch (e) {
+            } catch (exception) {
                 throw bali.exception({
                     $module: '$LocalRepository',
                     $procedure: '$fetchDraft',
@@ -163,12 +183,23 @@ exports.repository = function(testDirectory) {
             }
         },
 
-        storeDraft: function(draftId, draft) {
+        storeDraft: async function(draftId, draft) {
             try {
                 const filename = drafts + draftId + '.ndoc';
+                const exists = await doesExist(filename);
+                if (exists) {
+                    throw bali.exception({
+                        $module: '$LocalRepository',
+                        $procedure: '$storeDraft',
+                        $exception: '$fileExists',
+                        $directory: '"' + drafts + '"',
+                        $file: '"' + draftId + '.ndoc"',
+                        $message: '"The file to be written already exists."'
+                    });
+                }
                 const document = draft.toString() + '\n';  // add POSIX compliant <EOL>
-                fs.writeFileSync(filename, document, {encoding: 'utf8', mode: 384});
-            } catch (e) {
+                await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o600});
+            } catch (exception) {
                 throw bali.exception({
                     $module: '$LocalRepository',
                     $procedure: '$storeDraft',
@@ -179,13 +210,41 @@ exports.repository = function(testDirectory) {
             }
         },
 
-        deleteDraft: function(draftId) {
+        updateDraft: async function(draftId, draft) {
             try {
                 const filename = drafts + draftId + '.ndoc';
-                if (fs.existsSync(filename)) {
-                    fs.unlinkSync(filename);
+                const exists = await doesExist(filename);
+                if (!exists) {
+                    throw bali.exception({
+                        $module: '$LocalRepository',
+                        $procedure: '$updateDraft',
+                        $exception: '$fileMissing',
+                        $directory: '"' + drafts + '"',
+                        $file: '"' + draftId + '.ndoc"',
+                        $message: '"The file to be updated does not exist."'
+                    });
                 }
-            } catch (e) {
+                const document = draft.toString() + '\n';  // add POSIX compliant <EOL>
+                await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o600});
+            } catch (exception) {
+                throw bali.exception({
+                    $module: '$LocalRepository',
+                    $procedure: '$updateDraft',
+                    $exception: '$directoryAccess',
+                    $directory: '"' + drafts + '"',
+                    $message: '"The local configuration directory could not be accessed."'
+                });
+            }
+        },
+
+        deleteDraft: async function(draftId) {
+            try {
+                const filename = drafts + draftId + '.ndoc';
+                const exists = await doesExist(filename);
+                if (exists) {
+                    await pfs.unlink(filename);
+                }
+            } catch (exception) {
                 throw bali.exception({
                     $module: '$LocalRepository',
                     $procedure: '$deleteDraft',
@@ -196,11 +255,12 @@ exports.repository = function(testDirectory) {
             }
         },
 
-        documentExists: function(documentId) {
+        documentExists: async function(documentId) {
             try {
                 const filename = documents + documentId + '.ndoc';
-                return fs.existsSync(filename);
-            } catch (e) {
+                const exists = await doesExist(filename);
+                return exists;
+            } catch (exception) {
                 throw bali.exception({
                     $module: '$LocalRepository',
                     $procedure: '$documentExists',
@@ -211,14 +271,15 @@ exports.repository = function(testDirectory) {
             }
         },
 
-        fetchDocument: function(documentId) {
+        fetchDocument: async function(documentId) {
             try {
                 const filename = documents + documentId + '.ndoc';
-                if (fs.existsSync(filename)) {
-                    const document = fs.readFileSync(filename).toString().slice(0, -1);  // remove POSIX compliant <EOL>
+                const exists = await doesExist(filename);
+                if (exists) {
+                    const document = await pfs.readFile(filename).toString().slice(0, -1);  // remove POSIX compliant <EOL>
                     return document;
                 }
-            } catch (e) {
+            } catch (exception) {
                 throw bali.exception({
                     $module: '$LocalRepository',
                     $procedure: '$fetchDocument',
@@ -229,10 +290,10 @@ exports.repository = function(testDirectory) {
             }
         },
 
-        storeDocument: function(documentId, document) {
+        storeDocument: async function(documentId, document) {
             try {
                 const filename = documents + documentId + '.ndoc';
-                const exists = fs.existsSync(filename);
+                const exists = await doesExist(filename);
                 if (exists) {
                     throw bali.exception({
                         $module: '$LocalRepository',
@@ -244,8 +305,8 @@ exports.repository = function(testDirectory) {
                     });
                 }
                 document = document.toString() + '\n';  // add POSIX compliant <EOL>
-                fs.writeFileSync(filename, document, {encoding: 'utf8', mode: 256});
-            } catch (e) {
+                await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o400});
+            } catch (exception) {
                 throw bali.exception({
                     $module: '$LocalRepository',
                     $procedure: '$storeDocument',
@@ -256,11 +317,12 @@ exports.repository = function(testDirectory) {
             }
         },
 
-        typeExists: function(typeId) {
+        typeExists: async function(typeId) {
             try {
                 const filename = types + typeId + '.ndoc';
-                return fs.existsSync(filename);
-            } catch (e) {
+                const exists = await doesExist(filename);
+                return exists;
+            } catch (exception) {
                 throw bali.exception({
                     $module: '$LocalRepository',
                     $procedure: '$typeExists',
@@ -271,14 +333,15 @@ exports.repository = function(testDirectory) {
             }
         },
 
-        fetchType: function(typeId) {
+        fetchType: async function(typeId) {
             try {
                 const filename = types + typeId + '.ndoc';
-                if (fs.existsSync(filename)) {
-                    const type = fs.readFileSync(filename).toString().slice(0, -1);  // remove POSIX compliant <EOL>
+                const exists = await doesExist(filename);
+                if (exists) {
+                    const type = await pfs.readFile(filename).toString().slice(0, -1);  // remove POSIX compliant <EOL>
                     return type;
                 }
-            } catch (e) {
+            } catch (exception) {
                 throw bali.exception({
                     $module: '$LocalRepository',
                     $procedure: '$fetchType',
@@ -289,10 +352,10 @@ exports.repository = function(testDirectory) {
             }
         },
 
-        storeType: function(typeId, type) {
+        storeType: async function(typeId, type) {
             try {
                 const filename = types + typeId + '.ndoc';
-                const exists = fs.existsSync(filename);
+                const exists = await doesExist(filename);
                 if (exists) {
                     throw bali.exception({
                         $module: '$LocalRepository',
@@ -304,8 +367,8 @@ exports.repository = function(testDirectory) {
                     });
                 }
                 const document = type.toString() + '\n';  // add POSIX compliant <EOL>
-                fs.writeFileSync(filename, document, {encoding: 'utf8', mode: 256});
-            } catch (e) {
+                await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o400});
+            } catch (exception) {
                 throw bali.exception({
                     $module: '$LocalRepository',
                     $procedure: '$storeType',
@@ -316,35 +379,38 @@ exports.repository = function(testDirectory) {
             }
         },
 
-        queueExists: function(queueId) {
-            const directory = queues + queueId;
+        queueExists: async function(queueId) {
             try {
-                return fs.existsSync(directory);
-            } catch (e) {
+                const directory = queues + queueId;
+                const exists = await doesExist(directory);
+                return exists;
+            } catch (exception) {
                 throw bali.exception({
                     $module: '$LocalRepository',
                     $procedure: '$queueExists',
                     $exception: '$directoryAccess',
-                    $directory: '"' + directory + '"',
+                    $directory: '"' + queues + '"',
                     $message: '"The local configuration directory could not be accessed."'
                 });
             }
         },
 
-        createQueue: function(queueId) {
-            const directory = queues + queueId;
+        createQueue: async function(queueId) {
             try {
-                if (fs.existsSync(directory)) {
+                const directory = queues + queueId;
+                const exists = await doesExist(directory);
+                if (exists) {
                     throw bali.exception({
                         $module: '$LocalRepository',
                         $procedure: '$createQueue',
-                        $exception: '$queueExists',
-                        $directory: '"' + directory + '"',
-                        $message: '"The queue to be created already exists."'
+                        $exception: '$directoryExists',
+                        $directory: '"' + queues + '"',
+                        $file: '"' + queueId + '.ndoc"',
+                        $message: '"The directory to be created already exists."'
                     });
                 }
-                fs.mkdirSync(directory);
-            } catch (e) {
+                await pfs.mkdir(directory, 0o700);
+            } catch (exception) {
                 throw bali.exception({
                     $module: '$LocalRepository',
                     $procedure: '$createQueue',
@@ -355,28 +421,31 @@ exports.repository = function(testDirectory) {
             }
         },
 
-        deleteQueue: function(queueId) {
-            const directory = queues + queueId;
+        deleteQueue: async function(queueId) {
             try {
-                if (fs.existsSync(directory)) fs.unlinkSync(directory);
-            } catch (e) {
+                const directory = queues + queueId;
+                const exists = await doesExist(directory);
+                if (exists) {
+                    await pfs.rmdirSync(directory);
+                }
+            } catch (exception) {
                 throw bali.exception({
                     $module: '$LocalRepository',
                     $procedure: '$deleteQueue',
                     $exception: '$directoryAccess',
                     $directory: '"' + directory + '"',
+                    $error: '"' + exception + '"',
                     $message: '"The local configuration directory could not be accessed."'
                 });
             }
         },
 
-        queueMessage: function(queueId, message) {
+        queueMessage: async function(queueId, message) {
             try {
-                const directory = queues + queueId + '/';
                 const messageId = bali.tag().getValue();
+                const directory = queues + queueId + '/';
                 const filename = directory + messageId + '.ndoc';
-                if (!fs.existsSync(directory)) fs.mkdirSync(directory);
-                const exists = fs.existsSync(filename);
+                const exists = await doesExist(filename);
                 if (exists) {
                     throw bali.exception({
                         $module: '$LocalRepository',
@@ -388,8 +457,8 @@ exports.repository = function(testDirectory) {
                     });
                 }
                 const document = message.toString() + '\n';  // add POSIX compliant <EOL>
-                fs.writeFileSync(filename, document, {encoding: 'utf8', mode: 384});
-            } catch (e) {
+                await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o600});
+            } catch (exception) {
                 throw bali.exception({
                     $module: '$LocalRepository',
                     $procedure: '$queueMessage',
@@ -400,23 +469,23 @@ exports.repository = function(testDirectory) {
             }
         },
 
-        dequeueMessage: function(queueId) {
+        dequeueMessage: async function(queueId) {
             try {
                 var message;
                 const directory = queues + queueId + '/';
-                while (fs.existsSync(directory)) {
-                    const messages = fs.readdirSync(directory);
+                while (await doesExist(directory)) {
+                    const messages = await pfs.readdir(directory);
                     const count = messages.length;
                     if (count) {
                         // select a message a random since a distributed queue cannot guarantee FIFO
                         const index = bali.random.index(count) - 1;  // convert to zero based indexing
                         const messageFile = messages[index];
                         const filename = directory + messageFile;
-                        message = fs.readFileSync(filename).toString().slice(0, -1);  // remove POSIX compliant <EOL>
+                        message = await pfs.readFile(filename).toString().slice(0, -1);  // remove POSIX compliant <EOL>
                         try {
-                            fs.unlinkSync(filename);
+                            await pfs.unlink(filename);
                             break; // we got there first
-                        } catch (e) {
+                        } catch (exception) {
                             // another process got there first
                             message = undefined;
                         }
@@ -425,7 +494,7 @@ exports.repository = function(testDirectory) {
                     }
                 }
                 return message;
-            } catch (e) {
+            } catch (exception) {
                 throw bali.exception({
                     $module: '$LocalRepository',
                     $procedure: '$dequeueMessage',
@@ -437,4 +506,17 @@ exports.repository = function(testDirectory) {
         }
 
     };
+};
+
+
+const doesExist = async function(path) {
+    var exists = true;
+    await pfs.stat(path).catch(function(error) {
+        if (error.code === "ENOENT") {
+            exists = false;
+        } else {
+            throw error;
+        }
+    });
+    return exists;
 };

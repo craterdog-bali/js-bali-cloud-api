@@ -11,7 +11,14 @@
 const mocha = require('mocha');
 const assert = require('chai').assert;
 const expect = require('chai').expect;
-const repository = require('../').local('test/config/');
+//const repository = require('../').local('test/config/');
+const bali = require('bali-component-framework');
+const account = bali.parse('#GTDHQ9B8ZGS7WCBJJJBFF6KDCCF55R2P');
+const testDirectory = 'test/config/';
+const cloudURL = 'http://localhost:3000';
+const notary = require('bali-digital-notary').api(account, testDirectory);
+notary.generateKeys();
+const repository = require('../').cloud(notary, cloudURL);
 
 const source =
     '[\n' +

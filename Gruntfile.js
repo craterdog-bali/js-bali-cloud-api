@@ -20,7 +20,7 @@ module.exports = function(grunt) {
       ],
       options: {
         node: true,
-        esversion: 6
+        esversion: 9
       }
     },
 
@@ -43,8 +43,7 @@ module.exports = function(grunt) {
           timeout: 10000 
         },
         src: [
-          'test/**/*.js',
-          '!test/server.js'
+          'test/**/*.js'
         ]
       }
     },
@@ -83,7 +82,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-mocha-test');
   grunt.loadNpmTasks('grunt-webpack');
 
-  grunt.registerTask('build', 'Build the module.', ['clean:build', 'jshint', 'mochaTest']);
+  grunt.registerTask('build', 'Build the module.', ['clean:build', 'mochaTest']);
   grunt.registerTask('package', 'Package the libraries.', ['clean:build', 'jshint', 'mochaTest', 'webpack']);
   grunt.registerTask('default', 'Default targets.', ['build']);
 
