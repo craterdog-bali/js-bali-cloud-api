@@ -33,6 +33,11 @@ exports.api = function(notary, repository) {
     const SEND_QUEUE_ID = 'JXT095QY01HBLHPAW04ZR5WSH41MWG4H';
     const EVENT_QUEUE_ID = '3RMGDVN7D6HLAPFXQNPF7DV71V3MAL43';
 
+    // create the send and event queues if necessary
+    // TODO: these should be made as synchronous calls
+    repository.createQueue(SEND_QUEUE_ID).catch(function() {});
+    repository.createQueue(EVENT_QUEUE_ID).catch(function() {});
+
     // return the client API instance
     return {
 
@@ -317,8 +322,9 @@ exports.api = function(notary, repository) {
          * @returns {Tag} The unique tag for the new queue.
          */
         createQueue: async function() {
-            const queueId = await repository.createQueue();
-            const queue = bali.tag(queueId);
+            const queue = bali.tag();
+            const queueId = queue.getValue();
+            await repository.createQueue(queueId);
             return queue;
         },
 

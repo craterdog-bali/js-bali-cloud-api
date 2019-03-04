@@ -417,6 +417,7 @@ exports.repository = function(testDirectory) {
                     });
                 }
                 await pfs.mkdir(directory, 0o700);
+                return bali.tag(queueId);
             } catch (exception) {
                 throw bali.exception({
                     $module: '$LocalRepository',
