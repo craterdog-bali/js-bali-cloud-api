@@ -75,7 +75,7 @@ exports.repository = function(testDirectory) {
             $exception: '$directoryAccess',
             $directory: '"' + configDirectory + '"',
             $message: '"The local configuration directory could not be accessed."'
-        });
+        }, exception);
     }
 
     return {
@@ -97,7 +97,7 @@ exports.repository = function(testDirectory) {
                     $exception: '$directoryAccess',
                     $directory: '"' + certificates + '"',
                     $message: '"The local configuration directory could not be accessed."'
-                });
+                }, exception);
             }
         },
 
@@ -118,7 +118,7 @@ exports.repository = function(testDirectory) {
                     $exception: '$directoryAccess',
                     $directory: '"' + certificates + '"',
                     $message: '"The local configuration directory could not be accessed."'
-                });
+                }, exception);
             }
         },
 
@@ -145,7 +145,7 @@ exports.repository = function(testDirectory) {
                     $exception: '$directoryAccess',
                     $directory: '"' + certificates + '"',
                     $message: '"The local configuration directory could not be accessed."'
-                });
+                }, exception);
             }
         },
 
@@ -161,7 +161,7 @@ exports.repository = function(testDirectory) {
                     $exception: '$directoryAccess',
                     $directory: '"' + drafts + '"',
                     $message: '"The local configuration directory could not be accessed."'
-                });
+                }, exception);
             }
         },
 
@@ -182,7 +182,7 @@ exports.repository = function(testDirectory) {
                     $exception: '$directoryAccess',
                     $directory: '"' + drafts + '"',
                     $message: '"The local configuration directory could not be accessed."'
-                });
+                }, exception);
             }
         },
 
@@ -209,7 +209,7 @@ exports.repository = function(testDirectory) {
                     $exception: '$directoryAccess',
                     $directory: '"' + drafts + '"',
                     $message: '"The local configuration directory could not be accessed."'
-                });
+                }, exception);
             }
         },
 
@@ -236,7 +236,7 @@ exports.repository = function(testDirectory) {
                     $exception: '$directoryAccess',
                     $directory: '"' + drafts + '"',
                     $message: '"The local configuration directory could not be accessed."'
-                });
+                }, exception);
             }
         },
 
@@ -254,7 +254,7 @@ exports.repository = function(testDirectory) {
                     $exception: '$directoryAccess',
                     $directory: '"' + drafts + '"',
                     $message: '"The local configuration directory could not be accessed."'
-                });
+                }, exception);
             }
         },
 
@@ -270,7 +270,7 @@ exports.repository = function(testDirectory) {
                     $exception: '$directoryAccess',
                     $directory: '"' + documents + '"',
                     $message: '"The local configuration directory could not be accessed."'
-                });
+                }, exception);
             }
         },
 
@@ -291,7 +291,7 @@ exports.repository = function(testDirectory) {
                     $exception: '$directoryAccess',
                     $directory: '"' + documents + '"',
                     $message: '"The local configuration directory could not be accessed."'
-                });
+                }, exception);
             }
         },
 
@@ -318,7 +318,7 @@ exports.repository = function(testDirectory) {
                     $exception: '$directoryAccess',
                     $directory: '"' + documents + '"',
                     $message: '"The local configuration directory could not be accessed."'
-                });
+                }, exception);
             }
         },
 
@@ -334,7 +334,7 @@ exports.repository = function(testDirectory) {
                     $exception: '$directoryAccess',
                     $directory: '"' + types + '"',
                     $message: '"The local configuration directory could not be accessed."'
-                });
+                }, exception);
             }
         },
 
@@ -355,7 +355,7 @@ exports.repository = function(testDirectory) {
                     $exception: '$directoryAccess',
                     $directory: '"' + types + '"',
                     $message: '"The local configuration directory could not be accessed."'
-                });
+                }, exception);
             }
         },
 
@@ -382,7 +382,7 @@ exports.repository = function(testDirectory) {
                     $exception: '$directoryAccess',
                     $directory: '"' + types + '"',
                     $message: '"The local configuration directory could not be accessed."'
-                });
+                }, exception);
             }
         },
 
@@ -398,7 +398,7 @@ exports.repository = function(testDirectory) {
                     $exception: '$directoryAccess',
                     $directory: '"' + directory + '"',
                     $message: '"The local configuration directory could not be accessed."'
-                });
+                }, exception);
             }
         },
 
@@ -425,7 +425,7 @@ exports.repository = function(testDirectory) {
                     $exception: '$directoryAccess',
                     $directory: '"' + directory + '"',
                     $message: '"The local configuration directory could not be accessed."'
-                });
+                }, exception);
             }
         },
 
@@ -444,7 +444,7 @@ exports.repository = function(testDirectory) {
                     $directory: '"' + directory + '"',
                     $error: '"' + exception + '"',
                     $message: '"The local configuration directory could not be accessed."'
-                });
+                }, exception);
             }
         },
 
@@ -473,7 +473,7 @@ exports.repository = function(testDirectory) {
                     $exception: '$directoryAccess',
                     $directory: '"' + directory + '"',
                     $message: '"The local configuration directory could not be accessed."'
-                });
+                }, exception);
             }
         },
 
@@ -510,7 +510,7 @@ exports.repository = function(testDirectory) {
                     $exception: '$directoryAccess',
                     $directory: '"' + directory + '"',
                     $message: '"The local configuration directory could not be accessed."'
-                });
+                }, exception);
             }
         }
 
