@@ -27,117 +27,131 @@ const axios = require('axios');
  */
 exports.repository = function(notary, cloudURL) {
 
+    var account;
+
     return {
 
         toString: function() {
             const catalog = bali.catalog({
-                $citation: notary.getCitation(),
+                $account: account,
                 $cloudURL: cloudURL
             });
             return catalog.toString();
         },
 
+        initializeAPI: async function() {
+            account = await notary.getAccount();
+            this.initializeAPI = function() {
+                throw bali.exception({
+                    $module: '$CloudRepository',
+                    $procedure: '$initializeAPI',
+                    $exception: '$alreadyInitialized',
+                    $message: bali.text('The local repository API has already been initialized.')
+                });
+            };
+        },
+
         certificateExists: async function(certificateId) {
-            const credentials = generateCredentials(notary);
+            const credentials = await generateCredentials(notary);
             const status = await sendRequest(credentials, '$certificateExists', cloudURL, 'HEAD', 'certificate', certificateId);
             return status;
         },
 
         fetchCertificate: async function(certificateId) {
-            const credentials = generateCredentials(notary);
+            const credentials = await generateCredentials(notary);
             const certificate = await sendRequest(credentials, '$fetchCertificate', cloudURL, 'GET', 'certificate', certificateId);
             return certificate;
         },
 
         createCertificate: async function(certificateId, certificate) {
-            const credentials = generateCredentials(notary);
+            const credentials = await generateCredentials(notary);
             await sendRequest(credentials, '$createCertificate', cloudURL, 'POST', 'certificate', certificateId, certificate);
         },
 
         draftExists: async function(draftId) {
-            const credentials = generateCredentials(notary);
+            const credentials = await generateCredentials(notary);
             const status = await sendRequest(credentials, '$draftExists', cloudURL, 'HEAD', 'draft', draftId);
             return status;
         },
 
         fetchDraft: async function(draftId) {
-            const credentials = generateCredentials(notary);
+            const credentials = await generateCredentials(notary);
             const draft = await sendRequest(credentials, '$fetchDraft', cloudURL, 'GET', 'draft', draftId);
             return draft;
         },
 
         createDraft: async function(draftId, draft) {
-            const credentials = generateCredentials(notary);
+            const credentials = await generateCredentials(notary);
             await sendRequest(credentials, '$createDraft', cloudURL, 'POST', 'draft', draftId, draft);
         },
 
         updateDraft: async function(draftId, draft) {
-            const credentials = generateCredentials(notary);
+            const credentials = await generateCredentials(notary);
             await sendRequest(credentials, '$updateDraft', cloudURL, 'PUT', 'draft', draftId, draft);
         },
 
         deleteDraft: async function(draftId) {
-            const credentials = generateCredentials(notary);
+            const credentials = await generateCredentials(notary);
             await sendRequest(credentials, '$deleteDraft', cloudURL, 'DELETE', 'draft', draftId);
         },
 
         documentExists: async function(documentId) {
-            const credentials = generateCredentials(notary);
+            const credentials = await generateCredentials(notary);
             const status = await sendRequest(credentials, '$documentExists', cloudURL, 'HEAD', 'document', documentId);
             return status;
         },
 
         fetchDocument: async function(documentId) {
-            const credentials = generateCredentials(notary);
+            const credentials = await generateCredentials(notary);
             const document = await sendRequest(credentials, '$fetchDocument', cloudURL, 'GET', 'document', documentId);
             return document;
         },
 
         createDocument: async function(documentId, document) {
-            const credentials = generateCredentials(notary);
+            const credentials = await generateCredentials(notary);
             await sendRequest(credentials, '$createDocument', cloudURL, 'POST', 'document', documentId, document);
         },
 
         typeExists: async function(typeId) {
-            const credentials = generateCredentials(notary);
+            const credentials = await generateCredentials(notary);
             const status = await sendRequest(credentials, '$typeExists', cloudURL, 'HEAD', 'type', typeId);
             return status;
         },
 
         fetchType: async function(typeId) {
-            const credentials = generateCredentials(notary);
+            const credentials = await generateCredentials(notary);
             const type = await sendRequest(credentials, '$fetchType', cloudURL, 'GET', 'type', typeId);
             return type;
         },
 
         createType: async function(typeId, type) {
-            const credentials = generateCredentials(notary);
+            const credentials = await generateCredentials(notary);
             await sendRequest(credentials, '$createType', cloudURL, 'POST', 'type', typeId, type);
         },
 
         queueExists: async function(queueId) {
-            const credentials = generateCredentials(notary);
+            const credentials = await generateCredentials(notary);
             const status = await sendRequest(credentials, '$queueExists', cloudURL, 'HEAD', 'queue', queueId);
             return status;
         },
 
         createQueue: async function(queueId) {
-            const credentials = generateCredentials(notary);
+            const credentials = await generateCredentials(notary);
             await sendRequest(credentials, '$createQueue', cloudURL, 'POST', 'queue', queueId);
         },
 
         deleteQueue: async function(queueId) {
-            const credentials = generateCredentials(notary);
+            const credentials = await generateCredentials(notary);
             await sendRequest(credentials, '$deleteQueue', cloudURL, 'DELETE', 'queue', queueId);
         },
 
         queueMessage: async function(queueId, message) {
-            const credentials = generateCredentials(notary);
+            const credentials = await generateCredentials(notary);
             await sendRequest(credentials, '$queueMessage', cloudURL, 'PUT', 'queue', queueId, message);
         },
 
         dequeueMessage: async function(queueId) {
-            const credentials = generateCredentials(notary);
+            const credentials = await generateCredentials(notary);
             const message = await sendRequest(credentials, '$dequeueMessage', cloudURL, 'GET', 'queue', queueId);
             return message;
         }
@@ -148,9 +162,9 @@ exports.repository = function(notary, cloudURL) {
 
 // PRIVATE FUNCTIONS
 
-const generateCredentials = function(notary) {
-    const citation = notary.getCitation();
-    const credentials = notary.notarizeDocument(citation);
+const generateCredentials = async function(notary) {
+    const citation = await notary.getCitation();
+    const credentials = await notary.notarizeDocument(citation);
     return credentials;
 };
 

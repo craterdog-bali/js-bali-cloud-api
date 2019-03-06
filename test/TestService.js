@@ -12,7 +12,6 @@ const bali = require('bali-component-framework');
 const repository = require('../').local('test/config/');
 const express = require("express");
 const bodyParser = require('body-parser');
-/* global Promise */
 const isLogging = false;
 
 
@@ -671,7 +670,9 @@ service.use('/document', documentRouter);
 service.use('/type', typeRouter);
 service.use('/queue', queueRouter);
 
-service.listen(3000, function() {
-    var message = 'Service: Server running on port 3000';
-    if (isLogging) console.log(message);
+repository.initializeAPI().then(function() {
+    service.listen(3000, function() {
+        var message = 'Service: Server running on port 3000';
+        if (isLogging) console.log(message);
+    });
 });

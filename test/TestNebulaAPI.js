@@ -10,6 +10,7 @@
 
 const testDirectory = 'test/config/';
 const mocha = require('mocha');
+const assert = require('chai').assert;
 const expect = require('chai').expect;
 const bali = require('bali-component-framework');
 const notary = require('bali-digital-notary');
@@ -34,37 +35,85 @@ describe('Bali Nebula API™', function() {
 
     describe('Initialize Environment', function() {
 
-        it('should setup the document repository', function() {
-            expect(repository).to.exist;  // jshint ignore:line
+        it('should initialize the repository API once and only once', async function() {
+            await repository.initializeAPI();
+            try {
+                await repository.initializeAPI();
+                assert.fail('The second attempt to initialize the API should have failed.');
+            } catch(error) {
+                // expected
+            };
         });
 
-        it('should setup the digital notary for the consumer', async function() {
+        it('should initialize the consumer notary API once and only once', async function() {
             const consumerTag = bali.tag();
             consumerNotary = notary.api(consumerTag, testDirectory);
             expect(consumerNotary).to.exist;  // jshint ignore:line
-            consumerCertificate = consumerNotary.generateKeys();
+            await consumerNotary.initializeAPI();
+            try {
+                await consumerNotary.initializeAPI();
+                assert.fail('The second attempt to initialize the API should have failed.');
+            } catch(error) {
+                // expected
+            };
+        });
+
+        it('should initialize the merchant notary API once and only once', async function() {
+            const merchantTag = bali.tag();
+            merchantNotary = notary.api(merchantTag, testDirectory);
+            expect(merchantNotary).to.exist;  // jshint ignore:line
+            await merchantNotary.initializeAPI();
+            try {
+                await merchantNotary.initializeAPI();
+                assert.fail('The second attempt to initialize the API should have failed.');
+            } catch(error) {
+                // expected
+            };
+        });
+
+        it('should initialize the consumer nebula API once and only once', async function() {
+            consumerClient = nebula.api(consumerNotary, repository);
+            expect(consumerClient).to.exist;  // jshint ignore:line
+            await consumerClient.initializeAPI();
+            try {
+                await consumerClient.initializeAPI();
+                assert.fail('The second attempt to initialize the API should have failed.');
+            } catch(error) {
+                // expected
+            };
+        });
+
+        it('should initialize the merchant nebula API once and only once', async function() {
+            merchantClient = nebula.api(merchantNotary, repository);
+            expect(merchantClient).to.exist;  // jshint ignore:line
+            await merchantClient.initializeAPI();
+            try {
+                await merchantClient.initializeAPI();
+                assert.fail('The second attempt to initialize the API should have failed.');
+            } catch(error) {
+                // expected
+            };
+        });
+
+        it('should setup the digital notary for the consumer', async function() {
+            consumerCertificate = await consumerNotary.generateKeyPair();
             expect(consumerCertificate).to.exist;  // jshint ignore:line
-            consumerCitation = consumerNotary.getCitation();
+            consumerCitation = await consumerNotary.getCitation();
             expect(consumerCitation).to.exist;  // jshint ignore:line
             const certificateId = extractId(consumerCitation);
             await repository.createCertificate(certificateId, consumerCertificate);
         });
 
         it('should setup the digital notary for the merchant', async function() {
-            const merchantTag = bali.tag();
-            merchantNotary = notary.api(merchantTag, testDirectory);
-            expect(merchantNotary).to.exist;  // jshint ignore:line
-            merchantCertificate = merchantNotary.generateKeys();
+            merchantCertificate = await merchantNotary.generateKeyPair();
             expect(merchantCertificate).to.exist;  // jshint ignore:line
-            merchantCitation = merchantNotary.getCitation();
+            merchantCitation = await merchantNotary.getCitation();
             expect(merchantCitation).to.exist;  // jshint ignore:line
             const certificateId = extractId(merchantCitation);
             await repository.createCertificate(certificateId, merchantCertificate);
         });
 
         it('should setup the client environment for the consumer', async function() {
-            consumerClient = nebula.api(consumerNotary, repository);
-            expect(consumerClient).to.exist;  // jshint ignore:line
             const citation = await consumerClient.retrieveCitation();
             expect(citation).to.exist;  // jshint ignore:line
             expect(citation.isEqualTo(consumerCitation)).to.equal(true);
@@ -73,8 +122,6 @@ describe('Bali Nebula API™', function() {
         });
 
         it('should setup the client environment for the merchant', async function() {
-            merchantClient = nebula.api(merchantNotary, repository);
-            expect(merchantClient).to.exist;  // jshint ignore:line
             const citation = await merchantClient.retrieveCitation();
             expect(citation).to.exist;  // jshint ignore:line
             expect(citation.isEqualTo(merchantCitation)).to.equal(true);

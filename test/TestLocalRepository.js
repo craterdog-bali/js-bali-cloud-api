@@ -27,6 +27,16 @@ describe('Bali Nebula API™', function() {
 
     describe('Test Local Repository', function() {
 
+        it('should initialize the API once and only once', async function() {
+            await repository.initializeAPI();
+            try {
+                await repository.initializeAPI();
+                assert.fail('The second attempt to initialize the API should have failed.');
+            } catch(error) {
+                // expected
+            };
+        });
+
         it('should perform a draft document lifecycle', async function() {
             const identifier = 'BXC15F9H0V4AJVTHJHN1B6VA8PZP4S51v1.2.3';
 
@@ -80,7 +90,6 @@ describe('Bali Nebula API™', function() {
             expect(exists).is.true;  // jshint ignore:line
 
             // attempt to store the same document in the repository
-            //expect(repository.createDocument.bind(repository, identifier, source)).to.throw();
             try {
                 await repository.createDocument(identifier, source);
                 assert.fail('The attempt to store the same document should have failed.');

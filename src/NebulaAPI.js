@@ -33,13 +33,25 @@ exports.api = function(notary, repository) {
     const SEND_QUEUE_ID = 'JXT095QY01HBLHPAW04ZR5WSH41MWG4H';
     const EVENT_QUEUE_ID = '3RMGDVN7D6HLAPFXQNPF7DV71V3MAL43';
 
-    // create the send and event queues if necessary
-    // TODO: these should be made as synchronous calls
-    repository.createQueue(SEND_QUEUE_ID).catch(function() {});
-    repository.createQueue(EVENT_QUEUE_ID).catch(function() {});
-
-    // return the client API instance
     return {
+
+        /**
+         * This function initializes the Bali Nebula API™.  It must be called before an
+         * other API function and can only be called once.
+         */
+        initializeAPI: async function() {
+            // create the send and event queues if necessary
+            await repository.createQueue(SEND_QUEUE_ID).catch(function() {});
+            await repository.createQueue(EVENT_QUEUE_ID).catch(function() {});
+            this.initializeAPI = function() {
+                throw bali.exception({
+                    $module: '$NebulaAPI',
+                    $procedure: '$initializeAPI',
+                    $exception: '$alreadyInitialized',
+                    $message: '"The Bali Nebula API™ has already been initialized."'
+                });
+            };
+        },
 
         /**
          * This method retrieves from the Bali Nebula™ the certificate citation

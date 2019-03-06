@@ -11,17 +11,15 @@ module.exports = function(grunt) {
     // read in the package information
     pkg: grunt.file.readJSON('package.json'),
 
-    // grunt-contrib-jshint plugin configuration (lint for JS)
-    jshint: {
-      files: [
+    // grunt-eslint plugin configuration (lint for JS)
+    eslint: {
+      options: {
+      },
+      target: [
         'Gruntfile.js',
         'src/**/*.js',
         'test/**/*.js'
-      ],
-      options: {
-        node: true,
-        esversion: 9
-      }
+      ]
     },
 
     // grunt-contrib-clean plugin configuration (clean up files)
@@ -78,12 +76,12 @@ module.exports = function(grunt) {
   });
 
   grunt.loadNpmTasks('grunt-contrib-clean');
-  grunt.loadNpmTasks('grunt-contrib-jshint');
+  grunt.loadNpmTasks('grunt-eslint');
   grunt.loadNpmTasks('grunt-mocha-test');
   grunt.loadNpmTasks('grunt-webpack');
 
   grunt.registerTask('build', 'Build the module.', ['clean:build', 'mochaTest']);
-  grunt.registerTask('package', 'Package the libraries.', ['clean:build', 'jshint', 'mochaTest', 'webpack']);
+  grunt.registerTask('package', 'Package the libraries.', ['clean:build', 'eslint', 'mochaTest', 'webpack']);
   grunt.registerTask('default', 'Default targets.', ['build']);
 
 };

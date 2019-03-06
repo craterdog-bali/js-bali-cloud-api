@@ -11,13 +11,11 @@
 const mocha = require('mocha');
 const assert = require('chai').assert;
 const expect = require('chai').expect;
-//const repository = require('../').local('test/config/');
 const bali = require('bali-component-framework');
 const account = bali.parse('#GTDHQ9B8ZGS7WCBJJJBFF6KDCCF55R2P');
 const testDirectory = 'test/config/';
 const cloudURL = 'http://localhost:3000';
 const notary = require('bali-digital-notary').api(account, testDirectory);
-notary.generateKeys();
 const repository = require('../').cloud(notary, cloudURL);
 
 const source =
@@ -33,6 +31,27 @@ const source =
 describe('Bali Nebula API™', function() {
 
     describe('Test Cloud Repository', function() {
+
+        it('should initialize the notary API once and only once', async function() {
+            await notary.initializeAPI();
+            await notary.generateKeyPair();
+            try {
+                await notary.initializeAPI();
+                assert.fail('The second attempt to initialize the API should have failed.');
+            } catch(error) {
+                // expected
+            };
+        });
+
+        it('should initialize the cloud API once and only once', async function() {
+            await repository.initializeAPI();
+            try {
+                await repository.initializeAPI();
+                assert.fail('The second attempt to initialize the API should have failed.');
+            } catch(error) {
+                // expected
+            };
+        });
 
         it('should perform a draft document lifecycle', async function() {
             const identifier = 'NZRRDAB94B4ZH0WDRT5N3TGX2ZTVMSV2v1.2.3';
