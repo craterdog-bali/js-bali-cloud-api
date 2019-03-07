@@ -46,7 +46,7 @@ exports.api = function(notary, repository) {
             this.initializeAPI = function() {
                 throw bali.exception({
                     $module: '$NebulaAPI',
-                    $procedure: '$initializeAPI',
+                    $function: '$initializeAPI',
                     $exception: '$alreadyInitialized',
                     $message: '"The Bali Nebula API™ has already been initialized."'
                 });
@@ -190,7 +190,7 @@ exports.api = function(notary, repository) {
             if (cache.documentExists(draftId) || await repository.documentExists(draftId)) {
                 throw bali.exception({
                     $module: '$NebulaAPI',
-                    $procedure: '$updateDraft',
+                    $function: '$updateDraft',
                     $exception: '$versionExists',
                     $tag: draftCitation.getValue('$tag'),
                     $version: draftCitation.getValue('$version'),
@@ -228,7 +228,7 @@ exports.api = function(notary, repository) {
             if (cache.documentExists(documentId) || await repository.documentExists(documentId)) {
                 throw bali.exception({
                     $module: '$NebulaAPI',
-                    $procedure: '$commitDocument',
+                    $function: '$commitDocument',
                     $exception: '$versionExists',
                     $documentId: '"' + documentId + '"',
                     $message: '"A committed version of the document referenced by the citation already exists."'
@@ -291,7 +291,7 @@ exports.api = function(notary, repository) {
             if (cache.documentExists(draftId) || await repository.documentExists(draftId) || await repository.draftExists(draftId)) {
                 throw bali.exception({
                     $module: '$NebulaAPI',
-                    $procedure: '$checkoutDocument',
+                    $function: '$checkoutDocument',
                     $exception: '$versionExists',
                     $documentId: '"' + draftId + '"',
                     $message: '"A committed version of the document referenced by the citation already exists."'
@@ -304,7 +304,7 @@ exports.api = function(notary, repository) {
             if (source === undefined) {
                 throw bali.exception({
                     $module: '$NebulaAPI',
-                    $procedure: '$checkoutDocument',
+                    $function: '$checkoutDocument',
                     $exception: '$documentMissing',
                     $documentId: '"' + documentId + '"',
                     $message: '"A committed version of the document referenced by the draft citation already exists."'
@@ -445,11 +445,11 @@ const extractId = function(catalog) {
  * contained within the document citation.
  */
 const validateCitation = async function(notary, citation, document) {
-    const matches = await notary.documentMatches(document, citation);
+    const matches = await notary.citationMatches(citation, document);
     if (!matches) {
         throw bali.exception({
             $module: '$NebulaAPI',
-            $procedure: '$validateCitation',
+            $function: '$validateCitation',
             $exception: '$documentModified',
             $citation: citation,
             $document: document,
@@ -473,11 +473,11 @@ const validateCitation = async function(notary, citation, document) {
  * associated with the private notary key that notarized the certificate.
  */
 const validateCertificate = async function(notary, citation, document) {
-    const matches = await notary.documentMatches(document, citation);
+    const matches = await notary.citationMatches(citation, document);
     if (!matches) {
         throw bali.exception({
             $module: '$NebulaAPI',
-            $procedure: '$validateCertificate',
+            $function: '$validateCertificate',
             $exception: '$documentModified',
             $citation: citation,
             $document: document,
@@ -489,7 +489,7 @@ const validateCertificate = async function(notary, citation, document) {
     if (!valid) {
         throw bali.exception({
             $module: '$NebulaAPI',
-            $procedure: '$validateCertificate',
+            $function: '$validateCertificate',
             $exception: '$documentInvalid',
             $document: document,
             $certificate: certificate,
@@ -522,7 +522,7 @@ const validateDocument = async function(notary, repository, document) {
             } else {
                 throw bali.exception({
                     $module: '$NebulaAPI',
-                    $procedure: '$validateDocument',
+                    $function: '$validateDocument',
                     $exception: '$certificateMissing',
                     $certificateId: '"' + certificateId + '"',
                     $message: '"The certificate for the document does not exist."'
@@ -533,7 +533,7 @@ const validateDocument = async function(notary, repository, document) {
         if (!valid) {
             throw bali.exception({
                 $module: '$NebulaAPI',
-                $procedure: '$validateDocument',
+                $function: '$validateDocument',
                 $exception: '$documentInvalid',
                 $document: document,
                 $message: '"The signature on the document is invalid."'

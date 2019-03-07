@@ -44,7 +44,7 @@ exports.repository = function(notary, cloudURL) {
             this.initializeAPI = function() {
                 throw bali.exception({
                     $module: '$CloudRepository',
-                    $procedure: '$initializeAPI',
+                    $function: '$initializeAPI',
                     $exception: '$alreadyInitialized',
                     $message: bali.text('The local repository API has already been initialized.')
                 });
@@ -169,7 +169,7 @@ const generateCredentials = async function(notary) {
 };
 
 
-const sendRequest = async function(credentials, procedure, url, method, type, identifier, document) {
+const sendRequest = async function(credentials, functionName, url, method, type, identifier, document) {
 
     // analyze the parameters
     switch (type) {
@@ -182,7 +182,7 @@ const sendRequest = async function(credentials, procedure, url, method, type, id
                 default:
                     throw bali.exception({
                         $module: '$CloudRepository',
-                        $procedure: procedure,
+                        $function: functionName,
                         $exception: '$invalidParameter',
                         $method: '"\n' + method.toString() + '\n"',
                         $type: '"\n' + type.toString() + '\n"',
@@ -201,7 +201,7 @@ const sendRequest = async function(credentials, procedure, url, method, type, id
                 default:
                     throw bali.exception({
                         $module: '$CloudRepository',
-                        $procedure: procedure,
+                        $function: functionName,
                         $exception: '$invalidParameter',
                         $method: '"\n' + method.toString() + '\n"',
                         $type: '"\n' + type.toString() + '\n"',
@@ -218,7 +218,7 @@ const sendRequest = async function(credentials, procedure, url, method, type, id
                 default:
                     throw bali.exception({
                         $module: '$CloudRepository',
-                        $procedure: procedure,
+                        $function: functionName,
                         $exception: '$invalidParameter',
                         $method: '"\n' + method.toString() + '\n"',
                         $type: '"\n' + type.toString() + '\n"',
@@ -235,7 +235,7 @@ const sendRequest = async function(credentials, procedure, url, method, type, id
                 default:
                     throw bali.exception({
                         $module: '$CloudRepository',
-                        $procedure: procedure,
+                        $function: functionName,
                         $exception: '$invalidParameter',
                         $method: '"\n' + method.toString() + '\n"',
                         $type: '"\n' + type.toString() + '\n"',
@@ -254,7 +254,7 @@ const sendRequest = async function(credentials, procedure, url, method, type, id
                 default:
                     throw bali.exception({
                         $module: '$CloudRepository',
-                        $procedure: procedure,
+                        $function: functionName,
                         $exception: '$invalidParameter',
                         $method: '"\n' + method.toString() + '\n"',
                         $type: '"\n' + type.toString() + '\n"',
@@ -265,7 +265,7 @@ const sendRequest = async function(credentials, procedure, url, method, type, id
         default:
             throw bali.exception({
                 $module: '$CloudRepository',
-                $procedure: procedure,
+                $function: functionName,
                 $exception: '$invalidParameter',
                 $parameter: '"\n' + type.toString() + '\n"',
                 $message: '"An invalid document type was specified."'
@@ -299,7 +299,7 @@ const sendRequest = async function(credentials, procedure, url, method, type, id
             // the server responded with an error status
             throw bali.exception({
                 $module: '$CloudRepository',
-                $procedure: procedure,
+                $function: functionName,
                 $exception: '$invalidRequest',
                 $url: '<' + options.url + '>',
                 $method: '"' + method + '"',
@@ -313,7 +313,7 @@ const sendRequest = async function(credentials, procedure, url, method, type, id
             // the request was sent but no response was received
             throw bali.exception({
                 $module: '$CloudRepository',
-                $procedure: procedure,
+                $function: functionName,
                 $exception: '$serverDown',
                 $url: '<' + options.url + '>',
                 $method: '"' + method + '"',
@@ -326,7 +326,7 @@ const sendRequest = async function(credentials, procedure, url, method, type, id
         // the request could not be sent
         throw bali.exception({
             $module: '$CloudRepository',
-            $procedure: procedure,
+            $function: functionName,
             $exception: '$malformedRequest',
             $url: '<' + options.url + '>',
             $method: '"' + options.method + '"',
