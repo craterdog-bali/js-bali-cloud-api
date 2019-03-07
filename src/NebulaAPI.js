@@ -69,17 +69,31 @@ exports.api = function(notary, repository, debug) {
          * other API function and can only be called once.
          */
         initializeAPI: async function() {
-            // create the send and event queues if necessary
-            await repository.createQueue(SEND_QUEUE_ID).catch(function() {});
-            await repository.createQueue(EVENT_QUEUE_ID).catch(function() {});
-            this.initializeAPI = function() {
-                throw bali.exception({
+            try {
+                // create the send and event queues if necessary
+                await repository.createQueue(SEND_QUEUE_ID).catch(function() {});
+                await repository.createQueue(EVENT_QUEUE_ID).catch(function() {});
+                this.initializeAPI = function() {
+                    const exception = bali.exception({
+                        $module: '$NebulaAPI',
+                        $function: '$initializeAPI',
+                        $exception: '$alreadyInitialized',
+                        $message: '"The Bali Nebula API™ has already been initialized."'
+                    });
+                    if (debug) console.error(exception.toString());
+                    throw exception;
+                };
+            } catch (cause) {
+                const exception = bali.exception({
                     $module: '$NebulaAPI',
                     $function: '$initializeAPI',
-                    $exception: '$alreadyInitialized',
-                    $message: '"The Bali Nebula API™ has already been initialized."'
-                });
-            };
+                    $exception: '$unexpected',
+                    $account: notary.getAccount(),
+                    $message: bali.text('An unexpected error occurred while attempting to initialize the API.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
         },
 
         /**
@@ -89,8 +103,20 @@ exports.api = function(notary, repository, debug) {
          * @returns {Catalog} The certificate citation for this client.
          */
         retrieveCitation: async function() {
-            const citation = await notary.getCitation();
-            return citation;
+            try {
+                const citation = await notary.getCitation();
+                return citation;
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$retrieveCitation',
+                    $exception: '$unexpected',
+                    $account: notary.getAccount(),
+                    $message: bali.text('An unexpected error occurred while attempting to retrieve the notary certificate citation.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
         },
         
         /**
@@ -114,18 +140,30 @@ exports.api = function(notary, repository, debug) {
                 throw exception;
             }
 
-            const certificateId = extractId(citation);
-            var certificate = cache.fetchCertificate(certificateId);
-            if (!certificate) {
-                const source = await repository.fetchCertificate(certificateId);
-                if (source) {
-                    const notarizedCertificate = bali.parse(source);
-                    validateCertificate(notary, citation, notarizedCertificate);
-                    certificate = notarizedCertificate.getValue('$component');
-                    cache.createCertificate(certificateId, certificate);
+            try {
+                const certificateId = extractId(citation);
+                var certificate = cache.fetchCertificate(certificateId);
+                if (!certificate) {
+                    const source = await repository.fetchCertificate(certificateId);
+                    if (source) {
+                        const notarizedCertificate = bali.parse(source);
+                        validateCertificate(notary, citation, notarizedCertificate);
+                        certificate = notarizedCertificate.getValue('$component');
+                        cache.createCertificate(certificateId, certificate);
+                    }
                 }
+                return certificate;
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$retrieveCertificate',
+                    $exception: '$unexpected',
+                    $account: notary.getAccount(),
+                    $message: bali.text('An unexpected error occurred while attempting to retrieve the notary certificate.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
             }
-            return certificate;
         },
 
         /**
@@ -150,18 +188,30 @@ exports.api = function(notary, repository, debug) {
                 throw exception;
             }
 
-            const typeId = extractId(citation);
-            var type = cache.fetchType(typeId);
-            if (!type) {
-                const source = await repository.fetchType(typeId);
-                if (source) {
-                    const notarizedType = bali.parse(source);
-                    validateDocument(notary, repository, notarizedType);
-                    type = notarizedType.getValue('$component');
-                    cache.createType(typeId, type);
+            try {
+                const typeId = extractId(citation);
+                var type = cache.fetchType(typeId);
+                if (!type) {
+                    const source = await repository.fetchType(typeId);
+                    if (source) {
+                        const notarizedType = bali.parse(source);
+                        validateDocument(notary, repository, notarizedType);
+                        type = notarizedType.getValue('$component');
+                        cache.createType(typeId, type);
+                    }
                 }
+                return type;
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$retrieveType',
+                    $exception: '$unexpected',
+                    $account: notary.getAccount(),
+                    $message: bali.text('An unexpected error occurred while attempting to retrieve the compiled type.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
             }
-            return type;
         },
 
         /**
@@ -198,21 +248,33 @@ exports.api = function(notary, repository, debug) {
                 throw exception;
             }
 
-            const notarizedType = await notary.notarizeDocument(type, previous);
-            const typeCitation = await notary.citeDocument(notarizedType);
-            const typeId = extractId(typeCitation);
-            if (await repository.typeExists(typeId)) {
-                throw bali.exception({
-                    $exception: '$versionExists',
-                    $tag: typeCitation.getValue('$tag'),
-                    $version: typeCitation.getValue('$version'),
-                    $message: '"A committed version of the type document referenced by the citation already exists."'
-                });
+            try {
+                const notarizedType = await notary.notarizeDocument(type, previous);
+                const typeCitation = await notary.citeDocument(notarizedType);
+                const typeId = extractId(typeCitation);
+                if (await repository.typeExists(typeId)) {
+                    throw bali.exception({
+                        $exception: '$versionExists',
+                        $tag: typeCitation.getValue('$tag'),
+                        $version: typeCitation.getValue('$version'),
+                        $message: '"A committed version of the type document referenced by the citation already exists."'
+                    });
+                }
+                await repository.createType(typeId, notarizedType);
+                type = notarizedType.getValue('$component');
+                cache.createType(typeId, type);
+                return typeCitation;
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$commitType',
+                    $exception: '$unexpected',
+                    $account: notary.getAccount(),
+                    $message: bali.text('An unexpected error occurred while attempting to commit the compiled type.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
             }
-            await repository.createType(typeId, notarizedType);
-            type = notarizedType.getValue('$component');
-            cache.createType(typeId, type);
-            return typeCitation;
         },
 
         /**
@@ -241,12 +303,24 @@ exports.api = function(notary, repository, debug) {
                 throw exception;
             }
 
-            const notarizedDraft = await notary.notarizeDocument(draft);
-            const draftCitation = await notary.citeDocument(notarizedDraft);
-            const draftId = extractId(draftCitation);
-            await repository.createDraft(draftId, notarizedDraft);
-            // we don't cache drafts since they are mutable
-            return draftCitation;
+            try {
+                const notarizedDraft = await notary.notarizeDocument(draft);
+                const draftCitation = await notary.citeDocument(notarizedDraft);
+                const draftId = extractId(draftCitation);
+                await repository.createDraft(draftId, notarizedDraft);
+                // we don't cache drafts since they are mutable
+                return draftCitation;
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$createDraft',
+                    $exception: '$unexpected',
+                    $account: notary.getAccount(),
+                    $message: bali.text('An unexpected error occurred while attempting to create a new draft document.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
         },
 
         /**
@@ -270,14 +344,26 @@ exports.api = function(notary, repository, debug) {
                 throw exception;
             }
 
-            const documentId = extractId(citation);
-            const source = await repository.fetchDraft(documentId);
-            if (source) {
-                const notarizedDraft = bali.parse(source);
-                validateDocument(notary, repository, notarizedDraft);
-                const draft = notarizedDraft.getValue('$component');
-                // we don't cache drafts since they are mutable
-                return draft;
+            try {
+                const documentId = extractId(citation);
+                const source = await repository.fetchDraft(documentId);
+                if (source) {
+                    const notarizedDraft = bali.parse(source);
+                    validateDocument(notary, repository, notarizedDraft);
+                    const draft = notarizedDraft.getValue('$component');
+                    // we don't cache drafts since they are mutable
+                    return draft;
+                }
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$retrieveDraft',
+                    $exception: '$unexpected',
+                    $account: notary.getAccount(),
+                    $message: bali.text('An unexpected error occurred while attempting to retrieve a draft document.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
             }
         },
 
@@ -302,22 +388,34 @@ exports.api = function(notary, repository, debug) {
                 throw exception;
             }
 
-            const notarizedDraft = await notary.notarizeDocument(draft);
-            const draftCitation = await notary.citeDocument(notarizedDraft);
-            const draftId = extractId(draftCitation);
-            if (cache.documentExists(draftId) || await repository.documentExists(draftId)) {
-                throw bali.exception({
+            try {
+                const notarizedDraft = await notary.notarizeDocument(draft);
+                const draftCitation = await notary.citeDocument(notarizedDraft);
+                const draftId = extractId(draftCitation);
+                if (cache.documentExists(draftId) || await repository.documentExists(draftId)) {
+                    throw bali.exception({
+                        $module: '$NebulaAPI',
+                        $function: '$updateDraft',
+                        $exception: '$versionExists',
+                        $tag: draftCitation.getValue('$tag'),
+                        $version: draftCitation.getValue('$version'),
+                        $message: '"A committed version of the document referenced by the citation already exists."'
+                    });
+                }
+                await repository.updateDraft(draftId, notarizedDraft);
+                // we don't cache drafts since they are mutable
+                return draftCitation;
+            } catch (cause) {
+                const exception = bali.exception({
                     $module: '$NebulaAPI',
                     $function: '$updateDraft',
-                    $exception: '$versionExists',
-                    $tag: draftCitation.getValue('$tag'),
-                    $version: draftCitation.getValue('$version'),
-                    $message: '"A committed version of the document referenced by the citation already exists."'
-                });
+                    $exception: '$unexpected',
+                    $account: notary.getAccount(),
+                    $message: bali.text('An unexpected error occurred while attempting to update a draft document.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
             }
-            await repository.updateDraft(draftId, notarizedDraft);
-            // we don't cache drafts since they are mutable
-            return draftCitation;
         },
 
         /**
@@ -340,8 +438,20 @@ exports.api = function(notary, repository, debug) {
                 throw exception;
             }
 
-            const documentId = extractId(citation);
-            await repository.deleteDraft(documentId);
+            try {
+                const documentId = extractId(citation);
+                await repository.deleteDraft(documentId);
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$discardDraft',
+                    $exception: '$unexpected',
+                    $account: notary.getAccount(),
+                    $message: bali.text('An unexpected error occurred while attempting to discard a draft document.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
         },
 
         /**
@@ -377,23 +487,35 @@ exports.api = function(notary, repository, debug) {
                 throw exception;
             }
 
-            const notarizedDocument = await notary.notarizeDocument(document, previous);
-            const documentCitation = await notary.citeDocument(notarizedDocument);
-            const documentId = extractId(documentCitation);
-            if (cache.documentExists(documentId) || await repository.documentExists(documentId)) {
-                throw bali.exception({
+            try {
+                const notarizedDocument = await notary.notarizeDocument(document, previous);
+                const documentCitation = await notary.citeDocument(notarizedDocument);
+                const documentId = extractId(documentCitation);
+                if (cache.documentExists(documentId) || await repository.documentExists(documentId)) {
+                    throw bali.exception({
+                        $module: '$NebulaAPI',
+                        $function: '$commitDocument',
+                        $exception: '$versionExists',
+                        $documentId: '"' + documentId + '"',
+                        $message: '"A committed version of the document referenced by the citation already exists."'
+                    });
+                }
+                await repository.createDocument(documentId, notarizedDocument);
+                document = notarizedDocument.getValue('$component');
+                cache.createDocument(documentId, document);
+                if (await repository.draftExists(documentId)) await repository.deleteDraft(documentId);
+                return documentCitation;
+            } catch (cause) {
+                const exception = bali.exception({
                     $module: '$NebulaAPI',
                     $function: '$commitDocument',
-                    $exception: '$versionExists',
-                    $documentId: '"' + documentId + '"',
-                    $message: '"A committed version of the document referenced by the citation already exists."'
-                });
+                    $exception: '$unexpected',
+                    $account: notary.getAccount(),
+                    $message: bali.text('An unexpected error occurred while attempting to commit a draft document.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
             }
-            await repository.createDocument(documentId, notarizedDocument);
-            document = notarizedDocument.getValue('$component');
-            cache.createDocument(documentId, document);
-            if (await repository.draftExists(documentId)) await repository.deleteDraft(documentId);
-            return documentCitation;
         },
 
         /**
@@ -417,19 +539,31 @@ exports.api = function(notary, repository, debug) {
                 throw exception;
             }
 
-            const documentId = extractId(citation);
-            var document = cache.fetchDocument(documentId);
-            if (!document) {
-                const source = await repository.fetchDocument(documentId);
-                if (source) {
-                    const notarizedDocument = bali.parse(source);
-                    validateCitation(notary, citation, notarizedDocument);
-                    validateDocument(notary, repository, notarizedDocument);
-                    document = notarizedDocument.getValue('$component');
-                    cache.createDocument(documentId, document);
+            try {
+                const documentId = extractId(citation);
+                var document = cache.fetchDocument(documentId);
+                if (!document) {
+                    const source = await repository.fetchDocument(documentId);
+                    if (source) {
+                        const notarizedDocument = bali.parse(source);
+                        validateCitation(notary, citation, notarizedDocument);
+                        validateDocument(notary, repository, notarizedDocument);
+                        document = notarizedDocument.getValue('$component');
+                        cache.createDocument(documentId, document);
+                    }
                 }
+                return document;
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$retrieveDocument',
+                    $exception: '$unexpected',
+                    $account: notary.getAccount(),
+                    $message: bali.text('An unexpected error occurred while attempting to retrieve a document.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
             }
-            return document;
         },
 
         /**
@@ -473,50 +607,62 @@ exports.api = function(notary, repository, debug) {
                 throw exception;
             }
 
-            // create the draft citation
-            const documentVersion = citation.getValue('$version');
-            const draftVersion = bali.version.nextVersion(documentVersion, level);
+            try {
+                // create the draft citation
+                const documentVersion = citation.getValue('$version');
+                const draftVersion = bali.version.nextVersion(documentVersion, level);
 
-            // make sure that there is no document already referenced by the draft citation
-            const draftId = citation.getValue('$tag').getValue() + draftVersion;
-            if (cache.documentExists(draftId) || await repository.documentExists(draftId) || await repository.draftExists(draftId)) {
-                throw bali.exception({
+                // make sure that there is no document already referenced by the draft citation
+                const draftId = citation.getValue('$tag').getValue() + draftVersion;
+                if (cache.documentExists(draftId) || await repository.documentExists(draftId) || await repository.draftExists(draftId)) {
+                    throw bali.exception({
+                        $module: '$NebulaAPI',
+                        $function: '$checkoutDocument',
+                        $exception: '$versionExists',
+                        $documentId: '"' + draftId + '"',
+                        $message: '"A committed version of the document referenced by the citation already exists."'
+                    });
+                }
+
+                // retrieve the document to be checked out
+                const documentId = extractId(citation);
+                const source = await repository.fetchDocument(documentId);
+                if (source === undefined) {
+                    throw bali.exception({
+                        $module: '$NebulaAPI',
+                        $function: '$checkoutDocument',
+                        $exception: '$documentMissing',
+                        $documentId: '"' + documentId + '"',
+                        $message: '"A committed version of the document referenced by the draft citation already exists."'
+                    });
+                }
+                const notarizedDocument = bali.parse(source);
+
+                // validate and cache the document
+                validateCitation(notary, citation, notarizedDocument);
+                validateDocument(notary, repository, notarizedDocument);
+                const document = notarizedDocument.getValue('$component');
+                cache.createDocument(documentId, document);
+
+                // store a draft copy of the document in the repository (NOTE: drafts are not cached)
+                const draft = bali.duplicate(document);
+                draft.getParameters().setParameter('$version', draftVersion);
+                const notarizedDraft = await notary.notarizeDocument(draft, citation);
+                const draftCitation = await notary.citeDocument(notarizedDraft);
+                await repository.createDraft(draftId, notarizedDraft);
+
+                return draftCitation;
+            } catch (cause) {
+                const exception = bali.exception({
                     $module: '$NebulaAPI',
                     $function: '$checkoutDocument',
-                    $exception: '$versionExists',
-                    $documentId: '"' + draftId + '"',
-                    $message: '"A committed version of the document referenced by the citation already exists."'
-                });
+                    $exception: '$unexpected',
+                    $account: notary.getAccount(),
+                    $message: bali.text('An unexpected error occurred while attempting to checkout a document.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
             }
-
-            // retrieve the document to be checked out
-            const documentId = extractId(citation);
-            const source = await repository.fetchDocument(documentId);
-            if (source === undefined) {
-                throw bali.exception({
-                    $module: '$NebulaAPI',
-                    $function: '$checkoutDocument',
-                    $exception: '$documentMissing',
-                    $documentId: '"' + documentId + '"',
-                    $message: '"A committed version of the document referenced by the draft citation already exists."'
-                });
-            }
-            const notarizedDocument = bali.parse(source);
-
-            // validate and cache the document
-            validateCitation(notary, citation, notarizedDocument);
-            validateDocument(notary, repository, notarizedDocument);
-            const document = notarizedDocument.getValue('$component');
-            cache.createDocument(documentId, document);
-
-            // store a draft copy of the document in the repository (NOTE: drafts are not cached)
-            const draft = bali.duplicate(document);
-            draft.getParameters().setParameter('$version', draftVersion);
-            const notarizedDraft = await notary.notarizeDocument(draft, citation);
-            const draftCitation = await notary.citeDocument(notarizedDraft);
-            await repository.createDraft(draftId, notarizedDraft);
-
-            return draftCitation;
         },
 
         /**
@@ -525,10 +671,22 @@ exports.api = function(notary, repository, debug) {
          * @returns {Tag} The unique tag for the new queue.
          */
         createQueue: async function() {
-            const queue = bali.tag();
-            const queueId = queue.getValue();
-            await repository.createQueue(queueId);
-            return queue;
+            try {
+                const queue = bali.tag();
+                const queueId = queue.getValue();
+                await repository.createQueue(queueId);
+                return queue;
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$createQueue',
+                    $exception: '$unexpected',
+                    $account: notary.getAccount(),
+                    $message: bali.text('An unexpected error occurred while attempting to create a new queue.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
         },
 
         /**
@@ -552,8 +710,20 @@ exports.api = function(notary, repository, debug) {
                 throw exception;
             }
 
-            const notarizedEvent = await notary.notarizeDocument(event);
-            await repository.queueMessage(EVENT_QUEUE_ID, notarizedEvent);
+            try {
+                const notarizedEvent = await notary.notarizeDocument(event);
+                await repository.queueMessage(EVENT_QUEUE_ID, notarizedEvent);
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$publishEvent',
+                    $exception: '$unexpected',
+                    $account: notary.getAccount(),
+                    $message: bali.text('An unexpected error occurred while attempting to publish an event.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
         },
 
         /**
@@ -590,9 +760,21 @@ exports.api = function(notary, repository, debug) {
                 throw exception;
             }
 
-            message.setValue('$target', target);
-            const notarizedMessage = await notary.notarizeDocument(message);
-            await repository.queueMessage(SEND_QUEUE_ID, notarizedMessage);
+            try {
+                message.setValue('$target', target);
+                const notarizedMessage = await notary.notarizeDocument(message);
+                await repository.queueMessage(SEND_QUEUE_ID, notarizedMessage);
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$sendMessage',
+                    $exception: '$unexpected',
+                    $account: notary.getAccount(),
+                    $message: bali.text('An unexpected error occurred while attempting to send a message.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
         },
 
         /**
@@ -629,9 +811,21 @@ exports.api = function(notary, repository, debug) {
                 throw exception;
             }
 
-            const notarizedMessage = await notary.notarizeDocument(message);
-            const queueId = queue.getValue();
-            await repository.queueMessage(queueId, notarizedMessage);
+            try {
+                const notarizedMessage = await notary.notarizeDocument(message);
+                const queueId = queue.getValue();
+                await repository.queueMessage(queueId, notarizedMessage);
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$queueMessage',
+                    $exception: '$unexpected',
+                    $account: notary.getAccount(),
+                    $message: bali.text('An unexpected error occurred while attempting to queue a message.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
         },
 
         /**
@@ -658,14 +852,26 @@ exports.api = function(notary, repository, debug) {
                 throw exception;
             }
 
-            const queueId = queue.getValue();
-            const source = await repository.dequeueMessage(queueId);
-            if (source) {
-                // validate the document
-                const notarizedMessage = bali.parse(source);
-                validateDocument(notary, repository, notarizedMessage);
-                const message = notarizedMessage.getValue('$component');
-                return message;
+            try {
+                const queueId = queue.getValue();
+                const source = await repository.dequeueMessage(queueId);
+                if (source) {
+                    // validate the document
+                    const notarizedMessage = bali.parse(source);
+                    validateDocument(notary, repository, notarizedMessage);
+                    const message = notarizedMessage.getValue('$component');
+                    return message;
+                }
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$receiveMessage',
+                    $exception: '$unexpected',
+                    $account: notary.getAccount(),
+                    $message: bali.text('An unexpected error occurred while attempting to receive a message.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
             }
         },
 
@@ -688,8 +894,20 @@ exports.api = function(notary, repository, debug) {
                 throw exception;
             }
 
-            const queueId = queue.getValue();
-            await repository.deleteQueue(queueId);
+            try {
+                const queueId = queue.getValue();
+                await repository.deleteQueue(queueId);
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$deleteQueue',
+                    $exception: '$unexpected',
+                    $account: notary.getAccount(),
+                    $message: bali.text('An unexpected error occurred while attempting to delete a queue.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
         }
     };
 };
