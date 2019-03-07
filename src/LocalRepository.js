@@ -46,6 +46,7 @@ exports.repository = function(directory, debug) {
     const types = repositoryDirectory + 'types/';
     const queues = repositoryDirectory + 'queues/';
 
+    // return a singleton object for the API
     return {
 
         /**

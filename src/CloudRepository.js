@@ -31,6 +31,7 @@ exports.repository = function(notary, cloudURL, debug) {
     debug = debug || false;
     var account = bali.NONE;
 
+    // return a singleton object for the API
     return {
 
         /**

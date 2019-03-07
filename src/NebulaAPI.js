@@ -32,11 +32,36 @@ const bali = require('bali-component-framework');
  * @returns {Object} An object that implements the API for the Bali Nebula™.
  */
 exports.api = function(notary, repository, debug) {
+    // validate the parameters
     debug = debug || false;
+    if (!notary || !notary.initializeAPI) {
+        const exception = bali.exception({
+            $module: '$NebulaAPI',
+            $function: '$api',
+            $exception: '$invalidParameter',
+            $parameter: notary ? bali.text(notary.toString()) : bali.NONE,
+            $message: bali.text('The digital notary is invalid.')
+        });
+        if (debug) console.error(exception.toString());
+        throw exception;
+    }
+    if (!repository || !repository.initializeAPI) {
+        const exception = bali.exception({
+            $module: '$NebulaAPI',
+            $function: '$api',
+            $exception: '$invalidParameter',
+            $parameter: repository ? bali.text(repository.toString()) : bali.NONE,
+            $message: bali.text('The document repository is invalid.')
+        });
+        if (debug) console.error(exception.toString());
+        throw exception;
+    }
 
+    // TODO: these need to be shared with the virtual machine
     const SEND_QUEUE_ID = 'JXT095QY01HBLHPAW04ZR5WSH41MWG4H';
     const EVENT_QUEUE_ID = '3RMGDVN7D6HLAPFXQNPF7DV71V3MAL43';
 
+    // return a singleton object for the API
     return {
 
         /**
