@@ -13,10 +13,12 @@
  * This function initializes a test document repository for the Bali Nebula™.
  * 
  * @param {String} testDirectory A test directory to be used as a local document repository.
+ * @param {Boolean} debug An optional flag that determines whether or not exceptions
+ * will be logged to the error console.
  * @returns {Object} A singleton object containing the initialized document repository.
  */
-exports.local = function(testDirectory) {
-    const repository = require('./src/LocalRepository').repository(testDirectory);
+exports.local = function(testDirectory, debug) {
+    const repository = require('./src/LocalRepository').repository(testDirectory, debug);
     return repository;
 };
 
@@ -24,11 +26,13 @@ exports.local = function(testDirectory) {
  * This function initializes a cloud based document repository for the Bali Nebula™.
  * 
  * @param {Object} notary An object that implements the digital notary API.
- * @param {String|URL} cloudURL An object that defines the URL for the cloud repository.
+ * @param {Reference} cloudURL A reference that defines the URL for the cloud repository.
+ * @param {Boolean} debug An optional flag that determines whether or not exceptions
+ * will be logged to the error console.
  * @returns {Object} A singleton object containing the initialized document repository.
  */
-exports.cloud = function(notary, cloudURL) {
-    const repository = require('./src/CloudRepository').repository(notary, cloudURL);
+exports.cloud = function(notary, cloudURL, debug) {
+    const repository = require('./src/CloudRepository').repository(notary, cloudURL, debug);
     return repository;
 };
 
@@ -38,9 +42,11 @@ exports.cloud = function(notary, cloudURL) {
  * 
  * @param {Object} notary An object that implements the digital notary API.
  * @param {Object} repository An object that implements the document repository API.
+ * @param {Boolean} debug An optional flag that determines whether or not exceptions
+ * will be logged to the error console.
  * @returns {Object} A singleton object containing the initialized Bali Nebula™ API.
  */
-exports.api = function(notary, repository) {
-    const api = require('./src/NebulaAPI').api(notary, repository);
+exports.api = function(notary, repository, debug) {
+    const api = require('./src/NebulaAPI').api(notary, repository, debug);
     return api;
 };

@@ -38,20 +38,7 @@ const EOL = '\n';  // POSIX compliant end of line
  * @returns {Object} An object implementing the document repository interface.
  */
 exports.repository = function(directory, debug) {
-
-    // validate the parameters
-    if (!directory || typeof directory !== 'string') {
-        const exception = bali.exception({
-            $module: '$LocalRepository',
-            $function: '$repository',
-            $exception: '$invalidParameter',
-            $parameter: bali.text(directory.toString()),
-            $message: bali.text('The directory string is invalid.')
-        });
-        throw exception;
-    }
     debug = debug || false;
-
     const repositoryDirectory = directory + 'repository/';
     const certificates = repositoryDirectory + 'certificates/';
     const drafts = repositoryDirectory + 'drafts/';
@@ -61,6 +48,11 @@ exports.repository = function(directory, debug) {
 
     return {
 
+        /**
+         * This function returns a string providing attributes about this repository.
+         * 
+         * @returns {String} A string providing attributes about this repository.
+         */
         toString: function() {
             return bali.catalog({
                 $configuration: bali.text(directory),
@@ -68,6 +60,10 @@ exports.repository = function(directory, debug) {
             });
         },
 
+        /**
+         *  This function initializes the repository and must be called prior to calling any of
+         *  the other functions in the API. It can only be called once.
+         */
         initializeAPI: async function() {
             try {
                 // create the repository directory structure if necessary (with drwx------ permissions)
@@ -79,12 +75,14 @@ exports.repository = function(directory, debug) {
                 await pfs.mkdir(types, 0o700).catch(function() {});
                 await pfs.mkdir(queues, 0o700).catch(function() {});
                 this.initializeAPI = function() {
-                    throw bali.exception({
+                    const exception = bali.exception({
                         $module: '$LocalRepository',
                         $function: '$initializeAPI',
                         $exception: '$alreadyInitialized',
                         $message: bali.text('The local repository API has already been initialized.')
                     });
+                    if (debug) console.error(exception.toString());
+                    throw exception;
                 };
             } catch (cause) {
                 const exception = bali.exception({
@@ -99,19 +97,15 @@ exports.repository = function(directory, debug) {
             }
         },
 
+        /**
+         * This function checks to see whether or not a certificate is associated with the
+         * specified identifier.
+         * 
+         * @param {String} certificateId The unique identifier (including version number) for
+         * the certificate being checked.
+         * @returns {Boolean} Whether or not the certificate exists.
+         */
         certificateExists: async function(certificateId) {
-            // validate the parameters
-            if (!certificateId || typeof certificateId !== 'string') {
-                const exception = bali.exception({
-                    $module: '$LocalRepository',
-                    $function: '$certificateExists',
-                    $exception: '$invalidParameter',
-                    $parameter: bali.text(certificateId.toString()),
-                    $message: bali.text('The certificate identifier string is invalid.')
-                });
-                throw exception;
-            }
-
             try {
                 const filename = certificates + certificateId + '.ndoc';
                 const exists = await doesExist(filename);
@@ -129,19 +123,15 @@ exports.repository = function(directory, debug) {
             }
         },
 
+        /**
+         * This function attempts to retrieve the specified certificate from the repository.
+         * 
+         * @param {String} certificateId The unique identifier (including version number) for
+         * the certificate being fetched.
+         * @returns {String} The canonical source string for the certificate, or
+         * <code>undefined</code> if it doesn't exist.
+         */
         fetchCertificate: async function(certificateId) {
-            // validate the parameters
-            if (!certificateId || typeof certificateId !== 'string') {
-                const exception = bali.exception({
-                    $module: '$LocalRepository',
-                    $function: '$fetchCertificate',
-                    $exception: '$invalidParameter',
-                    $parameter: bali.text(certificateId.toString()),
-                    $message: bali.text('The certificate identifier string is invalid.')
-                });
-                throw exception;
-            }
-
             try {
                 var certificate;
                 const filename = certificates + certificateId + '.ndoc';
@@ -162,6 +152,13 @@ exports.repository = function(directory, debug) {
             }
         },
 
+        /**
+         * This function creates a new certificate in the repository.
+         * 
+         * @param {String} certificateId The unique identifier (including version number) for
+         * the certificate being created.
+         * @param {String} certificate The canonical source string for the certificate.
+         */
         createCertificate: async function(certificateId, certificate) {
             try {
                 const filename = certificates + certificateId + '.ndoc';
@@ -171,12 +168,11 @@ exports.repository = function(directory, debug) {
                         $module: '$LocalRepository',
                         $function: '$createCertificate',
                         $exception: '$fileExists',
-                        $directory: bali.text(certificates),
-                        $file: bali.text(certificateId + '.ndoc'),
+                        $file: bali.text(filename),
                         $message: bali.text('The file to be written already exists.')
                     });
                 }
-                const document = certificate.toString() + EOL;  // add POSIX compliant <EOL>
+                const document = certificate + EOL;  // add POSIX compliant <EOL>
                 await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o400});
             } catch (exception) {
                 throw bali.exception({
@@ -189,6 +185,14 @@ exports.repository = function(directory, debug) {
             }
         },
 
+        /**
+         * This function checks to see whether or not a draft document is associated with the
+         * specified identifier.
+         * 
+         * @param {String} draftId The unique identifier (including version number) for
+         * the draft document being checked.
+         * @returns {Boolean} Whether or not the draft document exists.
+         */
         draftExists: async function(draftId) {
             try {
                 const filename = drafts + draftId + '.ndoc';
@@ -205,6 +209,14 @@ exports.repository = function(directory, debug) {
             }
         },
 
+        /**
+         * This function attempts to retrieve the specified draft document from the repository.
+         * 
+         * @param {String} draftId The unique identifier (including version number) for
+         * the draft document being fetched.
+         * @returns {String} The canonical source string for the draft document, or
+         * <code>undefined</code> if it doesn't exist.
+         */
         fetchDraft: async function(draftId) {
             try {
                 var draft;
@@ -226,6 +238,13 @@ exports.repository = function(directory, debug) {
             }
         },
 
+        /**
+         * This function creates a new draft document in the repository.
+         * 
+         * @param {String} draftId The unique identifier (including version number) for
+         * the draft document being created.
+         * @param {String} draft The canonical source string for the draft document.
+         */
         createDraft: async function(draftId, draft) {
             try {
                 const filename = drafts + draftId + '.ndoc';
@@ -235,12 +254,11 @@ exports.repository = function(directory, debug) {
                         $module: '$LocalRepository',
                         $function: '$createDraft',
                         $exception: '$fileExists',
-                        $directory: bali.text(drafts),
-                        $file: bali.text(draftId + '.ndoc'),
+                        $file: bali.text(filename),
                         $message: bali.text('The file to be written already exists.')
                     });
                 }
-                const document = draft.toString() + EOL;  // add POSIX compliant <EOL>
+                const document = draft + EOL;  // add POSIX compliant <EOL>
                 await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o600});
             } catch (exception) {
                 throw bali.exception({
@@ -253,6 +271,13 @@ exports.repository = function(directory, debug) {
             }
         },
 
+        /**
+         * This function updates an existing draft document in the repository.
+         * 
+         * @param {String} draftId The unique identifier (including version number) for
+         * the draft document being updated.
+         * @param {String} draft The canonical source string for the draft document.
+         */
         updateDraft: async function(draftId, draft) {
             try {
                 const filename = drafts + draftId + '.ndoc';
@@ -262,12 +287,11 @@ exports.repository = function(directory, debug) {
                         $module: '$LocalRepository',
                         $function: '$updateDraft',
                         $exception: '$fileMissing',
-                        $directory: bali.text(drafts),
-                        $file: bali.text(draftId + '.ndoc'),
+                        $file: bali.text(filename),
                         $message: bali.text('The file to be updated does not exist.')
                     });
                 }
-                const document = draft.toString() + EOL;  // add POSIX compliant <EOL>
+                const document = draft + EOL;  // add POSIX compliant <EOL>
                 await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o600});
             } catch (exception) {
                 throw bali.exception({
@@ -280,6 +304,12 @@ exports.repository = function(directory, debug) {
             }
         },
 
+        /**
+         * This function attempts to delete the specified draft document from the repository.
+         * 
+         * @param {String} draftId The unique identifier (including version number) for
+         * the draft document being deleted.
+         */
         deleteDraft: async function(draftId) {
             try {
                 const filename = drafts + draftId + '.ndoc';
@@ -298,6 +328,14 @@ exports.repository = function(directory, debug) {
             }
         },
 
+        /**
+         * This function checks to see whether or not a document is associated with the
+         * specified identifier.
+         * 
+         * @param {String} documentId The unique identifier (including version number) for
+         * the document being checked.
+         * @returns {Boolean} Whether or not the document exists.
+         */
         documentExists: async function(documentId) {
             try {
                 const filename = documents + documentId + '.ndoc';
@@ -314,6 +352,14 @@ exports.repository = function(directory, debug) {
             }
         },
 
+        /**
+         * This function attempts to retrieve the specified document from the repository.
+         * 
+         * @param {String} documentId The unique identifier (including version number) for
+         * the document being fetched.
+         * @returns {String} The canonical source string for the document, or
+         * <code>undefined</code> if it doesn't exist.
+         */
         fetchDocument: async function(documentId) {
             try {
                 var document;
@@ -335,6 +381,13 @@ exports.repository = function(directory, debug) {
             }
         },
 
+        /**
+         * This function creates a new document in the repository.
+         * 
+         * @param {String} documentId The unique identifier (including version number) for
+         * the document being created.
+         * @param {String} document The canonical source string for the document.
+         */
         createDocument: async function(documentId, document) {
             try {
                 const filename = documents + documentId + '.ndoc';
@@ -344,12 +397,11 @@ exports.repository = function(directory, debug) {
                         $module: '$LocalRepository',
                         $function: '$createDocument',
                         $exception: '$fileExists',
-                        $directory: bali.text(documents),
-                        $file: bali.text(documentId + '.ndoc'),
+                        $file: bali.text(filename),
                         $message: bali.text('The file to be written already exists.')
                     });
                 }
-                document = document.toString() + EOL;  // add POSIX compliant <EOL>
+                document = document + EOL;  // add POSIX compliant <EOL>
                 await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o400});
             } catch (exception) {
                 throw bali.exception({
@@ -362,6 +414,14 @@ exports.repository = function(directory, debug) {
             }
         },
 
+        /**
+         * This function checks to see whether or not a type is associated with the
+         * specified identifier.
+         * 
+         * @param {String} typeId The unique identifier (including version number) for
+         * the type being checked.
+         * @returns {Boolean} Whether or not the type exists.
+         */
         typeExists: async function(typeId) {
             try {
                 const filename = types + typeId + '.ndoc';
@@ -378,6 +438,14 @@ exports.repository = function(directory, debug) {
             }
         },
 
+        /**
+         * This function attempts to retrieve the specified type from the repository.
+         * 
+         * @param {String} typeId The unique identifier (including version number) for
+         * the type being fetched.
+         * @returns {String} The canonical source string for the type, or
+         * <code>undefined</code> if it doesn't exist.
+         */
         fetchType: async function(typeId) {
             try {
                 var type;
@@ -399,6 +467,13 @@ exports.repository = function(directory, debug) {
             }
         },
 
+        /**
+         * This function creates a new type in the repository.
+         * 
+         * @param {String} typeId The unique identifier (including version number) for
+         * the type being created.
+         * @param {String} type The canonical source string for the type.
+         */
         createType: async function(typeId, type) {
             try {
                 const filename = types + typeId + '.ndoc';
@@ -408,12 +483,11 @@ exports.repository = function(directory, debug) {
                         $module: '$LocalRepository',
                         $function: '$createType',
                         $exception: '$fileExists',
-                        $directory: bali.text(types),
-                        $file: bali.text(typeId + '.ndoc'),
+                        $file: bali.text(filename),
                         $message: bali.text('The file to be written already exists.')
                     });
                 }
-                const document = type.toString() + EOL;  // add POSIX compliant <EOL>
+                const document = type + EOL;  // add POSIX compliant <EOL>
                 await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o400});
             } catch (exception) {
                 throw bali.exception({
@@ -426,6 +500,14 @@ exports.repository = function(directory, debug) {
             }
         },
 
+        /**
+         * This function checks to see whether or not a queue is associated with the
+         * specified identifier.
+         * 
+         * @param {String} queueId The unique identifier (including version number) for
+         * the queue being checked.
+         * @returns {Boolean} Whether or not the queue exists.
+         */
         queueExists: async function(queueId) {
             const directory = queues + queueId;
             try {
@@ -442,6 +524,11 @@ exports.repository = function(directory, debug) {
             }
         },
 
+        /**
+         * This function creates a new queue in the repository.
+         * 
+         * @param {String} queueId The unique identifier for the queue being created.
+         */
         createQueue: async function(queueId) {
             const directory = queues + queueId;
             try {
@@ -452,12 +539,10 @@ exports.repository = function(directory, debug) {
                         $function: '$createQueue',
                         $exception: '$directoryExists',
                         $directory: bali.text(directory),
-                        $file: bali.text(queueId + '.ndoc'),
                         $message: bali.text('The directory to be created already exists.')
                     });
                 }
                 await pfs.mkdir(directory, 0o700);
-                return bali.tag(queueId);
             } catch (exception) {
                 throw bali.exception({
                     $module: '$LocalRepository',
@@ -469,6 +554,11 @@ exports.repository = function(directory, debug) {
             }
         },
 
+        /**
+         * This function deletes an existing queue (and all messages it contains) from the repository.
+         * 
+         * @param {String} queueId The unique identifier for the queue being deleted.
+         */
         deleteQueue: async function(queueId) {
             const directory = queues + queueId;
             try {
@@ -488,6 +578,12 @@ exports.repository = function(directory, debug) {
             }
         },
 
+        /**
+         * This function adds a new message onto the specified queue in the repository.
+         * 
+         * @param {String} queueId The unique identifier for the queue.
+         * @param {String} message The canonical source string for the message.
+         */
         queueMessage: async function(queueId, message) {
             const directory = queues + queueId + '/';
             try {
@@ -499,12 +595,11 @@ exports.repository = function(directory, debug) {
                         $module: '$LocalRepository',
                         $function: '$queueMessage',
                         $exception: '$fileExists',
-                        $directory: bali.text(directory),
-                        $file: bali.text(messageId + '.ndoc'),
+                        $file: bali.text(filename),
                         $message: bali.text('The file to be written already exists.')
                     });
                 }
-                const document = message.toString() + EOL;  // add POSIX compliant <EOL>
+                const document = message + EOL;  // add POSIX compliant <EOL>
                 await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o600});
             } catch (exception) {
                 throw bali.exception({
@@ -517,6 +612,12 @@ exports.repository = function(directory, debug) {
             }
         },
 
+        /**
+         * This function removes a message (at random) from the specified queue in the repository.
+         * 
+         * @param {String} queueId The unique identifier for the queue.
+         * @returns {String} The canonical source string for the message.
+         */
         dequeueMessage: async function(queueId) {
             const directory = queues + queueId + '/';
             try {
@@ -558,14 +659,19 @@ exports.repository = function(directory, debug) {
 };
 
 
+// PRIVATE FUNCTIONS
+
 const doesExist = async function(path) {
     var exists = true;
     await pfs.stat(path).catch(function(exception) {
         if (exception.code === 'ENOENT') {
+            // the path does not exist
             exists = false;
         } else {
+            // something else went wrong
             throw exception;
         }
     });
+    // the path exists
     return exists;
 };

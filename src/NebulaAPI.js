@@ -27,9 +27,13 @@ const bali = require('bali-component-framework');
  *
  * @param {Object} notary An object that implements the API for the digital notary.
  * @param {Object} repository An object that implements the API for the document repository.
+ * @param {Boolean} debug An optional flag that determines whether or not exceptions
+ * will be logged to the error console.
  * @returns {Object} An object that implements the API for the Bali Nebula™.
  */
-exports.api = function(notary, repository) {
+exports.api = function(notary, repository, debug) {
+    debug = debug || false;
+
     const SEND_QUEUE_ID = 'JXT095QY01HBLHPAW04ZR5WSH41MWG4H';
     const EVENT_QUEUE_ID = '3RMGDVN7D6HLAPFXQNPF7DV71V3MAL43';
 
@@ -72,6 +76,19 @@ exports.api = function(notary, repository) {
          * @returns {Catalog} The desired notary certificate.
          */
         retrieveCertificate: async function(citation) {
+            // validate the parameters
+            if (!citation || !citation.getTypeId || citation.getTypeId() !== bali.types.CATALOG) {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$retrieveCertificate',
+                    $exception: '$invalidParameter',
+                    $parameter: citation ? bali.text(citation.toString()) : bali.NONE,
+                    $message: bali.text('The certificate citation is invalid.')
+                });
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
+
             const certificateId = extractId(citation);
             var certificate = cache.fetchCertificate(certificateId);
             if (!certificate) {
@@ -95,6 +112,19 @@ exports.api = function(notary, repository) {
          * @returns {Catalog} The compiled type document.
          */
         retrieveType: async function(citation) {
+            // validate the parameters
+            if (!citation || !citation.getTypeId || citation.getTypeId() !== bali.types.CATALOG) {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$retrieveType',
+                    $exception: '$invalidParameter',
+                    $parameter: citation ? bali.text(citation.toString()) : bali.NONE,
+                    $message: bali.text('The type citation is invalid.')
+                });
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
+
             const typeId = extractId(citation);
             var type = cache.fetchType(typeId);
             if (!type) {
@@ -119,6 +149,30 @@ exports.api = function(notary, repository) {
          * @returns {Catalog} A document citation for the committed type document.
          */
         commitType: async function(type, previous) {
+            // validate the parameters
+            if (!type || !type.getTypeId || type.getTypeId() !== bali.types.CATALOG) {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$commitType',
+                    $exception: '$invalidParameter',
+                    $parameter: type ? bali.text(type.toString()) : bali.NONE,
+                    $message: bali.text('The type citation is invalid.')
+                });
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
+            if (previous && (!previous.getTypeId || previous.getTypeId() !== bali.types.CATALOG)) {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$commitType',
+                    $exception: '$invalidParameter',
+                    $parameter: bali.text(previous.toString()),
+                    $message: bali.text('The previous version citation is invalid.')
+                });
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
+
             const notarizedType = await notary.notarizeDocument(type, previous);
             const typeCitation = await notary.citeDocument(notarizedType);
             const typeId = extractId(typeCitation);
@@ -145,10 +199,23 @@ exports.api = function(notary, repository) {
          * @returns {Catalog} A document citation for the new draft document.
          */
         createDraft: async function(draft) {
+            // validate the parameters
             draft = draft || bali.catalog({}, bali.parameters({
                 $tag: bali.tag(),
                 $version: bali.version()
             }));
+            if (!draft.getTypeId) {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$createDraft',
+                    $exception: '$invalidParameter',
+                    $parameter: bali.text(draft.toString()),
+                    $message: bali.text('The draft document citation is invalid.')
+                });
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
+
             const notarizedDraft = await notary.notarizeDocument(draft);
             const draftCitation = await notary.citeDocument(notarizedDraft);
             const draftId = extractId(draftCitation);
@@ -165,6 +232,19 @@ exports.api = function(notary, repository) {
          * @returns {Component} The desired draft document.
          */
         retrieveDraft: async function(citation) {
+            // validate the parameters
+            if (!citation || !citation.getTypeId || citation.getTypeId() !== bali.types.CATALOG) {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$retrieveDraft',
+                    $exception: '$invalidParameter',
+                    $parameter: citation ? bali.text(citation.toString()) : bali.NONE,
+                    $message: bali.text('The draft document citation is invalid.')
+                });
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
+
             const documentId = extractId(citation);
             const source = await repository.fetchDraft(documentId);
             if (source) {
@@ -184,6 +264,19 @@ exports.api = function(notary, repository) {
          * @returns {Catalog} A document citation for the updated draft document.
          */
         updateDraft: async function(draft) {
+            // validate the parameters
+            if (!draft || !draft.getTypeId) {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$updateDraft',
+                    $exception: '$invalidParameter',
+                    $parameter: draft ? bali.text(draft.toString()) : bali.NONE,
+                    $message: bali.text('The draft document is invalid.')
+                });
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
+
             const notarizedDraft = await notary.notarizeDocument(draft);
             const draftCitation = await notary.citeDocument(notarizedDraft);
             const draftId = extractId(draftCitation);
@@ -209,6 +302,19 @@ exports.api = function(notary, repository) {
          * @param {Catalog} citation The document citation for the draft document to be deleted.
          */
         discardDraft: async function(citation) {
+            // validate the parameters
+            if (!citation || !citation.getTypeId || citation.getTypeId() !== bali.types.CATALOG) {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$discardDraft',
+                    $exception: '$invalidParameter',
+                    $parameter: citation ? bali.text(citation.toString()) : bali.NONE,
+                    $message: bali.text('The draft document citation is invalid.')
+                });
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
+
             const documentId = extractId(citation);
             await repository.deleteDraft(documentId);
         },
@@ -222,6 +328,30 @@ exports.api = function(notary, repository) {
          * @returns {Catalog} The updated citation for the committed document.
          */
         commitDocument: async function(document, previous) {
+            // validate the parameters
+            if (!document || !document.getTypeId) {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$commitDocument',
+                    $exception: '$invalidParameter',
+                    $parameter: document ? bali.text(document.toString()) : bali.NONE,
+                    $message: bali.text('The draft document is invalid.')
+                });
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
+            if (previous && (!previous.getTypeId || previous.getTypeId() !== bali.types.CATALOG)) {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$commitDocument',
+                    $exception: '$invalidParameter',
+                    $parameter: bali.text(previous.toString()),
+                    $message: bali.text('The previous version citation is invalid.')
+                });
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
+
             const notarizedDocument = await notary.notarizeDocument(document, previous);
             const documentCitation = await notary.citeDocument(notarizedDocument);
             const documentId = extractId(documentCitation);
@@ -249,6 +379,19 @@ exports.api = function(notary, repository) {
          * @returns {Component} The desired document.
          */
         retrieveDocument: async function(citation) {
+            // validate the parameters
+            if (!citation || !citation.getTypeId || citation.getTypeId() !== bali.types.CATALOG) {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$retrieveDocument',
+                    $exception: '$invalidParameter',
+                    $parameter: citation ? bali.text(citation.toString()) : bali.NONE,
+                    $message: bali.text('The document citation is invalid.')
+                });
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
+
             const documentId = extractId(citation);
             var document = cache.fetchDocument(documentId);
             if (!document) {
@@ -281,6 +424,29 @@ exports.api = function(notary, repository) {
          * @returns {Catalog} The document citation for the new draft document.
          */
         checkoutDocument: async function(citation, level) {
+            // validate the parameters
+            if (!citation || !citation.getTypeId || citation.getTypeId() !== bali.types.CATALOG) {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$checkoutDocument',
+                    $exception: '$invalidParameter',
+                    $parameter: citation ? bali.text(citation.toString()) : bali.NONE,
+                    $message: bali.text('The document citation is invalid.')
+                });
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
+            if (level && typeof level !== 'number') {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$checkoutDocument',
+                    $exception: '$invalidParameter',
+                    $parameter: level ? bali.text(level.toString()) : bali.NONE,
+                    $message: bali.text('The version level is invalid.')
+                });
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
 
             // create the draft citation
             const documentVersion = citation.getValue('$version');
@@ -348,6 +514,19 @@ exports.api = function(notary, repository) {
          * @param {Catalog} event The Bali catalog documenting the event.
          */
         publishEvent: async function(event) {
+            // validate the parameters
+            if (!event || !event.getTypeId || event.getTypeId() !== bali.types.CATALOG) {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$publishEvent',
+                    $exception: '$invalidParameter',
+                    $parameter: event ? bali.text(event.toString()) : bali.NONE,
+                    $message: bali.text('The event is invalid.')
+                });
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
+
             const notarizedEvent = await notary.notarizeDocument(event);
             await repository.queueMessage(EVENT_QUEUE_ID, notarizedEvent);
         },
@@ -357,12 +536,36 @@ exports.api = function(notary, repository) {
          * Nebula™ that is referenced by the specified target document citation.
          * The message is sent asynchronously so there is no response.
          * 
-         * @param {Catalog} targetCitation A document citation referencing the document containing
+         * @param {Catalog} target A document citation referencing the document containing
          * the target component of the message.
          * @param {Catalog} message The message to be sent to the target component.
          */
-        sendMessage: async function(targetCitation, message) {
-            message.setValue('$target', targetCitation);
+        sendMessage: async function(target, message) {
+            // validate the parameters
+            if (target && (!target.getTypeId || target.getTypeId() !== bali.types.CATALOG)) {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$sendMessage',
+                    $exception: '$invalidParameter',
+                    $parameter: target ? bali.text(target.toString()) : bali.NONE,
+                    $message: bali.text('The target citation is invalid.')
+                });
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
+            if (message && (!message.getTypeId || message.getTypeId() !== bali.types.CATALOG)) {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$sendMessage',
+                    $exception: '$invalidParameter',
+                    $parameter: bali.text(message.toString()),
+                    $message: bali.text('The message is invalid.')
+                });
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
+
+            message.setValue('$target', target);
             const notarizedMessage = await notary.notarizeDocument(message);
             await repository.queueMessage(SEND_QUEUE_ID, notarizedMessage);
         },
@@ -377,6 +580,30 @@ exports.api = function(notary, repository) {
          * @param {Catalog} message The message to be placed on the queue.
          */
         queueMessage: async function(queue, message) {
+            // validate the parameters
+            if (queue && (!queue.getTypeId || queue.getTypeId() !== bali.types.TAG)) {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$queueMessage',
+                    $exception: '$invalidParameter',
+                    $parameter: queue ? bali.text(queue.toString()) : bali.NONE,
+                    $message: bali.text('The queue identifier is invalid.')
+                });
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
+            if (message && (!message.getTypeId || message.getTypeId() !== bali.types.CATALOG)) {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$queueMessage',
+                    $exception: '$invalidParameter',
+                    $parameter: bali.text(message.toString()),
+                    $message: bali.text('The message is invalid.')
+                });
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
+
             const notarizedMessage = await notary.notarizeDocument(message);
             const queueId = queue.getValue();
             await repository.queueMessage(queueId, notarizedMessage);
@@ -393,6 +620,19 @@ exports.api = function(notary, repository) {
          * @returns {Component} The message received from the queue.
          */
         receiveMessage: async function(queue) {
+            // validate the parameters
+            if (queue && (!queue.getTypeId || queue.getTypeId() !== bali.types.TAG)) {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$receiveMessage',
+                    $exception: '$invalidParameter',
+                    $parameter: queue ? bali.text(queue.toString()) : bali.NONE,
+                    $message: bali.text('The queue identifier is invalid.')
+                });
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
+
             const queueId = queue.getValue();
             const source = await repository.dequeueMessage(queueId);
             if (source) {
@@ -410,6 +650,19 @@ exports.api = function(notary, repository) {
          * @param {Tag} queue The unique tag for the queue to be deleted.
          */
         deleteQueue: async function(queue) {
+            // validate the parameters
+            if (queue && (!queue.getTypeId || queue.getTypeId() !== bali.types.TAG)) {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$deleteQueue',
+                    $exception: '$invalidParameter',
+                    $parameter: queue ? bali.text(queue.toString()) : bali.NONE,
+                    $message: bali.text('The queue identifier is invalid.')
+                });
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
+
             const queueId = queue.getValue();
             await repository.deleteQueue(queueId);
         }

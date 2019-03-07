@@ -8,6 +8,7 @@
  * Source Initiative. (See http://opensource.org/licenses/MIT)          *
  ************************************************************************/
 
+const debug = false;  // set to true for error logging
 const testDirectory = 'test/config/';
 const mocha = require('mocha');
 const assert = require('chai').assert;
@@ -15,7 +16,7 @@ const expect = require('chai').expect;
 const bali = require('bali-component-framework');
 const notary = require('bali-digital-notary');
 const nebula = require('../');
-const repository = nebula.local(testDirectory);
+const repository = nebula.local(testDirectory, debug);
 
 function extractId(component) {
     const identifier = component.getValue('$tag').getValue();
@@ -47,7 +48,7 @@ describe('Bali Nebula API™', function() {
 
         it('should initialize the consumer notary API once and only once', async function() {
             const consumerTag = bali.tag();
-            consumerNotary = notary.api(consumerTag, testDirectory);
+            consumerNotary = notary.api(consumerTag, testDirectory, debug);
             expect(consumerNotary).to.exist;  // jshint ignore:line
             await consumerNotary.initializeAPI();
             try {
@@ -60,7 +61,7 @@ describe('Bali Nebula API™', function() {
 
         it('should initialize the merchant notary API once and only once', async function() {
             const merchantTag = bali.tag();
-            merchantNotary = notary.api(merchantTag, testDirectory);
+            merchantNotary = notary.api(merchantTag, testDirectory, debug);
             expect(merchantNotary).to.exist;  // jshint ignore:line
             await merchantNotary.initializeAPI();
             try {
@@ -72,7 +73,7 @@ describe('Bali Nebula API™', function() {
         });
 
         it('should initialize the consumer nebula API once and only once', async function() {
-            consumerClient = nebula.api(consumerNotary, repository);
+            consumerClient = nebula.api(consumerNotary, repository, debug);
             expect(consumerClient).to.exist;  // jshint ignore:line
             await consumerClient.initializeAPI();
             try {
@@ -84,7 +85,7 @@ describe('Bali Nebula API™', function() {
         });
 
         it('should initialize the merchant nebula API once and only once', async function() {
-            merchantClient = nebula.api(merchantNotary, repository);
+            merchantClient = nebula.api(merchantNotary, repository, debug);
             expect(merchantClient).to.exist;  // jshint ignore:line
             await merchantClient.initializeAPI();
             try {
