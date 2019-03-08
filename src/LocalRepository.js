@@ -80,7 +80,8 @@ exports.repository = function(directory, debug) {
                         $module: '$LocalRepository',
                         $function: '$initializeAPI',
                         $exception: '$alreadyInitialized',
-                        $message: bali.text('The local repository API has already been initialized.')
+                        $directory: directory ? bali.text(directory) : bali.NONE,
+                        $text: bali.text('The local repository API has already been initialized.')
                     });
                     if (debug) console.error(exception.toString());
                     throw exception;
@@ -90,8 +91,8 @@ exports.repository = function(directory, debug) {
                     $module: '$LocalRepository',
                     $function: '$initializeAPI',
                     $exception: '$unexpected',
-                    $directory: bali.text(directory),
-                    $message: bali.text('An unexpected error occurred while attempting to initialize the API.')
+                    $directory: directory ? bali.text(directory) : bali.NONE,
+                    $text: bali.text('An unexpected error occurred while attempting to initialize the API.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -116,8 +117,9 @@ exports.repository = function(directory, debug) {
                     $module: '$LocalRepository',
                     $function: '$certificateExists',
                     $exception: '$unexpected',
-                    $directory: bali.text(directory),
-                    $message: bali.text('An unexpected error occurred while attempting to see if a certificate exists.')
+                    $directory: directory ? bali.text(directory) : bali.NONE,
+                    $certificateId: certificateId ? bali.text(certificateId) : bali.NONE,
+                    $text: bali.text('An unexpected error occurred while attempting to see if a certificate exists.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -147,8 +149,9 @@ exports.repository = function(directory, debug) {
                     $module: '$LocalRepository',
                     $function: '$fetchCertificate',
                     $exception: '$directoryAccess',
-                    $directory: bali.text(certificates),
-                    $message: bali.text('The local configuration directory could not be accessed.')
+                    $directory: directory ? bali.text(directory) : bali.NONE,
+                    $certificateId: certificateId ? bali.text(certificateId) : bali.NONE,
+                    $text: bali.text('The local configuration directory could not be accessed.')
                 }, exception);
             }
         },
@@ -169,8 +172,9 @@ exports.repository = function(directory, debug) {
                         $module: '$LocalRepository',
                         $function: '$createCertificate',
                         $exception: '$fileExists',
+                        $directory: directory ? bali.text(directory) : bali.NONE,
                         $file: bali.text(filename),
-                        $message: bali.text('The file to be written already exists.')
+                        $text: bali.text('The file to be written already exists.')
                     });
                 }
                 const document = certificate + EOL;  // add POSIX compliant <EOL>
@@ -180,8 +184,10 @@ exports.repository = function(directory, debug) {
                     $module: '$LocalRepository',
                     $function: '$createCertificate',
                     $exception: '$directoryAccess',
-                    $directory: bali.text(certificates),
-                    $message: bali.text('The local configuration directory could not be accessed.')
+                    $directory: directory ? bali.text(directory) : bali.NONE,
+                    $certificateId: certificateId ? bali.text(certificateId) : bali.NONE,
+                    $certificate: certificate || bali.NONE,
+                    $text: bali.text('The local configuration directory could not be accessed.')
                 }, exception);
             }
         },
@@ -204,8 +210,9 @@ exports.repository = function(directory, debug) {
                     $module: '$LocalRepository',
                     $function: '$draftExists',
                     $exception: '$directoryAccess',
-                    $directory: bali.text(drafts),
-                    $message: bali.text('The local configuration directory could not be accessed.')
+                    $directory: directory ? bali.text(directory) : bali.NONE,
+                    $draftId: draftId ? bali.text(draftId) : bali.NONE,
+                    $text: bali.text('The local configuration directory could not be accessed.')
                 }, exception);
             }
         },
@@ -233,8 +240,9 @@ exports.repository = function(directory, debug) {
                     $module: '$LocalRepository',
                     $function: '$fetchDraft',
                     $exception: '$directoryAccess',
-                    $directory: bali.text(drafts),
-                    $message: bali.text('The local configuration directory could not be accessed.')
+                    $directory: directory ? bali.text(directory) : bali.NONE,
+                    $draftId: draftId ? bali.text(draftId) : bali.NONE,
+                    $text: bali.text('The local configuration directory could not be accessed.')
                 }, exception);
             }
         },
@@ -255,8 +263,9 @@ exports.repository = function(directory, debug) {
                         $module: '$LocalRepository',
                         $function: '$createDraft',
                         $exception: '$fileExists',
+                        $directory: directory ? bali.text(directory) : bali.NONE,
                         $file: bali.text(filename),
-                        $message: bali.text('The file to be written already exists.')
+                        $text: bali.text('The file to be written already exists.')
                     });
                 }
                 const document = draft + EOL;  // add POSIX compliant <EOL>
@@ -266,8 +275,10 @@ exports.repository = function(directory, debug) {
                     $module: '$LocalRepository',
                     $function: '$createDraft',
                     $exception: '$directoryAccess',
-                    $directory: bali.text(drafts),
-                    $message: bali.text('The local configuration directory could not be accessed.')
+                    $directory: directory ? bali.text(directory) : bali.NONE,
+                    $draftId: draftId ? bali.text(draftId) : bali.NONE,
+                    $draft: draft || bali.NONE,
+                    $text: bali.text('The local configuration directory could not be accessed.')
                 }, exception);
             }
         },
@@ -288,8 +299,9 @@ exports.repository = function(directory, debug) {
                         $module: '$LocalRepository',
                         $function: '$updateDraft',
                         $exception: '$fileMissing',
+                        $directory: directory ? bali.text(directory) : bali.NONE,
                         $file: bali.text(filename),
-                        $message: bali.text('The file to be updated does not exist.')
+                        $text: bali.text('The file to be updated does not exist.')
                     });
                 }
                 const document = draft + EOL;  // add POSIX compliant <EOL>
@@ -299,8 +311,10 @@ exports.repository = function(directory, debug) {
                     $module: '$LocalRepository',
                     $function: '$updateDraft',
                     $exception: '$directoryAccess',
-                    $directory: bali.text(drafts),
-                    $message: bali.text('The local configuration directory could not be accessed.')
+                    $directory: directory ? bali.text(directory) : bali.NONE,
+                    $draftId: draftId ? bali.text(draftId) : bali.NONE,
+                    $draft: draft || bali.NONE,
+                    $text: bali.text('The local configuration directory could not be accessed.')
                 }, exception);
             }
         },
@@ -323,8 +337,9 @@ exports.repository = function(directory, debug) {
                     $module: '$LocalRepository',
                     $function: '$deleteDraft',
                     $exception: '$directoryAccess',
-                    $directory: bali.text(drafts),
-                    $message: bali.text('The local configuration directory could not be accessed.')
+                    $directory: directory ? bali.text(directory) : bali.NONE,
+                    $draftId: draftId ? bali.text(draftId) : bali.NONE,
+                    $text: bali.text('The local configuration directory could not be accessed.')
                 }, exception);
             }
         },
@@ -347,8 +362,9 @@ exports.repository = function(directory, debug) {
                     $module: '$LocalRepository',
                     $function: '$documentExists',
                     $exception: '$directoryAccess',
-                    $directory: bali.text(documents),
-                    $message: bali.text('The local configuration directory could not be accessed.')
+                    $directory: directory ? bali.text(directory) : bali.NONE,
+                    $documentId: documentId ? bali.text(documentId) : bali.NONE,
+                    $text: bali.text('The local configuration directory could not be accessed.')
                 }, exception);
             }
         },
@@ -376,8 +392,9 @@ exports.repository = function(directory, debug) {
                     $module: '$LocalRepository',
                     $function: '$fetchDocument',
                     $exception: '$directoryAccess',
-                    $directory: bali.text(documents),
-                    $message: bali.text('The local configuration directory could not be accessed.')
+                    $directory: directory ? bali.text(directory) : bali.NONE,
+                    $documentId: documentId ? bali.text(documentId) : bali.NONE,
+                    $text: bali.text('The local configuration directory could not be accessed.')
                 }, exception);
             }
         },
@@ -398,8 +415,9 @@ exports.repository = function(directory, debug) {
                         $module: '$LocalRepository',
                         $function: '$createDocument',
                         $exception: '$fileExists',
+                        $directory: directory ? bali.text(directory) : bali.NONE,
                         $file: bali.text(filename),
-                        $message: bali.text('The file to be written already exists.')
+                        $text: bali.text('The file to be written already exists.')
                     });
                 }
                 document = document + EOL;  // add POSIX compliant <EOL>
@@ -409,8 +427,10 @@ exports.repository = function(directory, debug) {
                     $module: '$LocalRepository',
                     $function: '$createDocument',
                     $exception: '$directoryAccess',
-                    $directory: bali.text(documents),
-                    $message: bali.text('The local configuration directory could not be accessed.')
+                    $directory: directory ? bali.text(directory) : bali.NONE,
+                    $documentId: documentId ? bali.text(documentId) : bali.NONE,
+                    $document: document || bali.NONE,
+                    $text: bali.text('The local configuration directory could not be accessed.')
                 }, exception);
             }
         },
@@ -433,8 +453,9 @@ exports.repository = function(directory, debug) {
                     $module: '$LocalRepository',
                     $function: '$typeExists',
                     $exception: '$directoryAccess',
-                    $directory: bali.text(types),
-                    $message: bali.text('The local configuration directory could not be accessed.')
+                    $directory: directory ? bali.text(directory) : bali.NONE,
+                    $typeId: typeId ? bali.text(typeId) : bali.NONE,
+                    $text: bali.text('The local configuration directory could not be accessed.')
                 }, exception);
             }
         },
@@ -462,8 +483,9 @@ exports.repository = function(directory, debug) {
                     $module: '$LocalRepository',
                     $function: '$fetchType',
                     $exception: '$directoryAccess',
-                    $directory: bali.text(types),
-                    $message: bali.text('The local configuration directory could not be accessed.')
+                    $directory: directory ? bali.text(directory) : bali.NONE,
+                    $typeId: typeId ? bali.text(typeId) : bali.NONE,
+                    $text: bali.text('The local configuration directory could not be accessed.')
                 }, exception);
             }
         },
@@ -484,8 +506,9 @@ exports.repository = function(directory, debug) {
                         $module: '$LocalRepository',
                         $function: '$createType',
                         $exception: '$fileExists',
+                        $directory: directory ? bali.text(directory) : bali.NONE,
                         $file: bali.text(filename),
-                        $message: bali.text('The file to be written already exists.')
+                        $text: bali.text('The file to be written already exists.')
                     });
                 }
                 const document = type + EOL;  // add POSIX compliant <EOL>
@@ -495,8 +518,10 @@ exports.repository = function(directory, debug) {
                     $module: '$LocalRepository',
                     $function: '$createType',
                     $exception: '$directoryAccess',
-                    $directory: bali.text(types),
-                    $message: bali.text('The local configuration directory could not be accessed.')
+                    $directory: directory ? bali.text(directory) : bali.NONE,
+                    $typeId: typeId ? bali.text(typeId) : bali.NONE,
+                    $type: type || bali.NONE,
+                    $text: bali.text('The local configuration directory could not be accessed.')
                 }, exception);
             }
         },
@@ -510,17 +535,17 @@ exports.repository = function(directory, debug) {
          * @returns {Boolean} Whether or not the queue exists.
          */
         queueExists: async function(queueId) {
-            const directory = queues + queueId;
+            const queue = queues + queueId;
             try {
-                const exists = await doesExist(directory);
+                const exists = await doesExist(queue);
                 return exists;
             } catch (exception) {
                 throw bali.exception({
                     $module: '$LocalRepository',
                     $function: '$queueExists',
-                    $exception: '$directoryAccess',
-                    $directory: bali.text(directory),
-                    $message: bali.text('The local configuration directory could not be accessed.')
+                    $exception: '$queueAccess',
+                    $queue: queue ? bali.text(queue) : bali.NONE,
+                    $text: bali.text('The local queue could not be accessed.')
                 }, exception);
             }
         },
@@ -531,26 +556,26 @@ exports.repository = function(directory, debug) {
          * @param {String} queueId The unique identifier for the queue being created.
          */
         createQueue: async function(queueId) {
-            const directory = queues + queueId;
+            const queue = queues + queueId;
             try {
-                const exists = await doesExist(directory);
+                const exists = await doesExist(queue);
                 if (exists) {
                     throw bali.exception({
                         $module: '$LocalRepository',
                         $function: '$createQueue',
-                        $exception: '$directoryExists',
-                        $directory: bali.text(directory),
-                        $message: bali.text('The directory to be created already exists.')
+                        $exception: '$queueExists',
+                        $queue: queue ? bali.text(queue) : bali.NONE,
+                        $text: bali.text('The queue to be created already exists.')
                     });
                 }
-                await pfs.mkdir(directory, 0o700);
+                await pfs.mkdir(queue, 0o700);
             } catch (exception) {
                 throw bali.exception({
                     $module: '$LocalRepository',
                     $function: '$createQueue',
-                    $exception: '$directoryAccess',
-                    $directory: bali.text(directory),
-                    $message: bali.text('The local configuration directory could not be accessed.')
+                    $exception: '$queueAccess',
+                    $queue: queue ? bali.text(queue) : bali.NONE,
+                    $text: bali.text('The local queue could not be accessed.')
                 }, exception);
             }
         },
@@ -561,20 +586,19 @@ exports.repository = function(directory, debug) {
          * @param {String} queueId The unique identifier for the queue being deleted.
          */
         deleteQueue: async function(queueId) {
-            const directory = queues + queueId;
+            const queue = queues + queueId;
             try {
-                const exists = await doesExist(directory);
+                const exists = await doesExist(queue);
                 if (exists) {
-                    await pfs.rmdir(directory);
+                    await pfs.rmdir(queue);
                 }
             } catch (exception) {
                 throw bali.exception({
                     $module: '$LocalRepository',
                     $function: '$deleteQueue',
-                    $exception: '$directoryAccess',
-                    $directory: bali.text(directory),
-                    $error: bali.text(exception),
-                    $message: bali.text('The local configuration directory could not be accessed.')
+                    $exception: '$queueAccess',
+                    $queue: queue ? bali.text(queue) : bali.NONE,
+                    $text: bali.text('The local queue could not be accessed.')
                 }, exception);
             }
         },
@@ -586,18 +610,18 @@ exports.repository = function(directory, debug) {
          * @param {String} message The canonical source string for the message.
          */
         queueMessage: async function(queueId, message) {
-            const directory = queues + queueId + '/';
+            const queue = queues + queueId + '/';
             try {
                 const messageId = bali.tag().getValue();
-                const filename = directory + messageId + '.ndoc';
+                const filename = queue + messageId + '.ndoc';
                 const exists = await doesExist(filename);
                 if (exists) {
                     throw bali.exception({
                         $module: '$LocalRepository',
                         $function: '$queueMessage',
-                        $exception: '$fileExists',
-                        $file: bali.text(filename),
-                        $message: bali.text('The file to be written already exists.')
+                        $exception: '$messageExists',
+                        $message: bali.text(filename),
+                        $text: bali.text('The message to be written already exists.')
                     });
                 }
                 const document = message + EOL;  // add POSIX compliant <EOL>
@@ -606,9 +630,10 @@ exports.repository = function(directory, debug) {
                 throw bali.exception({
                     $module: '$LocalRepository',
                     $function: '$queueMessage',
-                    $exception: '$directoryAccess',
-                    $directory: bali.text(directory),
-                    $message: bali.text('The local configuration directory could not be accessed.')
+                    $exception: '$queueAccess',
+                    $queue: queue ? bali.text(queue) : bali.NONE,
+                    $messageId: messageId ? bali.text(messageId) : bali.NONE,
+                    $text: bali.text('The local queue could not be accessed.')
                 }, exception);
             }
         },
@@ -620,17 +645,17 @@ exports.repository = function(directory, debug) {
          * @returns {String} The canonical source string for the message.
          */
         dequeueMessage: async function(queueId) {
-            const directory = queues + queueId + '/';
+            const queue = queues + queueId + '/';
             try {
                 var message;
-                while (await doesExist(directory)) {
-                    const messages = await pfs.readdir(directory);
+                while (await doesExist(queue)) {
+                    const messages = await pfs.readdir(queue);
                     const count = messages.length;
                     if (count) {
                         // select a message a random since a distributed queue cannot guarantee FIFO
                         const index = bali.random.index(count) - 1;  // convert to zero based indexing
                         const messageFile = messages[index];
-                        const filename = directory + messageFile;
+                        const filename = queue + messageFile;
                         message = await pfs.readFile(filename);
                         message = message.toString().slice(0, -1);  // remove POSIX compliant <EOL>
                         try {
@@ -649,9 +674,9 @@ exports.repository = function(directory, debug) {
                 throw bali.exception({
                     $module: '$LocalRepository',
                     $function: '$dequeueMessage',
-                    $exception: '$directoryAccess',
-                    $directory: bali.text(directory),
-                    $message: bali.text('The local configuration directory could not be accessed.')
+                    $exception: '$queueAccess',
+                    $queue: queue ? bali.text(queue) : bali.NONE,
+                    $text: bali.text('The local queue could not be accessed.')
                 }, exception);
             }
         }

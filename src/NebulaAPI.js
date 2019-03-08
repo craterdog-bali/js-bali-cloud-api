@@ -40,7 +40,7 @@ exports.api = function(notary, repository, debug) {
             $function: '$api',
             $exception: '$invalidParameter',
             $parameter: notary ? bali.text(notary.toString()) : bali.NONE,
-            $message: bali.text('The digital notary is invalid.')
+            $text: bali.text('The digital notary is invalid.')
         });
         if (debug) console.error(exception.toString());
         throw exception;
@@ -51,7 +51,7 @@ exports.api = function(notary, repository, debug) {
             $function: '$api',
             $exception: '$invalidParameter',
             $parameter: repository ? bali.text(repository.toString()) : bali.NONE,
-            $message: bali.text('The document repository is invalid.')
+            $text: bali.text('The document repository is invalid.')
         });
         if (debug) console.error(exception.toString());
         throw exception;
@@ -78,7 +78,7 @@ exports.api = function(notary, repository, debug) {
                         $module: '$NebulaAPI',
                         $function: '$initializeAPI',
                         $exception: '$alreadyInitialized',
-                        $message: '"The Bali Nebula API™ has already been initialized."'
+                        $text: '"The Bali Nebula API™ has already been initialized."'
                     });
                     if (debug) console.error(exception.toString());
                     throw exception;
@@ -89,7 +89,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$initializeAPI',
                     $exception: '$unexpected',
                     $account: notary.getAccount(),
-                    $message: bali.text('An unexpected error occurred while attempting to initialize the API.')
+                    $text: bali.text('An unexpected error occurred while attempting to initialize the API.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -112,7 +112,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$retrieveCitation',
                     $exception: '$unexpected',
                     $account: notary.getAccount(),
-                    $message: bali.text('An unexpected error occurred while attempting to retrieve the notary certificate citation.')
+                    $text: bali.text('An unexpected error occurred while attempting to retrieve the notary certificate citation.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -134,7 +134,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$retrieveCertificate',
                     $exception: '$invalidParameter',
                     $parameter: citation ? bali.text(citation.toString()) : bali.NONE,
-                    $message: bali.text('The certificate citation is invalid.')
+                    $text: bali.text('The certificate citation is invalid.')
                 });
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -159,7 +159,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$retrieveCertificate',
                     $exception: '$unexpected',
                     $account: notary.getAccount(),
-                    $message: bali.text('An unexpected error occurred while attempting to retrieve the notary certificate.')
+                    $text: bali.text('An unexpected error occurred while attempting to retrieve the notary certificate.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -182,7 +182,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$retrieveType',
                     $exception: '$invalidParameter',
                     $parameter: citation ? bali.text(citation.toString()) : bali.NONE,
-                    $message: bali.text('The type citation is invalid.')
+                    $text: bali.text('The type citation is invalid.')
                 });
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -207,7 +207,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$retrieveType',
                     $exception: '$unexpected',
                     $account: notary.getAccount(),
-                    $message: bali.text('An unexpected error occurred while attempting to retrieve the compiled type.')
+                    $text: bali.text('An unexpected error occurred while attempting to retrieve the compiled type.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -231,7 +231,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$commitType',
                     $exception: '$invalidParameter',
                     $parameter: type ? bali.text(type.toString()) : bali.NONE,
-                    $message: bali.text('The type citation is invalid.')
+                    $text: bali.text('The type citation is invalid.')
                 });
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -242,7 +242,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$commitType',
                     $exception: '$invalidParameter',
                     $parameter: bali.text(previous.toString()),
-                    $message: bali.text('The previous version citation is invalid.')
+                    $text: bali.text('The previous version citation is invalid.')
                 });
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -257,7 +257,7 @@ exports.api = function(notary, repository, debug) {
                         $exception: '$versionExists',
                         $tag: typeCitation.getValue('$tag'),
                         $version: typeCitation.getValue('$version'),
-                        $message: '"A committed version of the type document referenced by the citation already exists."'
+                        $text: '"A committed version of the type document referenced by the citation already exists."'
                     });
                 }
                 await repository.createType(typeId, notarizedType);
@@ -270,7 +270,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$commitType',
                     $exception: '$unexpected',
                     $account: notary.getAccount(),
-                    $message: bali.text('An unexpected error occurred while attempting to commit the compiled type.')
+                    $text: bali.text('An unexpected error occurred while attempting to commit the compiled type.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -297,7 +297,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$createDraft',
                     $exception: '$invalidParameter',
                     $parameter: bali.text(draft.toString()),
-                    $message: bali.text('The draft document citation is invalid.')
+                    $text: bali.text('The draft document citation is invalid.')
                 });
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -316,7 +316,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$createDraft',
                     $exception: '$unexpected',
                     $account: notary.getAccount(),
-                    $message: bali.text('An unexpected error occurred while attempting to create a new draft document.')
+                    $text: bali.text('An unexpected error occurred while attempting to create a new draft document.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -338,7 +338,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$retrieveDraft',
                     $exception: '$invalidParameter',
                     $parameter: citation ? bali.text(citation.toString()) : bali.NONE,
-                    $message: bali.text('The draft document citation is invalid.')
+                    $text: bali.text('The draft document citation is invalid.')
                 });
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -360,7 +360,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$retrieveDraft',
                     $exception: '$unexpected',
                     $account: notary.getAccount(),
-                    $message: bali.text('An unexpected error occurred while attempting to retrieve a draft document.')
+                    $text: bali.text('An unexpected error occurred while attempting to retrieve a draft document.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -382,7 +382,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$updateDraft',
                     $exception: '$invalidParameter',
                     $parameter: draft ? bali.text(draft.toString()) : bali.NONE,
-                    $message: bali.text('The draft document is invalid.')
+                    $text: bali.text('The draft document is invalid.')
                 });
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -399,7 +399,7 @@ exports.api = function(notary, repository, debug) {
                         $exception: '$versionExists',
                         $tag: draftCitation.getValue('$tag'),
                         $version: draftCitation.getValue('$version'),
-                        $message: '"A committed version of the document referenced by the citation already exists."'
+                        $text: '"A committed version of the document referenced by the citation already exists."'
                     });
                 }
                 await repository.updateDraft(draftId, notarizedDraft);
@@ -411,7 +411,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$updateDraft',
                     $exception: '$unexpected',
                     $account: notary.getAccount(),
-                    $message: bali.text('An unexpected error occurred while attempting to update a draft document.')
+                    $text: bali.text('An unexpected error occurred while attempting to update a draft document.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -432,7 +432,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$discardDraft',
                     $exception: '$invalidParameter',
                     $parameter: citation ? bali.text(citation.toString()) : bali.NONE,
-                    $message: bali.text('The draft document citation is invalid.')
+                    $text: bali.text('The draft document citation is invalid.')
                 });
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -447,7 +447,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$discardDraft',
                     $exception: '$unexpected',
                     $account: notary.getAccount(),
-                    $message: bali.text('An unexpected error occurred while attempting to discard a draft document.')
+                    $text: bali.text('An unexpected error occurred while attempting to discard a draft document.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -470,7 +470,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$commitDocument',
                     $exception: '$invalidParameter',
                     $parameter: document ? bali.text(document.toString()) : bali.NONE,
-                    $message: bali.text('The draft document is invalid.')
+                    $text: bali.text('The draft document is invalid.')
                 });
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -481,7 +481,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$commitDocument',
                     $exception: '$invalidParameter',
                     $parameter: bali.text(previous.toString()),
-                    $message: bali.text('The previous version citation is invalid.')
+                    $text: bali.text('The previous version citation is invalid.')
                 });
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -497,7 +497,7 @@ exports.api = function(notary, repository, debug) {
                         $function: '$commitDocument',
                         $exception: '$versionExists',
                         $documentId: '"' + documentId + '"',
-                        $message: '"A committed version of the document referenced by the citation already exists."'
+                        $text: '"A committed version of the document referenced by the citation already exists."'
                     });
                 }
                 await repository.createDocument(documentId, notarizedDocument);
@@ -511,7 +511,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$commitDocument',
                     $exception: '$unexpected',
                     $account: notary.getAccount(),
-                    $message: bali.text('An unexpected error occurred while attempting to commit a draft document.')
+                    $text: bali.text('An unexpected error occurred while attempting to commit a draft document.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -533,7 +533,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$retrieveDocument',
                     $exception: '$invalidParameter',
                     $parameter: citation ? bali.text(citation.toString()) : bali.NONE,
-                    $message: bali.text('The document citation is invalid.')
+                    $text: bali.text('The document citation is invalid.')
                 });
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -559,7 +559,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$retrieveDocument',
                     $exception: '$unexpected',
                     $account: notary.getAccount(),
-                    $message: bali.text('An unexpected error occurred while attempting to retrieve a document.')
+                    $text: bali.text('An unexpected error occurred while attempting to retrieve a document.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -590,7 +590,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$checkoutDocument',
                     $exception: '$invalidParameter',
                     $parameter: citation ? bali.text(citation.toString()) : bali.NONE,
-                    $message: bali.text('The document citation is invalid.')
+                    $text: bali.text('The document citation is invalid.')
                 });
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -601,7 +601,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$checkoutDocument',
                     $exception: '$invalidParameter',
                     $parameter: level ? bali.text(level.toString()) : bali.NONE,
-                    $message: bali.text('The version level is invalid.')
+                    $text: bali.text('The version level is invalid.')
                 });
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -620,7 +620,7 @@ exports.api = function(notary, repository, debug) {
                         $function: '$checkoutDocument',
                         $exception: '$versionExists',
                         $documentId: '"' + draftId + '"',
-                        $message: '"A committed version of the document referenced by the citation already exists."'
+                        $text: '"A committed version of the document referenced by the citation already exists."'
                     });
                 }
 
@@ -633,7 +633,7 @@ exports.api = function(notary, repository, debug) {
                         $function: '$checkoutDocument',
                         $exception: '$documentMissing',
                         $documentId: '"' + documentId + '"',
-                        $message: '"A committed version of the document referenced by the draft citation already exists."'
+                        $text: '"A committed version of the document referenced by the draft citation already exists."'
                     });
                 }
                 const notarizedDocument = bali.parse(source);
@@ -658,7 +658,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$checkoutDocument',
                     $exception: '$unexpected',
                     $account: notary.getAccount(),
-                    $message: bali.text('An unexpected error occurred while attempting to checkout a document.')
+                    $text: bali.text('An unexpected error occurred while attempting to checkout a document.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -682,7 +682,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$createQueue',
                     $exception: '$unexpected',
                     $account: notary.getAccount(),
-                    $message: bali.text('An unexpected error occurred while attempting to create a new queue.')
+                    $text: bali.text('An unexpected error occurred while attempting to create a new queue.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -704,7 +704,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$publishEvent',
                     $exception: '$invalidParameter',
                     $parameter: event ? bali.text(event.toString()) : bali.NONE,
-                    $message: bali.text('The event is invalid.')
+                    $text: bali.text('The event is invalid.')
                 });
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -719,7 +719,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$publishEvent',
                     $exception: '$unexpected',
                     $account: notary.getAccount(),
-                    $message: bali.text('An unexpected error occurred while attempting to publish an event.')
+                    $text: bali.text('An unexpected error occurred while attempting to publish an event.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -743,7 +743,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$sendMessage',
                     $exception: '$invalidParameter',
                     $parameter: target ? bali.text(target.toString()) : bali.NONE,
-                    $message: bali.text('The target citation is invalid.')
+                    $text: bali.text('The target citation is invalid.')
                 });
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -754,7 +754,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$sendMessage',
                     $exception: '$invalidParameter',
                     $parameter: bali.text(message.toString()),
-                    $message: bali.text('The message is invalid.')
+                    $text: bali.text('The message is invalid.')
                 });
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -770,7 +770,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$sendMessage',
                     $exception: '$unexpected',
                     $account: notary.getAccount(),
-                    $message: bali.text('An unexpected error occurred while attempting to send a message.')
+                    $text: bali.text('An unexpected error occurred while attempting to send a message.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -794,7 +794,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$queueMessage',
                     $exception: '$invalidParameter',
                     $parameter: queue ? bali.text(queue.toString()) : bali.NONE,
-                    $message: bali.text('The queue identifier is invalid.')
+                    $text: bali.text('The queue identifier is invalid.')
                 });
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -805,7 +805,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$queueMessage',
                     $exception: '$invalidParameter',
                     $parameter: bali.text(message.toString()),
-                    $message: bali.text('The message is invalid.')
+                    $text: bali.text('The message is invalid.')
                 });
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -821,7 +821,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$queueMessage',
                     $exception: '$unexpected',
                     $account: notary.getAccount(),
-                    $message: bali.text('An unexpected error occurred while attempting to queue a message.')
+                    $text: bali.text('An unexpected error occurred while attempting to queue a message.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -846,7 +846,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$receiveMessage',
                     $exception: '$invalidParameter',
                     $parameter: queue ? bali.text(queue.toString()) : bali.NONE,
-                    $message: bali.text('The queue identifier is invalid.')
+                    $text: bali.text('The queue identifier is invalid.')
                 });
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -868,7 +868,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$receiveMessage',
                     $exception: '$unexpected',
                     $account: notary.getAccount(),
-                    $message: bali.text('An unexpected error occurred while attempting to receive a message.')
+                    $text: bali.text('An unexpected error occurred while attempting to receive a message.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -888,7 +888,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$deleteQueue',
                     $exception: '$invalidParameter',
                     $parameter: queue ? bali.text(queue.toString()) : bali.NONE,
-                    $message: bali.text('The queue identifier is invalid.')
+                    $text: bali.text('The queue identifier is invalid.')
                 });
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -903,7 +903,7 @@ exports.api = function(notary, repository, debug) {
                     $function: '$deleteQueue',
                     $exception: '$unexpected',
                     $account: notary.getAccount(),
-                    $message: bali.text('An unexpected error occurred while attempting to delete a queue.')
+                    $text: bali.text('An unexpected error occurred while attempting to delete a queue.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -949,7 +949,7 @@ const validateCitation = async function(notary, citation, document) {
             $exception: '$documentModified',
             $citation: citation,
             $document: document,
-            $message: '"The cited document was modified after it was committed."'
+            $text: '"The cited document was modified after it was committed."'
         });
     }
 };
@@ -977,7 +977,7 @@ const validateCertificate = async function(notary, citation, document) {
             $exception: '$documentModified',
             $citation: citation,
             $document: document,
-            $message: '"The document was modified after it was committed."'
+            $text: '"The document was modified after it was committed."'
         });
     }
     const certificate = document.getValue('$component');
@@ -989,7 +989,7 @@ const validateCertificate = async function(notary, citation, document) {
             $exception: '$documentInvalid',
             $document: document,
             $certificate: certificate,
-            $message: '"The signature on the document is invalid."'
+            $text: '"The signature on the document is invalid."'
         });
     }
 };
@@ -1021,7 +1021,7 @@ const validateDocument = async function(notary, repository, document) {
                     $function: '$validateDocument',
                     $exception: '$certificateMissing',
                     $certificateId: '"' + certificateId + '"',
-                    $message: '"The certificate for the document does not exist."'
+                    $text: '"The certificate for the document does not exist."'
                 });
             }
         }
@@ -1032,7 +1032,7 @@ const validateDocument = async function(notary, repository, document) {
                 $function: '$validateDocument',
                 $exception: '$documentInvalid',
                 $document: document,
-                $message: '"The signature on the document is invalid."'
+                $text: '"The signature on the document is invalid."'
             });
         }
         try {

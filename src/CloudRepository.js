@@ -59,9 +59,9 @@ exports.repository = function(notary, cloudURL, debug) {
                         $module: '$CloudRepository',
                         $function: '$initializeAPI',
                         $exception: '$alreadyInitialized',
-                        $account: account,
-                        $cloudURL: cloudURL,
-                        $message: bali.text('The cloud repository API has already been initialized.')
+                        $account: account || bali.NONE,
+                        $cloudURL: cloudURL || bali.NONE,
+                        $text: bali.text('The cloud repository API has already been initialized.')
                     });
                     if (debug) console.error(exception.toString());
                     throw exception;
@@ -71,9 +71,9 @@ exports.repository = function(notary, cloudURL, debug) {
                     $module: '$CloudRepository',
                     $function: '$initializeAPI',
                     $exception: '$unexpected',
-                    $account: account,
-                    $cloudURL: cloudURL,
-                    $message: bali.text('An unexpected error occurred while attempting to initialize the API.')
+                    $account: account || bali.NONE,
+                    $cloudURL: cloudURL || bali.NONE,
+                    $text: bali.text('An unexpected error occurred while attempting to initialize the API.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -98,9 +98,10 @@ exports.repository = function(notary, cloudURL, debug) {
                     $module: '$CloudRepository',
                     $function: '$certificateExists',
                     $exception: '$unexpected',
-                    $account: account,
-                    $cloudURL: cloudURL,
-                    $message: bali.text('An unexpected error occurred while attempting check to see if the certificate exists.')
+                    $account: account || bali.NONE,
+                    $cloudURL: cloudURL || bali.NONE,
+                    $certificateId: certificateId ? bali.text(certificateId) : bali.NONE,
+                    $text: bali.text('An unexpected error occurred while attempting check to see if the certificate exists.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -125,9 +126,10 @@ exports.repository = function(notary, cloudURL, debug) {
                     $module: '$CloudRepository',
                     $function: '$fetchCertificate',
                     $exception: '$unexpected',
-                    $account: account,
-                    $cloudURL: cloudURL,
-                    $message: bali.text('An unexpected error occurred while attempting to fetch the certificate.')
+                    $account: account || bali.NONE,
+                    $cloudURL: cloudURL || bali.NONE,
+                    $certificateId: certificateId ? bali.text(certificateId) : bali.NONE,
+                    $text: bali.text('An unexpected error occurred while attempting to fetch the certificate.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -150,9 +152,11 @@ exports.repository = function(notary, cloudURL, debug) {
                     $module: '$CloudRepository',
                     $function: '$createCertificate',
                     $exception: '$unexpected',
-                    $account: account,
-                    $cloudURL: cloudURL,
-                    $message: bali.text('An unexpected error occurred while attempting to create the certificate.')
+                    $account: account || bali.NONE,
+                    $cloudURL: cloudURL || bali.NONE,
+                    $certificateId: certificateId ? bali.text(certificateId) : bali.NONE,
+                    $certificate: certificate || bali.NONE,
+                    $text: bali.text('An unexpected error occurred while attempting to create the certificate.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -177,9 +181,10 @@ exports.repository = function(notary, cloudURL, debug) {
                     $module: '$CloudRepository',
                     $function: '$draftExists',
                     $exception: '$unexpected',
-                    $account: account,
-                    $cloudURL: cloudURL,
-                    $message: bali.text('An unexpected error occurred while attempting check to see if the draft exists.')
+                    $account: account || bali.NONE,
+                    $cloudURL: cloudURL || bali.NONE,
+                    $draftId: draftId ? bali.text(draftId) : bali.NONE,
+                    $text: bali.text('An unexpected error occurred while attempting check to see if the draft exists.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -204,9 +209,10 @@ exports.repository = function(notary, cloudURL, debug) {
                     $module: '$CloudRepository',
                     $function: '$fetchDraft',
                     $exception: '$unexpected',
-                    $account: account,
-                    $cloudURL: cloudURL,
-                    $message: bali.text('An unexpected error occurred while attempting to fetch the draft.')
+                    $account: account || bali.NONE,
+                    $cloudURL: cloudURL || bali.NONE,
+                    $draftId: draftId ? bali.text(draftId) : bali.NONE,
+                    $text: bali.text('An unexpected error occurred while attempting to fetch the draft.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -229,9 +235,11 @@ exports.repository = function(notary, cloudURL, debug) {
                     $module: '$CloudRepository',
                     $function: '$createDraft',
                     $exception: '$unexpected',
-                    $account: account,
-                    $cloudURL: cloudURL,
-                    $message: bali.text('An unexpected error occurred while attempting to create the draft.')
+                    $account: account || bali.NONE,
+                    $cloudURL: cloudURL || bali.NONE,
+                    $draftId: draftId ? bali.text(draftId) : bali.NONE,
+                    $draft: draft || bali.NONE,
+                    $text: bali.text('An unexpected error occurred while attempting to create the draft.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -254,9 +262,11 @@ exports.repository = function(notary, cloudURL, debug) {
                     $module: '$CloudRepository',
                     $function: '$updateDraft',
                     $exception: '$unexpected',
-                    $account: account,
-                    $cloudURL: cloudURL,
-                    $message: bali.text('An unexpected error occurred while attempting to update the draft.')
+                    $account: account || bali.NONE,
+                    $cloudURL: cloudURL || bali.NONE,
+                    $draftId: draftId ? bali.text(draftId) : bali.NONE,
+                    $draft: draft || bali.NONE,
+                    $text: bali.text('An unexpected error occurred while attempting to update the draft.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -278,9 +288,10 @@ exports.repository = function(notary, cloudURL, debug) {
                     $module: '$CloudRepository',
                     $function: '$deleteDraft',
                     $exception: '$unexpected',
-                    $account: account,
-                    $cloudURL: cloudURL,
-                    $message: bali.text('An unexpected error occurred while attempting to delete the draft.')
+                    $account: account || bali.NONE,
+                    $cloudURL: cloudURL || bali.NONE,
+                    $draftId: draftId ? bali.text(draftId) : bali.NONE,
+                    $text: bali.text('An unexpected error occurred while attempting to delete the draft.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -305,9 +316,10 @@ exports.repository = function(notary, cloudURL, debug) {
                     $module: '$CloudRepository',
                     $function: '$documentExists',
                     $exception: '$unexpected',
-                    $account: account,
-                    $cloudURL: cloudURL,
-                    $message: bali.text('An unexpected error occurred while attempting check to see if the document exists.')
+                    $account: account || bali.NONE,
+                    $cloudURL: cloudURL || bali.NONE,
+                    $documentId: documentId ? bali.text(documentId) : bali.NONE,
+                    $text: bali.text('An unexpected error occurred while attempting check to see if the document exists.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -332,9 +344,10 @@ exports.repository = function(notary, cloudURL, debug) {
                     $module: '$CloudRepository',
                     $function: '$fetchDocument',
                     $exception: '$unexpected',
-                    $account: account,
-                    $cloudURL: cloudURL,
-                    $message: bali.text('An unexpected error occurred while attempting to fetch the document.')
+                    $account: account || bali.NONE,
+                    $cloudURL: cloudURL || bali.NONE,
+                    $documentId: documentId ? bali.text(documentId) : bali.NONE,
+                    $text: bali.text('An unexpected error occurred while attempting to fetch the document.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -357,9 +370,11 @@ exports.repository = function(notary, cloudURL, debug) {
                     $module: '$CloudRepository',
                     $function: '$createDocument',
                     $exception: '$unexpected',
-                    $account: account,
-                    $cloudURL: cloudURL,
-                    $message: bali.text('An unexpected error occurred while attempting to create the document.')
+                    $account: account || bali.NONE,
+                    $cloudURL: cloudURL || bali.NONE,
+                    $documentId: documentId ? bali.text(documentId) : bali.NONE,
+                    $document: document || bali.NONE,
+                    $text: bali.text('An unexpected error occurred while attempting to create the document.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -384,9 +399,10 @@ exports.repository = function(notary, cloudURL, debug) {
                     $module: '$CloudRepository',
                     $function: '$typeExists',
                     $exception: '$unexpected',
-                    $account: account,
-                    $cloudURL: cloudURL,
-                    $message: bali.text('An unexpected error occurred while attempting check to see if the type exists.')
+                    $account: account || bali.NONE,
+                    $cloudURL: cloudURL || bali.NONE,
+                    $typeId: typeId ? bali.text(typeId) : bali.NONE,
+                    $text: bali.text('An unexpected error occurred while attempting check to see if the type exists.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -411,9 +427,10 @@ exports.repository = function(notary, cloudURL, debug) {
                     $module: '$CloudRepository',
                     $function: '$fetchType',
                     $exception: '$unexpected',
-                    $account: account,
-                    $cloudURL: cloudURL,
-                    $message: bali.text('An unexpected error occurred while attempting to fetch the type.')
+                    $account: account || bali.NONE,
+                    $cloudURL: cloudURL || bali.NONE,
+                    $typeId: typeId ? bali.text(typeId) : bali.NONE,
+                    $text: bali.text('An unexpected error occurred while attempting to fetch the type.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -436,9 +453,11 @@ exports.repository = function(notary, cloudURL, debug) {
                     $module: '$CloudRepository',
                     $function: '$createType',
                     $exception: '$unexpected',
-                    $account: account,
-                    $cloudURL: cloudURL,
-                    $message: bali.text('An unexpected error occurred while attempting to create the type.')
+                    $account: account || bali.NONE,
+                    $cloudURL: cloudURL || bali.NONE,
+                    $typeId: typeId ? bali.text(typeId) : bali.NONE,
+                    $type: type || bali.NONE,
+                    $text: bali.text('An unexpected error occurred while attempting to create the type.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -463,9 +482,10 @@ exports.repository = function(notary, cloudURL, debug) {
                     $module: '$CloudRepository',
                     $function: '$queueExists',
                     $exception: '$unexpected',
-                    $account: account,
-                    $cloudURL: cloudURL,
-                    $message: bali.text('An unexpected error occurred while attempting check to see if the queue exists.')
+                    $account: account || bali.NONE,
+                    $cloudURL: cloudURL || bali.NONE,
+                    $queueId: queueId ? bali.text(queueId) : bali.NONE,
+                    $text: bali.text('An unexpected error occurred while attempting check to see if the queue exists.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -486,9 +506,10 @@ exports.repository = function(notary, cloudURL, debug) {
                     $module: '$CloudRepository',
                     $function: '$createQueue',
                     $exception: '$unexpected',
-                    $account: account,
-                    $cloudURL: cloudURL,
-                    $message: bali.text('An unexpected error occurred while attempting to create the queue.')
+                    $account: account || bali.NONE,
+                    $cloudURL: cloudURL || bali.NONE,
+                    $queueId: queueId ? bali.text(queueId) : bali.NONE,
+                    $text: bali.text('An unexpected error occurred while attempting to create the queue.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -509,9 +530,10 @@ exports.repository = function(notary, cloudURL, debug) {
                     $module: '$CloudRepository',
                     $function: '$deleteQueue',
                     $exception: '$unexpected',
-                    $account: account,
-                    $cloudURL: cloudURL,
-                    $message: bali.text('An unexpected error occurred while attempting to delete the queue.')
+                    $account: account || bali.NONE,
+                    $cloudURL: cloudURL || bali.NONE,
+                    $queueId: queueId ? bali.text(queueId) : bali.NONE,
+                    $text: bali.text('An unexpected error occurred while attempting to delete the queue.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -533,9 +555,11 @@ exports.repository = function(notary, cloudURL, debug) {
                     $module: '$CloudRepository',
                     $function: '$queueMessage',
                     $exception: '$unexpected',
-                    $account: account,
-                    $cloudURL: cloudURL,
-                    $message: bali.text('An unexpected error occurred while attempting to queue the message.')
+                    $account: account || bali.NONE,
+                    $cloudURL: cloudURL || bali.NONE,
+                    $queueId: queueId ? bali.text(queueId) : bali.NONE,
+                    $message: message || bali.NONE,
+                    $text: bali.text('An unexpected error occurred while attempting to queue the message.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -558,9 +582,10 @@ exports.repository = function(notary, cloudURL, debug) {
                     $module: '$CloudRepository',
                     $function: '$dequeueMessage',
                     $exception: '$unexpected',
-                    $account: account,
-                    $cloudURL: cloudURL,
-                    $message: bali.text('An unexpected error occurred while attempting to dequeue the message.')
+                    $account: account || bali.NONE,
+                    $cloudURL: cloudURL || bali.NONE,
+                    $queueId: queueId ? bali.text(queueId) : bali.NONE,
+                    $text: bali.text('An unexpected error occurred while attempting to dequeue the message.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -580,7 +605,7 @@ const generateCredentials = async function(notary) {
 };
 
 
-const sendRequest = async function(credentials, functionName, url, method, type, identifier, document) {
+const sendRequest = async function(credentials, functionName, cloudURL, method, type, identifier, document) {
 
     // analyze the parameters
     switch (type) {
@@ -595,9 +620,10 @@ const sendRequest = async function(credentials, functionName, url, method, type,
                         $module: '$CloudRepository',
                         $function: functionName,
                         $exception: '$invalidParameter',
+                        $cloudURL: cloudURL || bali.NONE,
                         $method: bali.text(method.toString()),
                         $type: bali.text(type.toString()),
-                        $message: bali.text('An invalid method and document type combination was specified.')
+                        $text: bali.text('An invalid method and document type combination was specified.')
                     });
                     throw exception;
             }
@@ -617,7 +643,7 @@ const sendRequest = async function(credentials, functionName, url, method, type,
                         $exception: '$invalidParameter',
                         $method: bali.text(method.toString()),
                         $type: bali.text(type.toString()),
-                        $message: bali.text('An invalid method and document type combination was specified.')
+                        $text: bali.text('An invalid method and document type combination was specified.')
                     });
                     throw exception;
             }
@@ -635,7 +661,7 @@ const sendRequest = async function(credentials, functionName, url, method, type,
                         $exception: '$invalidParameter',
                         $method: bali.text(method.toString()),
                         $type: bali.text(type.toString()),
-                        $message: bali.text('An invalid method and document type combination was specified.')
+                        $text: bali.text('An invalid method and document type combination was specified.')
                     });
                     throw exception;
             }
@@ -653,7 +679,7 @@ const sendRequest = async function(credentials, functionName, url, method, type,
                         $exception: '$invalidParameter',
                         $method: bali.text(method.toString()),
                         $type: bali.text(type.toString()),
-                        $message: bali.text('An invalid method and document type combination was specified.')
+                        $text: bali.text('An invalid method and document type combination was specified.')
                     });
                     throw exception;
             }
@@ -673,7 +699,7 @@ const sendRequest = async function(credentials, functionName, url, method, type,
                         $exception: '$invalidParameter',
                         $method: bali.text(method.toString()),
                         $type: bali.text(type.toString()),
-                        $message: bali.text('An invalid method and document type combination was specified.')
+                        $text: bali.text('An invalid method and document type combination was specified.')
                     });
                     throw exception;
             }
@@ -684,12 +710,12 @@ const sendRequest = async function(credentials, functionName, url, method, type,
                 $function: functionName,
                 $exception: '$invalidParameter',
                 $parameter: bali.text(type.toString()),
-                $message: bali.text('An invalid document type was specified.')
+                $text: bali.text('An invalid document type was specified.')
             });
             throw exception;
     }
 
-    const fullURL = url.getValue().toString() + type + '/' + identifier;
+    const fullURL = cloudURL.getValue().toString() + type + '/' + identifier;
     const options = {
         url: fullURL,
         method: method,
@@ -723,7 +749,7 @@ const sendRequest = async function(credentials, functionName, url, method, type,
                 $method: bali.text(method),
                 $status: error.response.status,
                 $details: bali.text(error.response.statusText),
-                $message: bali.text('The request was rejected by the Bali Nebula™.')
+                $text: bali.text('The request was rejected by the Bali Nebula™.')
             });
             throw exception;
         }
@@ -738,7 +764,7 @@ const sendRequest = async function(credentials, functionName, url, method, type,
                 $method: bali.text(method),
                 $status: error.request.status,
                 $details: bali.text(error.request.statusText),
-                $message: bali.text('The request received no response.')
+                $text: bali.text('The request received no response.')
             });
             throw exception;
         } 
@@ -750,7 +776,7 @@ const sendRequest = async function(credentials, functionName, url, method, type,
             $exception: '$malformedRequest',
             $url: bali.reference(options.url),
             $method: bali.text(options.method),
-            $message: bali.text('The request was not formed correctly.')
+            $text: bali.text('The request was not formed correctly.')
         });
         throw exception;
 
