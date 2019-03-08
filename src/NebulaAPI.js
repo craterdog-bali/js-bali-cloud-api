@@ -25,8 +25,10 @@ const bali = require('bali-component-framework');
 /**
  * This function returns an object that implements the API for the Bali Nebula™.
  *
- * @param {Object} notary An object that implements the API for the digital notary.
+ * @param {Object} notary An object that implements the API for the digital notary. This API
+ * should not yet be initialized.
  * @param {Object} repository An object that implements the API for the document repository.
+ * This API should not yet be initialized.
  * @param {Boolean} debug An optional flag that determines whether or not exceptions
  * will be logged to the error console.
  * @returns {Object} An object that implements the API for the Bali Nebula™.
