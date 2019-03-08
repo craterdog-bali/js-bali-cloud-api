@@ -54,18 +54,7 @@ exports.repository = function(notary, cloudURL, debug) {
         initializeAPI: async function() {
             try {
                 account = await notary.getAccount();
-                this.initializeAPI = function() {
-                    const exception = bali.exception({
-                        $module: '$CloudRepository',
-                        $function: '$initializeAPI',
-                        $exception: '$alreadyInitialized',
-                        $account: account || bali.NONE,
-                        $cloudURL: cloudURL || bali.NONE,
-                        $text: bali.text('The cloud repository API has already been initialized.')
-                    });
-                    if (debug) console.error(exception.toString());
-                    throw exception;
-                };
+                this.initializeAPI = undefined;  // can only be called once
             } catch (cause) {
                 const exception = bali.exception({
                     $module: '$CloudRepository',

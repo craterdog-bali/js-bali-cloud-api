@@ -75,17 +75,7 @@ exports.repository = function(directory, debug) {
                 await pfs.mkdir(documents, 0o700).catch(function() {});
                 await pfs.mkdir(types, 0o700).catch(function() {});
                 await pfs.mkdir(queues, 0o700).catch(function() {});
-                this.initializeAPI = function() {
-                    const exception = bali.exception({
-                        $module: '$LocalRepository',
-                        $function: '$initializeAPI',
-                        $exception: '$alreadyInitialized',
-                        $directory: directory ? bali.text(directory) : bali.NONE,
-                        $text: bali.text('The local repository API has already been initialized.')
-                    });
-                    if (debug) console.error(exception.toString());
-                    throw exception;
-                };
+                this.initializeAPI = undefined;  // can only be called once
             } catch (cause) {
                 const exception = bali.exception({
                     $module: '$LocalRepository',
