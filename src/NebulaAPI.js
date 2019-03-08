@@ -34,7 +34,8 @@ const bali = require('bali-component-framework');
 exports.api = function(notary, repository, debug) {
     // validate the parameters
     debug = debug || false;
-    if (!notary || Object.keys(notary).indexOf('initializeAPI') < 0) {
+    // notary should not yet be initialized
+    if (!notary || !notary.initializeAPI) {
         const exception = bali.exception({
             $module: '$NebulaAPI',
             $function: '$api',
@@ -45,7 +46,8 @@ exports.api = function(notary, repository, debug) {
         if (debug) console.error(exception.toString());
         throw exception;
     }
-    if (!repository || Object.keys(repository).indexOf('initializeAPI') < 0) {
+    // repository should not yet be initialized
+    if (!repository || !repository.initializeAPI) {
         const exception = bali.exception({
             $module: '$NebulaAPI',
             $function: '$api',
@@ -70,9 +72,14 @@ exports.api = function(notary, repository, debug) {
          */
         initializeAPI: async function() {
             try {
+                // initialize the digital notary and document repository
+                await notary.initializeAPI();
+                await repository.initializeAPI();
+
                 // create the send and event queues if necessary
                 await repository.createQueue(SEND_QUEUE_ID).catch(function() {});
                 await repository.createQueue(EVENT_QUEUE_ID).catch(function() {});
+
                 this.initializeAPI = undefined;  // can only be called once
             } catch (cause) {
                 const exception = bali.exception({
