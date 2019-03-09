@@ -7,7 +7,7 @@ This project provides a JavaScript version of the API needed to interact with th
  * send and receive notarized messages
  * post notarized events to other interested components
 
-![Pyramid](https://raw.githubusercontent.com/craterdog-bali/js-bali-nebula-api/master/docs/images/BaliPyramid-NebulaAPI.png)
+![Pyramid](https://raw.githubusercontent.com/craterdog-bali/js-bali-nebula-api/master/docs/images/BaliPyramid.png)
 
 _**WARNING**_
 _This project is still in its early stages and the classes and interfaces to the classes are likely to change._
@@ -16,7 +16,7 @@ _This project is still in its early stages and the classes and interfaces to the
 For more information on this project click on the following links:
  * [wiki](https://github.com/craterdog-bali/js-bali-nebula-api/wiki)
  * [node package](https://www.npmjs.com/package/bali-nebula-api)
- * [release notes](https://github.com/craterdog-bali/js-bali-nebula-api/wiki/releases)
+ * [release notes](https://github.com/craterdog-bali/js-bali-nebula-api/wiki/release-notes)
  * [project documentation](https://github.com/craterdog-bali/bali-project-documentation/wiki)
 
 ### Getting Started
@@ -29,5 +29,5 @@ Then add the following line to your NodeJS modules:
 var notary = require('bali-nebula-api);
 ```
 
-Check out the example code [here](https://github.com/craterdog-bali/js-bali-nebula-api/wiki/examples).
+Check out the example code [here](https://github.com/craterdog-bali/js-bali-nebula-api/wiki/example-code).
 
