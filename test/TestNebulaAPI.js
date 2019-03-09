@@ -248,7 +248,7 @@ describe('Bali Nebula API™', function() {
     });
 
     describe('Test Messages', function() {
-        var queue;
+        var queue = bali.tag();
         const source =
             '[\n' +
             '    $date: <2018-04-01>\n' +
@@ -258,11 +258,6 @@ describe('Bali Nebula API™', function() {
             '    $tax: 1.07(USD)\n' +
             '    $total: 13.57(USD)\n' +
             ']\n';
-
-        it('should allow the merchant to create a queue', async function() {
-            queue = await merchantClient.createQueue();
-            expect(queue).to.exist;  // jshint ignore:line
-        });
 
         it('should allow the merchant to verify that the queue is empty', async function() {
             const message = await merchantClient.receiveMessage(queue);
@@ -289,10 +284,6 @@ describe('Bali Nebula API™', function() {
                 transaction = await merchantClient.receiveMessage(queue);
             }
             expect(count).to.equal(3);
-        });
-
-        it('should allow the merchant to delete the queue', async function() {
-            await merchantClient.deleteQueue(queue);
         });
 
     });

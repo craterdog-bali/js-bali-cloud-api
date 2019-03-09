@@ -687,31 +687,6 @@ exports.api = function(notary, repository, debug) {
         },
 
         /**
-         * This method creates a new message queue in the Bali Nebula™.
-         * 
-         * @returns {Tag} The unique tag for the new queue.
-         */
-        createQueue: async function() {
-            checkInitialization(this, '$createQueue');
-            try {
-                const queue = bali.tag();
-                const queueId = queue.getValue();
-                await repository.createQueue(queueId);
-                return queue;
-            } catch (cause) {
-                const exception = bali.exception({
-                    $module: '$NebulaAPI',
-                    $function: '$createQueue',
-                    $exception: '$unexpected',
-                    $account: notary.getAccount(),
-                    $text: bali.text('An unexpected error occurred while attempting to create a new queue.')
-                }, cause);
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
-        },
-
-        /**
          * This method publishes the specified event in the Bali Nebula™.
          * Any component that has registered event handlers for this type of event
          * will be automatically notified.
@@ -842,6 +817,7 @@ exports.api = function(notary, repository, debug) {
             try {
                 const notarizedMessage = await notary.notarizeDocument(message);
                 const queueId = queue.getValue();
+                await repository.createQueue(queueId).catch(function() {});
                 await repository.queueMessage(queueId, notarizedMessage);
             } catch (cause) {
                 const exception = bali.exception({
@@ -899,43 +875,6 @@ exports.api = function(notary, repository, debug) {
                     $exception: '$unexpected',
                     $account: notary.getAccount(),
                     $text: bali.text('An unexpected error occurred while attempting to receive a message.')
-                }, cause);
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
-        },
-
-        /**
-         * This method deletes the specified queue from the Bali Nebula™.
-         * 
-         * @param {Tag} queue The unique tag for the queue to be deleted.
-         */
-        deleteQueue: async function(queue) {
-            checkInitialization(this, '$deleteQueue');
-
-            // validate the parameters
-            if (queue && (!queue.getTypeId || queue.getTypeId() !== bali.types.TAG)) {
-                const exception = bali.exception({
-                    $module: '$NebulaAPI',
-                    $function: '$deleteQueue',
-                    $exception: '$invalidParameter',
-                    $parameter: queue ? bali.text(queue.toString()) : bali.NONE,
-                    $text: bali.text('The queue identifier is invalid.')
-                });
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
-
-            try {
-                const queueId = queue.getValue();
-                await repository.deleteQueue(queueId);
-            } catch (cause) {
-                const exception = bali.exception({
-                    $module: '$NebulaAPI',
-                    $function: '$deleteQueue',
-                    $exception: '$unexpected',
-                    $account: notary.getAccount(),
-                    $text: bali.text('An unexpected error occurred while attempting to delete a queue.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
