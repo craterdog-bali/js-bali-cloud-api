@@ -117,14 +117,14 @@ describe('Bali Nebula API™', function() {
         var draftSource;
 
         it('should create a new empty draft document', async function() {
-            draftCitation = await consumerClient.createDraft();
+            draftCitation = await consumerClient.saveDraft();
             draft = await consumerClient.retrieveDraft(draftCitation);
             draft.setValue('$foo', '"bar"');
             draftSource = draft.toString();
         });
 
         it('should save a new draft document in the repository', async function() {
-            draftCitation = await consumerClient.updateDraft(draft);
+            draftCitation = await consumerClient.saveDraft(draft);
             expect(draft.toString()).to.equal(draftSource);
         });
 
@@ -136,7 +136,7 @@ describe('Bali Nebula API™', function() {
 
         it('should save an updated draft document in the repository', async function() {
             draft.setValue('$bar', '"baz"');
-            draftCitation = await consumerClient.updateDraft(draft);
+            draftCitation = await consumerClient.saveDraft(draft);
             expect(draft.toString()).to.not.equal(draftSource);
             expect(draft.getValue('$foo').toString()).to.equal('"bar"');
             expect(draft.getValue('$bar').toString()).to.equal('"baz"');
@@ -163,7 +163,7 @@ describe('Bali Nebula API™', function() {
         it('should create a new draft document from a component', async function() {
             const catalog = bali.catalog();
             catalog.setValue('$foo', '"bar"');
-            draftCitation = await consumerClient.createDraft(catalog);
+            draftCitation = await consumerClient.saveDraft(catalog);
             draft = await consumerClient.retrieveDraft(draftCitation);
             draftSource = draft.toString();
         });
@@ -232,7 +232,7 @@ describe('Bali Nebula API™', function() {
         it('should allow a new compiled type to be committed', async function() {
             const type = bali.catalog();
             type.setValue('$foo', '"bar"');
-            const documentCitation = await merchantClient.createDraft(type);
+            const documentCitation = await merchantClient.saveDraft(type);
             typeCitation = await merchantClient.commitType(type);
             expect(typeCitation).to.exist;  // jshint ignore:line
         });

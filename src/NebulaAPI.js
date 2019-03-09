@@ -285,54 +285,6 @@ exports.api = function(notary, repository, debug) {
         },
 
         /**
-         * This method creates in the Bali Nebula™ a new draft document. If no
-         * draft content is provided, an empty catalog is created.
-         * 
-         * @param {Component} draft An optional component that is to be used as
-         * the content for the new draft document. 
-         * @returns {Catalog} A document citation for the new draft document.
-         */
-        createDraft: async function(draft) {
-            checkInitialization(this, '$createDraft');
-
-            // validate the parameters
-            draft = draft || bali.catalog({}, bali.parameters({
-                $tag: bali.tag(),
-                $version: bali.version()
-            }));
-            if (!draft.getTypeId) {
-                const exception = bali.exception({
-                    $module: '$NebulaAPI',
-                    $function: '$createDraft',
-                    $exception: '$invalidParameter',
-                    $parameter: bali.text(draft.toString()),
-                    $text: bali.text('The draft document citation is invalid.')
-                });
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
-
-            try {
-                const notarizedDraft = await notary.notarizeDocument(draft);
-                const draftCitation = await notary.citeDocument(notarizedDraft);
-                const draftId = extractId(draftCitation);
-                await repository.createDraft(draftId, notarizedDraft);
-                // we don't cache drafts since they are mutable
-                return draftCitation;
-            } catch (cause) {
-                const exception = bali.exception({
-                    $module: '$NebulaAPI',
-                    $function: '$createDraft',
-                    $exception: '$unexpected',
-                    $account: notary.getAccount(),
-                    $text: bali.text('An unexpected error occurred while attempting to create a new draft document.')
-                }, cause);
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
-        },
-
-        /**
          * This method retrieves from the Bali Nebula™ the saved draft document
          * associated with the specified document citation.
          * 
@@ -379,20 +331,24 @@ exports.api = function(notary, repository, debug) {
         },
 
         /**
-         * This method saves to the Bali Nebula™ the specified draft document
-         * to be associated with the specified document citation.
+         * This method saves in the Bali Nebula™ a draft document. If no
+         * draft content is provided, an empty catalog is created.
          * 
-         * @param {Component} draft The draft document to be saved.
-         * @returns {Catalog} A document citation for the updated draft document.
+         * @param {Component} draft An optional draft document to be saved.
+         * @returns {Catalog} A document citation for the draft document.
          */
-        updateDraft: async function(draft) {
-            checkInitialization(this, '$updateDraft');
+        saveDraft: async function(draft) {
+            checkInitialization(this, '$saveDraft');
 
             // validate the parameters
-            if (!draft || !draft.getTypeId) {
+            draft = draft || bali.catalog({}, bali.parameters({
+                $tag: bali.tag(),
+                $version: bali.version()
+            }));
+            if (!draft.getTypeId) {
                 const exception = bali.exception({
                     $module: '$NebulaAPI',
-                    $function: '$updateDraft',
+                    $function: '$saveDraft',
                     $exception: '$invalidParameter',
                     $parameter: draft ? bali.text(draft.toString()) : bali.NONE,
                     $text: bali.text('The draft document is invalid.')
@@ -408,20 +364,24 @@ exports.api = function(notary, repository, debug) {
                 if (cache.documentExists(draftId) || await repository.documentExists(draftId)) {
                     throw bali.exception({
                         $module: '$NebulaAPI',
-                        $function: '$updateDraft',
+                        $function: '$saveDraft',
                         $exception: '$versionExists',
                         $tag: draftCitation.getValue('$tag'),
                         $version: draftCitation.getValue('$version'),
                         $text: '"A committed version of the document referenced by the citation already exists."'
                     });
                 }
-                await repository.updateDraft(draftId, notarizedDraft);
+                if (await repository.draftExists(draftId)) {
+                    await repository.updateDraft(draftId, notarizedDraft);
+                } else {
+                    await repository.createDraft(draftId, notarizedDraft);
+                }
                 // we don't cache drafts since they are mutable
                 return draftCitation;
             } catch (cause) {
                 const exception = bali.exception({
                     $module: '$NebulaAPI',
-                    $function: '$updateDraft',
+                    $function: '$saveDraft',
                     $exception: '$unexpected',
                     $account: notary.getAccount(),
                     $text: bali.text('An unexpected error occurred while attempting to update a draft document.')
@@ -520,7 +480,7 @@ exports.api = function(notary, repository, debug) {
                 await repository.createDocument(documentId, notarizedDocument);
                 document = notarizedDocument.getValue('$component');
                 cache.createDocument(documentId, document);
-                if (await repository.draftExists(documentId)) await repository.deleteDraft(documentId);
+                await repository.deleteDraft(documentId);
                 return documentCitation;
             } catch (cause) {
                 const exception = bali.exception({
