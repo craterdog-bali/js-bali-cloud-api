@@ -29,5 +29,5 @@ Then add the following line to your NodeJS modules:
 var notary = require('bali-nebula-api);
 ```
 
-Check out the example code [here](https://github.com/craterdog-bali/js-bali-nebula-api/wiki/example-code).
+Check out the example code [here](https://github.com/craterdog-bali/js-bali-nebula-api/wiki/code-examples).
 
