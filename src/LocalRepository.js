@@ -601,8 +601,8 @@ exports.repository = function(directory, debug) {
          */
         queueMessage: async function(queueId, message) {
             const queue = queues + queueId + '/';
+            const messageId = bali.tag().getValue();
             try {
-                const messageId = bali.tag().getValue();
                 const filename = queue + messageId + '.ndoc';
                 const exists = await doesExist(filename);
                 if (exists) {
