@@ -155,7 +155,7 @@ exports.api = function(notary, repository, debug) {
                 throw exception;
             }
         },
-        
+
         /**
          * This method retrieves from the Bali Nebula™ the notary certificate
          * for the specified certificate citation.
