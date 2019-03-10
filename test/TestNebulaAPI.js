@@ -94,7 +94,7 @@ describe('Bali Nebula API™', function() {
         });
 
         it('should setup the client environment for the consumer', async function() {
-            const citation = await consumerClient.retrieveCitation();
+            const citation = await consumerClient.getCitation();
             expect(citation).to.exist;  // jshint ignore:line
             expect(citation.isEqualTo(consumerCitation)).to.equal(true);
             consumerCertificate = await consumerClient.retrieveCertificate(consumerCitation);
@@ -102,7 +102,7 @@ describe('Bali Nebula API™', function() {
         });
 
         it('should setup the client environment for the merchant', async function() {
-            const citation = await merchantClient.retrieveCitation();
+            const citation = await merchantClient.getCitation();
             expect(citation).to.exist;  // jshint ignore:line
             expect(citation.isEqualTo(merchantCitation)).to.equal(true);
             merchantCertificate = await merchantClient.retrieveCertificate(merchantCitation);

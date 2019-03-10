@@ -134,19 +134,19 @@ exports.api = function(notary, repository, debug) {
 
         /**
          * This method retrieves from the Bali Nebula™ the certificate citation
-         * for this client.
+         * for the digital notary for this client.
          * 
-         * @returns {Catalog} The certificate citation for this client.
+         * @returns {Catalog} The certificate citation for the digital notary for this client.
          */
-        retrieveCitation: async function() {
-            checkInitialization(this, '$retrieveCitation');
+        getCitation: async function() {
+            checkInitialization(this, '$getCitation');
             try {
                 const citation = await notary.getCitation();
                 return citation;
             } catch (cause) {
                 const exception = bali.exception({
                     $module: '$NebulaAPI',
-                    $function: '$retrieveCitation',
+                    $function: '$getCitation',
                     $exception: '$unexpected',
                     $account: notary.getAccount(),
                     $text: bali.text('An unexpected error occurred while attempting to retrieve the notary certificate citation.')
