@@ -27,7 +27,7 @@ npm install bali-nebula-api
 ```
 Then add the following line to your NodeJS modules:
 ```
-const nebula = require('bali-nebula-api);
+const nebula = require('bali-nebula-api');
 ```
 
 Check out the example code [here](https://github.com/craterdog-bali/js-bali-nebula-api/wiki/code-examples).
