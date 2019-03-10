@@ -69,7 +69,43 @@ exports.api = function(notary, repository, debug) {
     return {
 
         /**
-         * This function initializes the Bali Nebula API™.  It must be called before an
+         * This function returns a string providing attributes about this repository.
+         * 
+         * @returns {String} A string providing attributes about this repository.
+         */
+        toString: function() {
+            const catalog = bali.catalog({
+                $module: '$NebulaAPI',
+                $account: this.getAccount(),
+                $url: this.getURL()
+            });
+            return catalog.toString();
+        },
+
+        /**
+         * This function returns the unique tag for the account that owns the notary key
+         * for this client.
+         * 
+         * @returns {Tag} The unique tag for the account that owns the notary key for
+         * this client.
+         */
+        getAccount: function() {
+            return notary.getAccount();
+        },
+
+        /**
+         * This function returns a reference to the document repository that is used by this
+         * client.
+         * 
+         * @returns {Reference} A reference to the document repository that is used by this
+         * client.
+         */
+        getURL: function() {
+            return repository.getURL();
+        },
+
+        /**
+         * This function initializes the Bali Nebula API™.  It must be called before any
          * other API function and can only be called once.
          */
         initializeAPI: async function() {

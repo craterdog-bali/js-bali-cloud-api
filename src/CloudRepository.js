@@ -41,15 +41,25 @@ exports.repository = function(notary, cloudURL, debug) {
          */
         toString: function() {
             const catalog = bali.catalog({
+                $module: '$CloudRepository',
                 $account: account,
-                $cloudURL: cloudURL
+                $url: cloudURL
             });
             return catalog.toString();
         },
 
         /**
-         *  This function initializes the repository and must be called prior to calling any of
-         *  the other functions in the API. It can only be called once.
+         * This function returns a reference to this document repository.
+         * 
+         * @returns {Reference} A reference to this document repository.
+         */
+        getURL: function() {
+            return cloudURL;
+        },
+
+        /**
+         * This function initializes the document repository.  It must be called before any
+         * other API function and can only be called once.
          */
         initializeAPI: async function() {
             try {
@@ -61,7 +71,7 @@ exports.repository = function(notary, cloudURL, debug) {
                     $function: '$initializeAPI',
                     $exception: '$unexpected',
                     $account: account || bali.NONE,
-                    $cloudURL: cloudURL || bali.NONE,
+                    $url: cloudURL || bali.NONE,
                     $text: bali.text('An unexpected error occurred while attempting to initialize the API.')
                 }, cause);
                 if (debug) console.error(exception.toString());
@@ -88,7 +98,7 @@ exports.repository = function(notary, cloudURL, debug) {
                     $function: '$certificateExists',
                     $exception: '$unexpected',
                     $account: account || bali.NONE,
-                    $cloudURL: cloudURL || bali.NONE,
+                    $url: cloudURL || bali.NONE,
                     $certificateId: certificateId ? bali.text(certificateId) : bali.NONE,
                     $text: bali.text('An unexpected error occurred while attempting check to see if the certificate exists.')
                 }, cause);
@@ -116,7 +126,7 @@ exports.repository = function(notary, cloudURL, debug) {
                     $function: '$fetchCertificate',
                     $exception: '$unexpected',
                     $account: account || bali.NONE,
-                    $cloudURL: cloudURL || bali.NONE,
+                    $url: cloudURL || bali.NONE,
                     $certificateId: certificateId ? bali.text(certificateId) : bali.NONE,
                     $text: bali.text('An unexpected error occurred while attempting to fetch the certificate.')
                 }, cause);
@@ -142,7 +152,7 @@ exports.repository = function(notary, cloudURL, debug) {
                     $function: '$createCertificate',
                     $exception: '$unexpected',
                     $account: account || bali.NONE,
-                    $cloudURL: cloudURL || bali.NONE,
+                    $url: cloudURL || bali.NONE,
                     $certificateId: certificateId ? bali.text(certificateId) : bali.NONE,
                     $certificate: certificate || bali.NONE,
                     $text: bali.text('An unexpected error occurred while attempting to create the certificate.')
@@ -171,7 +181,7 @@ exports.repository = function(notary, cloudURL, debug) {
                     $function: '$draftExists',
                     $exception: '$unexpected',
                     $account: account || bali.NONE,
-                    $cloudURL: cloudURL || bali.NONE,
+                    $url: cloudURL || bali.NONE,
                     $draftId: draftId ? bali.text(draftId) : bali.NONE,
                     $text: bali.text('An unexpected error occurred while attempting check to see if the draft exists.')
                 }, cause);
@@ -199,7 +209,7 @@ exports.repository = function(notary, cloudURL, debug) {
                     $function: '$fetchDraft',
                     $exception: '$unexpected',
                     $account: account || bali.NONE,
-                    $cloudURL: cloudURL || bali.NONE,
+                    $url: cloudURL || bali.NONE,
                     $draftId: draftId ? bali.text(draftId) : bali.NONE,
                     $text: bali.text('An unexpected error occurred while attempting to fetch the draft.')
                 }, cause);
@@ -225,7 +235,7 @@ exports.repository = function(notary, cloudURL, debug) {
                     $function: '$createDraft',
                     $exception: '$unexpected',
                     $account: account || bali.NONE,
-                    $cloudURL: cloudURL || bali.NONE,
+                    $url: cloudURL || bali.NONE,
                     $draftId: draftId ? bali.text(draftId) : bali.NONE,
                     $draft: draft || bali.NONE,
                     $text: bali.text('An unexpected error occurred while attempting to create the draft.')
@@ -252,7 +262,7 @@ exports.repository = function(notary, cloudURL, debug) {
                     $function: '$updateDraft',
                     $exception: '$unexpected',
                     $account: account || bali.NONE,
-                    $cloudURL: cloudURL || bali.NONE,
+                    $url: cloudURL || bali.NONE,
                     $draftId: draftId ? bali.text(draftId) : bali.NONE,
                     $draft: draft || bali.NONE,
                     $text: bali.text('An unexpected error occurred while attempting to update the draft.')
@@ -278,7 +288,7 @@ exports.repository = function(notary, cloudURL, debug) {
                     $function: '$deleteDraft',
                     $exception: '$unexpected',
                     $account: account || bali.NONE,
-                    $cloudURL: cloudURL || bali.NONE,
+                    $url: cloudURL || bali.NONE,
                     $draftId: draftId ? bali.text(draftId) : bali.NONE,
                     $text: bali.text('An unexpected error occurred while attempting to delete the draft.')
                 }, cause);
@@ -306,7 +316,7 @@ exports.repository = function(notary, cloudURL, debug) {
                     $function: '$documentExists',
                     $exception: '$unexpected',
                     $account: account || bali.NONE,
-                    $cloudURL: cloudURL || bali.NONE,
+                    $url: cloudURL || bali.NONE,
                     $documentId: documentId ? bali.text(documentId) : bali.NONE,
                     $text: bali.text('An unexpected error occurred while attempting check to see if the document exists.')
                 }, cause);
@@ -334,7 +344,7 @@ exports.repository = function(notary, cloudURL, debug) {
                     $function: '$fetchDocument',
                     $exception: '$unexpected',
                     $account: account || bali.NONE,
-                    $cloudURL: cloudURL || bali.NONE,
+                    $url: cloudURL || bali.NONE,
                     $documentId: documentId ? bali.text(documentId) : bali.NONE,
                     $text: bali.text('An unexpected error occurred while attempting to fetch the document.')
                 }, cause);
@@ -360,7 +370,7 @@ exports.repository = function(notary, cloudURL, debug) {
                     $function: '$createDocument',
                     $exception: '$unexpected',
                     $account: account || bali.NONE,
-                    $cloudURL: cloudURL || bali.NONE,
+                    $url: cloudURL || bali.NONE,
                     $documentId: documentId ? bali.text(documentId) : bali.NONE,
                     $document: document || bali.NONE,
                     $text: bali.text('An unexpected error occurred while attempting to create the document.')
@@ -389,7 +399,7 @@ exports.repository = function(notary, cloudURL, debug) {
                     $function: '$typeExists',
                     $exception: '$unexpected',
                     $account: account || bali.NONE,
-                    $cloudURL: cloudURL || bali.NONE,
+                    $url: cloudURL || bali.NONE,
                     $typeId: typeId ? bali.text(typeId) : bali.NONE,
                     $text: bali.text('An unexpected error occurred while attempting check to see if the type exists.')
                 }, cause);
@@ -417,7 +427,7 @@ exports.repository = function(notary, cloudURL, debug) {
                     $function: '$fetchType',
                     $exception: '$unexpected',
                     $account: account || bali.NONE,
-                    $cloudURL: cloudURL || bali.NONE,
+                    $url: cloudURL || bali.NONE,
                     $typeId: typeId ? bali.text(typeId) : bali.NONE,
                     $text: bali.text('An unexpected error occurred while attempting to fetch the type.')
                 }, cause);
@@ -443,7 +453,7 @@ exports.repository = function(notary, cloudURL, debug) {
                     $function: '$createType',
                     $exception: '$unexpected',
                     $account: account || bali.NONE,
-                    $cloudURL: cloudURL || bali.NONE,
+                    $url: cloudURL || bali.NONE,
                     $typeId: typeId ? bali.text(typeId) : bali.NONE,
                     $type: type || bali.NONE,
                     $text: bali.text('An unexpected error occurred while attempting to create the type.')
@@ -472,7 +482,7 @@ exports.repository = function(notary, cloudURL, debug) {
                     $function: '$queueExists',
                     $exception: '$unexpected',
                     $account: account || bali.NONE,
-                    $cloudURL: cloudURL || bali.NONE,
+                    $url: cloudURL || bali.NONE,
                     $queueId: queueId ? bali.text(queueId) : bali.NONE,
                     $text: bali.text('An unexpected error occurred while attempting check to see if the queue exists.')
                 }, cause);
@@ -496,7 +506,7 @@ exports.repository = function(notary, cloudURL, debug) {
                     $function: '$createQueue',
                     $exception: '$unexpected',
                     $account: account || bali.NONE,
-                    $cloudURL: cloudURL || bali.NONE,
+                    $url: cloudURL || bali.NONE,
                     $queueId: queueId ? bali.text(queueId) : bali.NONE,
                     $text: bali.text('An unexpected error occurred while attempting to create the queue.')
                 }, cause);
@@ -520,7 +530,7 @@ exports.repository = function(notary, cloudURL, debug) {
                     $function: '$deleteQueue',
                     $exception: '$unexpected',
                     $account: account || bali.NONE,
-                    $cloudURL: cloudURL || bali.NONE,
+                    $url: cloudURL || bali.NONE,
                     $queueId: queueId ? bali.text(queueId) : bali.NONE,
                     $text: bali.text('An unexpected error occurred while attempting to delete the queue.')
                 }, cause);
@@ -545,7 +555,7 @@ exports.repository = function(notary, cloudURL, debug) {
                     $function: '$queueMessage',
                     $exception: '$unexpected',
                     $account: account || bali.NONE,
-                    $cloudURL: cloudURL || bali.NONE,
+                    $url: cloudURL || bali.NONE,
                     $queueId: queueId ? bali.text(queueId) : bali.NONE,
                     $message: message || bali.NONE,
                     $text: bali.text('An unexpected error occurred while attempting to queue the message.')
@@ -572,7 +582,7 @@ exports.repository = function(notary, cloudURL, debug) {
                     $function: '$dequeueMessage',
                     $exception: '$unexpected',
                     $account: account || bali.NONE,
-                    $cloudURL: cloudURL || bali.NONE,
+                    $url: cloudURL || bali.NONE,
                     $queueId: queueId ? bali.text(queueId) : bali.NONE,
                     $text: bali.text('An unexpected error occurred while attempting to dequeue the message.')
                 }, cause);
@@ -609,7 +619,7 @@ const sendRequest = async function(credentials, functionName, cloudURL, method, 
                         $module: '$CloudRepository',
                         $function: functionName,
                         $exception: '$invalidParameter',
-                        $cloudURL: cloudURL || bali.NONE,
+                        $url: cloudURL || bali.NONE,
                         $method: bali.text(method.toString()),
                         $type: bali.text(type.toString()),
                         $text: bali.text('An invalid method and document type combination was specified.')

@@ -56,14 +56,23 @@ exports.repository = function(directory, debug) {
          */
         toString: function() {
             return bali.catalog({
-                $configuration: bali.text(directory),
-                $repository: bali.text(repositoryDirectory)
+                $module: '$LocalRepository',
+                $url: this.getURL()
             });
         },
 
         /**
-         *  This function initializes the repository and must be called prior to calling any of
-         *  the other functions in the API. It can only be called once.
+         * This function returns a reference to this document repository.
+         * 
+         * @returns {Reference} A reference to this document repository.
+         */
+        getURL: function() {
+            return bali.reference('file:' + directory);
+        },
+
+        /**
+         * This function initializes the document repository.  It must be called before any
+         * other API function and can only be called once.
          */
         initializeAPI: async function() {
             try {
@@ -81,7 +90,7 @@ exports.repository = function(directory, debug) {
                     $module: '$LocalRepository',
                     $function: '$initializeAPI',
                     $exception: '$unexpected',
-                    $directory: directory ? bali.text(directory) : bali.NONE,
+                    $url: bali.reference('file:' + directory),
                     $text: bali.text('An unexpected error occurred while attempting to initialize the API.')
                 }, cause);
                 if (debug) console.error(exception.toString());
@@ -107,7 +116,7 @@ exports.repository = function(directory, debug) {
                     $module: '$LocalRepository',
                     $function: '$certificateExists',
                     $exception: '$unexpected',
-                    $directory: directory ? bali.text(directory) : bali.NONE,
+                    $url: bali.reference('file:' + directory),
                     $certificateId: certificateId ? bali.text(certificateId) : bali.NONE,
                     $text: bali.text('An unexpected error occurred while attempting to see if a certificate exists.')
                 }, cause);
@@ -139,7 +148,7 @@ exports.repository = function(directory, debug) {
                     $module: '$LocalRepository',
                     $function: '$fetchCertificate',
                     $exception: '$directoryAccess',
-                    $directory: directory ? bali.text(directory) : bali.NONE,
+                    $url: bali.reference('file:' + directory),
                     $certificateId: certificateId ? bali.text(certificateId) : bali.NONE,
                     $text: bali.text('The local configuration directory could not be accessed.')
                 }, exception);
@@ -162,7 +171,7 @@ exports.repository = function(directory, debug) {
                         $module: '$LocalRepository',
                         $function: '$createCertificate',
                         $exception: '$fileExists',
-                        $directory: directory ? bali.text(directory) : bali.NONE,
+                        $url: bali.reference('file:' + directory),
                         $file: bali.text(filename),
                         $text: bali.text('The file to be written already exists.')
                     });
@@ -174,7 +183,7 @@ exports.repository = function(directory, debug) {
                     $module: '$LocalRepository',
                     $function: '$createCertificate',
                     $exception: '$directoryAccess',
-                    $directory: directory ? bali.text(directory) : bali.NONE,
+                    $url: bali.reference('file:' + directory),
                     $certificateId: certificateId ? bali.text(certificateId) : bali.NONE,
                     $certificate: certificate || bali.NONE,
                     $text: bali.text('The local configuration directory could not be accessed.')
@@ -200,7 +209,7 @@ exports.repository = function(directory, debug) {
                     $module: '$LocalRepository',
                     $function: '$draftExists',
                     $exception: '$directoryAccess',
-                    $directory: directory ? bali.text(directory) : bali.NONE,
+                    $url: bali.reference('file:' + directory),
                     $draftId: draftId ? bali.text(draftId) : bali.NONE,
                     $text: bali.text('The local configuration directory could not be accessed.')
                 }, exception);
@@ -230,7 +239,7 @@ exports.repository = function(directory, debug) {
                     $module: '$LocalRepository',
                     $function: '$fetchDraft',
                     $exception: '$directoryAccess',
-                    $directory: directory ? bali.text(directory) : bali.NONE,
+                    $url: bali.reference('file:' + directory),
                     $draftId: draftId ? bali.text(draftId) : bali.NONE,
                     $text: bali.text('The local configuration directory could not be accessed.')
                 }, exception);
@@ -253,7 +262,7 @@ exports.repository = function(directory, debug) {
                         $module: '$LocalRepository',
                         $function: '$createDraft',
                         $exception: '$fileExists',
-                        $directory: directory ? bali.text(directory) : bali.NONE,
+                        $url: bali.reference('file:' + directory),
                         $file: bali.text(filename),
                         $text: bali.text('The file to be written already exists.')
                     });
@@ -265,7 +274,7 @@ exports.repository = function(directory, debug) {
                     $module: '$LocalRepository',
                     $function: '$createDraft',
                     $exception: '$directoryAccess',
-                    $directory: directory ? bali.text(directory) : bali.NONE,
+                    $url: bali.reference('file:' + directory),
                     $draftId: draftId ? bali.text(draftId) : bali.NONE,
                     $draft: draft || bali.NONE,
                     $text: bali.text('The local configuration directory could not be accessed.')
@@ -289,7 +298,7 @@ exports.repository = function(directory, debug) {
                         $module: '$LocalRepository',
                         $function: '$updateDraft',
                         $exception: '$fileMissing',
-                        $directory: directory ? bali.text(directory) : bali.NONE,
+                        $url: bali.reference('file:' + directory),
                         $file: bali.text(filename),
                         $text: bali.text('The file to be updated does not exist.')
                     });
@@ -301,7 +310,7 @@ exports.repository = function(directory, debug) {
                     $module: '$LocalRepository',
                     $function: '$updateDraft',
                     $exception: '$directoryAccess',
-                    $directory: directory ? bali.text(directory) : bali.NONE,
+                    $url: bali.reference('file:' + directory),
                     $draftId: draftId ? bali.text(draftId) : bali.NONE,
                     $draft: draft || bali.NONE,
                     $text: bali.text('The local configuration directory could not be accessed.')
@@ -327,7 +336,7 @@ exports.repository = function(directory, debug) {
                     $module: '$LocalRepository',
                     $function: '$deleteDraft',
                     $exception: '$directoryAccess',
-                    $directory: directory ? bali.text(directory) : bali.NONE,
+                    $url: bali.reference('file:' + directory),
                     $draftId: draftId ? bali.text(draftId) : bali.NONE,
                     $text: bali.text('The local configuration directory could not be accessed.')
                 }, exception);
@@ -352,7 +361,7 @@ exports.repository = function(directory, debug) {
                     $module: '$LocalRepository',
                     $function: '$documentExists',
                     $exception: '$directoryAccess',
-                    $directory: directory ? bali.text(directory) : bali.NONE,
+                    $url: bali.reference('file:' + directory),
                     $documentId: documentId ? bali.text(documentId) : bali.NONE,
                     $text: bali.text('The local configuration directory could not be accessed.')
                 }, exception);
@@ -382,7 +391,7 @@ exports.repository = function(directory, debug) {
                     $module: '$LocalRepository',
                     $function: '$fetchDocument',
                     $exception: '$directoryAccess',
-                    $directory: directory ? bali.text(directory) : bali.NONE,
+                    $url: bali.reference('file:' + directory),
                     $documentId: documentId ? bali.text(documentId) : bali.NONE,
                     $text: bali.text('The local configuration directory could not be accessed.')
                 }, exception);
@@ -405,7 +414,7 @@ exports.repository = function(directory, debug) {
                         $module: '$LocalRepository',
                         $function: '$createDocument',
                         $exception: '$fileExists',
-                        $directory: directory ? bali.text(directory) : bali.NONE,
+                        $url: bali.reference('file:' + directory),
                         $file: bali.text(filename),
                         $text: bali.text('The file to be written already exists.')
                     });
@@ -417,7 +426,7 @@ exports.repository = function(directory, debug) {
                     $module: '$LocalRepository',
                     $function: '$createDocument',
                     $exception: '$directoryAccess',
-                    $directory: directory ? bali.text(directory) : bali.NONE,
+                    $url: bali.reference('file:' + directory),
                     $documentId: documentId ? bali.text(documentId) : bali.NONE,
                     $document: document || bali.NONE,
                     $text: bali.text('The local configuration directory could not be accessed.')
@@ -443,7 +452,7 @@ exports.repository = function(directory, debug) {
                     $module: '$LocalRepository',
                     $function: '$typeExists',
                     $exception: '$directoryAccess',
-                    $directory: directory ? bali.text(directory) : bali.NONE,
+                    $url: bali.reference('file:' + directory),
                     $typeId: typeId ? bali.text(typeId) : bali.NONE,
                     $text: bali.text('The local configuration directory could not be accessed.')
                 }, exception);
@@ -473,7 +482,7 @@ exports.repository = function(directory, debug) {
                     $module: '$LocalRepository',
                     $function: '$fetchType',
                     $exception: '$directoryAccess',
-                    $directory: directory ? bali.text(directory) : bali.NONE,
+                    $url: bali.reference('file:' + directory),
                     $typeId: typeId ? bali.text(typeId) : bali.NONE,
                     $text: bali.text('The local configuration directory could not be accessed.')
                 }, exception);
@@ -496,7 +505,7 @@ exports.repository = function(directory, debug) {
                         $module: '$LocalRepository',
                         $function: '$createType',
                         $exception: '$fileExists',
-                        $directory: directory ? bali.text(directory) : bali.NONE,
+                        $url: bali.reference('file:' + directory),
                         $file: bali.text(filename),
                         $text: bali.text('The file to be written already exists.')
                     });
@@ -508,7 +517,7 @@ exports.repository = function(directory, debug) {
                     $module: '$LocalRepository',
                     $function: '$createType',
                     $exception: '$directoryAccess',
-                    $directory: directory ? bali.text(directory) : bali.NONE,
+                    $url: bali.reference('file:' + directory),
                     $typeId: typeId ? bali.text(typeId) : bali.NONE,
                     $type: type || bali.NONE,
                     $text: bali.text('The local configuration directory could not be accessed.')
