@@ -1,7 +1,7 @@
 {
   "name": "bali-nebula-api",
   "version": "1.0.3",
-  "description": "This library provides a JavaScript based parser and formatter for the Bali Instruction Set.",
+  "description": "This library provides a JavaScript based API to the Bali Nebula™.",
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/craterdog-bali/js-bali-nebula-api.git"

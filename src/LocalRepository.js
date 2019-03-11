@@ -90,7 +90,7 @@ exports.repository = function(directory, debug) {
                     $module: '$LocalRepository',
                     $function: '$initializeAPI',
                     $exception: '$unexpected',
-                    $url: bali.reference('file:' + directory),
+                    $url: this.getURL(),
                     $text: bali.text('An unexpected error occurred while attempting to initialize the API.')
                 }, cause);
                 if (debug) console.error(exception.toString());
@@ -688,7 +688,9 @@ exports.repository = function(directory, debug) {
 
 const doesExist = async function(path) {
     var exists = true;
-    await pfs.stat(path).catch(function(exception) {
+    try {
+        await pfs.stat(path);
+    } catch (exception) {
         if (exception.code === 'ENOENT') {
             // the path does not exist
             exists = false;
@@ -696,7 +698,7 @@ const doesExist = async function(path) {
             // something else went wrong
             throw exception;
         }
-    });
+    }
     // the path exists
     return exists;
 };
