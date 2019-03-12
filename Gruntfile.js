@@ -29,7 +29,7 @@ module.exports = function(grunt) {
         'test/config/'
       ],
       options: {
-        force: true
+        force: false
       }
     },
 
@@ -58,7 +58,7 @@ module.exports = function(grunt) {
         output: {
           path: path.resolve(__dirname, 'dist'),
           filename: 'lib-web.js',
-          library: 'nebula'
+          library: 'notary'
         }
       },
       serverConfig: {
@@ -68,7 +68,7 @@ module.exports = function(grunt) {
         output: {
           path: path.resolve(__dirname, 'dist'),
           filename: 'lib-node.js',
-          library: 'nebula'
+          library: 'notary'
         }
       }
     }
@@ -80,7 +80,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-mocha-test');
   grunt.loadNpmTasks('grunt-webpack');
 
-  grunt.registerTask('build', 'Build the module.', ['clean:build', 'mochaTest']);
+  grunt.registerTask('build', 'Build the module.', ['clean:build', 'eslint', 'mochaTest']);
   grunt.registerTask('package', 'Package the libraries.', ['clean:build', 'eslint', 'mochaTest', 'webpack']);
   grunt.registerTask('default', 'Default targets.', ['build']);
 
