@@ -219,53 +219,26 @@ exports.repository = function(notary, cloudURL, debug) {
         },
 
         /**
-         * This function creates a new draft document in the repository.
+         * This function saves a draft document in the repository.
          * 
          * @param {String} draftId The unique identifier (including version number) for
          * the draft document being created.
          * @param {String} draft The canonical source string for the draft document.
          */
-        createDraft: async function(draftId, draft) {
+        saveDraft: async function(draftId, draft) {
             try {
                 const credentials = await generateCredentials(notary);
-                await sendRequest(credentials, '$createDraft', cloudURL, 'POST', 'draft', draftId, draft);
+                await sendRequest(credentials, '$saveDraft', cloudURL, 'PUT', 'draft', draftId, draft);
             } catch (cause) {
                 const exception = bali.exception({
                     $module: '$CloudRepository',
-                    $function: '$createDraft',
+                    $function: '$saveDraft',
                     $exception: '$unexpected',
                     $account: account || bali.NONE,
                     $url: cloudURL || bali.NONE,
                     $draftId: draftId ? bali.text(draftId) : bali.NONE,
                     $draft: draft || bali.NONE,
                     $text: bali.text('An unexpected error occurred while attempting to create the draft.')
-                }, cause);
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
-        },
-
-        /**
-         * This function updates an existing draft document in the repository.
-         * 
-         * @param {String} draftId The unique identifier (including version number) for
-         * the draft document being updated.
-         * @param {String} draft The canonical source string for the draft document.
-         */
-        updateDraft: async function(draftId, draft) {
-            try {
-                const credentials = await generateCredentials(notary);
-                await sendRequest(credentials, '$updateDraft', cloudURL, 'PUT', 'draft', draftId, draft);
-            } catch (cause) {
-                const exception = bali.exception({
-                    $module: '$CloudRepository',
-                    $function: '$updateDraft',
-                    $exception: '$unexpected',
-                    $account: account || bali.NONE,
-                    $url: cloudURL || bali.NONE,
-                    $draftId: draftId ? bali.text(draftId) : bali.NONE,
-                    $draft: draft || bali.NONE,
-                    $text: bali.text('An unexpected error occurred while attempting to update the draft.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -457,82 +430,6 @@ exports.repository = function(notary, cloudURL, debug) {
                     $typeId: typeId ? bali.text(typeId) : bali.NONE,
                     $type: type || bali.NONE,
                     $text: bali.text('An unexpected error occurred while attempting to create the type.')
-                }, cause);
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
-        },
-
-        /**
-         * This function checks to see whether or not a queue is associated with the
-         * specified identifier.
-         * 
-         * @param {String} queueId The unique identifier (including version number) for
-         * the queue being checked.
-         * @returns {Boolean} Whether or not the queue exists.
-         */
-        queueExists: async function(queueId) {
-            try {
-                const credentials = await generateCredentials(notary);
-                const status = await sendRequest(credentials, '$queueExists', cloudURL, 'HEAD', 'queue', queueId);
-                return status;
-            } catch (cause) {
-                const exception = bali.exception({
-                    $module: '$CloudRepository',
-                    $function: '$queueExists',
-                    $exception: '$unexpected',
-                    $account: account || bali.NONE,
-                    $url: cloudURL || bali.NONE,
-                    $queueId: queueId ? bali.text(queueId) : bali.NONE,
-                    $text: bali.text('An unexpected error occurred while attempting check to see if the queue exists.')
-                }, cause);
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
-        },
-
-        /**
-         * This function creates a new queue in the repository.
-         * 
-         * @param {String} queueId The unique identifier for the queue being created.
-         */
-        createQueue: async function(queueId) {
-            try {
-                const credentials = await generateCredentials(notary);
-                await sendRequest(credentials, '$createQueue', cloudURL, 'POST', 'queue', queueId);
-            } catch (cause) {
-                const exception = bali.exception({
-                    $module: '$CloudRepository',
-                    $function: '$createQueue',
-                    $exception: '$unexpected',
-                    $account: account || bali.NONE,
-                    $url: cloudURL || bali.NONE,
-                    $queueId: queueId ? bali.text(queueId) : bali.NONE,
-                    $text: bali.text('An unexpected error occurred while attempting to create the queue.')
-                }, cause);
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
-        },
-
-        /**
-         * This function deletes an existing queue (and all messages it contains) from the repository.
-         * 
-         * @param {String} queueId The unique identifier for the queue being deleted.
-         */
-        deleteQueue: async function(queueId) {
-            try {
-                const credentials = await generateCredentials(notary);
-                await sendRequest(credentials, '$deleteQueue', cloudURL, 'DELETE', 'queue', queueId);
-            } catch (cause) {
-                const exception = bali.exception({
-                    $module: '$CloudRepository',
-                    $function: '$deleteQueue',
-                    $exception: '$unexpected',
-                    $account: account || bali.NONE,
-                    $url: cloudURL || bali.NONE,
-                    $queueId: queueId ? bali.text(queueId) : bali.NONE,
-                    $text: bali.text('An unexpected error occurred while attempting to delete the queue.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;

@@ -247,68 +247,21 @@ exports.repository = function(directory, debug) {
         },
 
         /**
-         * This function creates a new draft document in the repository.
+         * This function saves a draft document in the repository.
          * 
          * @param {String} draftId The unique identifier (including version number) for
-         * the draft document being created.
+         * the draft document being saved.
          * @param {String} draft The canonical source string for the draft document.
          */
-        createDraft: async function(draftId, draft) {
+        saveDraft: async function(draftId, draft) {
             try {
                 const filename = drafts + draftId + '.ndoc';
-                const exists = await doesExist(filename);
-                if (exists) {
-                    throw bali.exception({
-                        $module: '$LocalRepository',
-                        $function: '$createDraft',
-                        $exception: '$fileExists',
-                        $url: bali.reference('file:' + directory),
-                        $file: bali.text(filename),
-                        $text: bali.text('The file to be written already exists.')
-                    });
-                }
                 const document = draft + EOL;  // add POSIX compliant <EOL>
                 await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o600});
             } catch (exception) {
                 throw bali.exception({
                     $module: '$LocalRepository',
-                    $function: '$createDraft',
-                    $exception: '$directoryAccess',
-                    $url: bali.reference('file:' + directory),
-                    $draftId: draftId ? bali.text(draftId) : bali.NONE,
-                    $draft: draft || bali.NONE,
-                    $text: bali.text('The local configuration directory could not be accessed.')
-                }, exception);
-            }
-        },
-
-        /**
-         * This function updates an existing draft document in the repository.
-         * 
-         * @param {String} draftId The unique identifier (including version number) for
-         * the draft document being updated.
-         * @param {String} draft The canonical source string for the draft document.
-         */
-        updateDraft: async function(draftId, draft) {
-            try {
-                const filename = drafts + draftId + '.ndoc';
-                const exists = await doesExist(filename);
-                if (!exists) {
-                    throw bali.exception({
-                        $module: '$LocalRepository',
-                        $function: '$updateDraft',
-                        $exception: '$fileMissing',
-                        $url: bali.reference('file:' + directory),
-                        $file: bali.text(filename),
-                        $text: bali.text('The file to be updated does not exist.')
-                    });
-                }
-                const document = draft + EOL;  // add POSIX compliant <EOL>
-                await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o600});
-            } catch (exception) {
-                throw bali.exception({
-                    $module: '$LocalRepository',
-                    $function: '$updateDraft',
+                    $function: '$saveDraft',
                     $exception: '$directoryAccess',
                     $url: bali.reference('file:' + directory),
                     $draftId: draftId ? bali.text(draftId) : bali.NONE,
@@ -526,83 +479,6 @@ exports.repository = function(directory, debug) {
         },
 
         /**
-         * This function checks to see whether or not a queue is associated with the
-         * specified identifier.
-         * 
-         * @param {String} queueId The unique identifier (including version number) for
-         * the queue being checked.
-         * @returns {Boolean} Whether or not the queue exists.
-         */
-        queueExists: async function(queueId) {
-            const queue = queues + queueId;
-            try {
-                const exists = await doesExist(queue);
-                return exists;
-            } catch (exception) {
-                throw bali.exception({
-                    $module: '$LocalRepository',
-                    $function: '$queueExists',
-                    $exception: '$queueAccess',
-                    $queue: queue ? bali.text(queue) : bali.NONE,
-                    $text: bali.text('The local queue could not be accessed.')
-                }, exception);
-            }
-        },
-
-        /**
-         * This function creates a new queue in the repository.
-         * 
-         * @param {String} queueId The unique identifier for the queue being created.
-         */
-        createQueue: async function(queueId) {
-            const queue = queues + queueId;
-            try {
-                const exists = await doesExist(queue);
-                if (exists) {
-                    throw bali.exception({
-                        $module: '$LocalRepository',
-                        $function: '$createQueue',
-                        $exception: '$queueExists',
-                        $queue: queue ? bali.text(queue) : bali.NONE,
-                        $text: bali.text('The queue to be created already exists.')
-                    });
-                }
-                await pfs.mkdir(queue, 0o700);
-            } catch (exception) {
-                throw bali.exception({
-                    $module: '$LocalRepository',
-                    $function: '$createQueue',
-                    $exception: '$queueAccess',
-                    $queue: queue ? bali.text(queue) : bali.NONE,
-                    $text: bali.text('The local queue could not be accessed.')
-                }, exception);
-            }
-        },
-
-        /**
-         * This function deletes an existing queue (and all messages it contains) from the repository.
-         * 
-         * @param {String} queueId The unique identifier for the queue being deleted.
-         */
-        deleteQueue: async function(queueId) {
-            const queue = queues + queueId;
-            try {
-                const exists = await doesExist(queue);
-                if (exists) {
-                    await pfs.rmdir(queue);
-                }
-            } catch (exception) {
-                throw bali.exception({
-                    $module: '$LocalRepository',
-                    $function: '$deleteQueue',
-                    $exception: '$queueAccess',
-                    $queue: queue ? bali.text(queue) : bali.NONE,
-                    $text: bali.text('The local queue could not be accessed.')
-                }, exception);
-            }
-        },
-
-        /**
          * This function adds a new message onto the specified queue in the repository.
          * 
          * @param {String} queueId The unique identifier for the queue.
@@ -612,17 +488,8 @@ exports.repository = function(directory, debug) {
             const queue = queues + queueId + '/';
             const messageId = bali.tag().getValue();
             try {
+                if (!await doesExist(queue)) await pfs.mkdir(queue, 0o700);
                 const filename = queue + messageId + '.ndoc';
-                const exists = await doesExist(filename);
-                if (exists) {
-                    throw bali.exception({
-                        $module: '$LocalRepository',
-                        $function: '$queueMessage',
-                        $exception: '$messageExists',
-                        $message: bali.text(filename),
-                        $text: bali.text('The message to be written already exists.')
-                    });
-                }
                 const document = message + EOL;  // add POSIX compliant <EOL>
                 await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o600});
             } catch (exception) {

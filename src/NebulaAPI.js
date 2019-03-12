@@ -114,10 +114,6 @@ exports.api = function(notary, repository, debug) {
                 await notary.initializeAPI();
                 await repository.initializeAPI();
 
-                // create the send and event queues if necessary
-                await repository.createQueue(SEND_QUEUE_ID).catch(function() {});
-                await repository.createQueue(EVENT_QUEUE_ID).catch(function() {});
-
                 this.initializeAPI = undefined;  // can only be called once
             } catch (cause) {
                 const exception = bali.exception({
@@ -407,11 +403,7 @@ exports.api = function(notary, repository, debug) {
                         $text: '"A committed version of the document referenced by the citation already exists."'
                     });
                 }
-                if (await repository.draftExists(draftId)) {
-                    await repository.updateDraft(draftId, notarizedDraft);
-                } else {
-                    await repository.createDraft(draftId, notarizedDraft);
-                }
+                await repository.saveDraft(draftId, notarizedDraft);
                 // we don't cache drafts since they are mutable
                 return draftCitation;
             } catch (cause) {
@@ -666,7 +658,7 @@ exports.api = function(notary, repository, debug) {
                 draft.getParameters().setParameter('$version', draftVersion);
                 const notarizedDraft = await notary.notarizeDocument(draft, citation);
                 const draftCitation = await notary.citeDocument(notarizedDraft);
-                await repository.createDraft(draftId, notarizedDraft);
+                await repository.saveDraft(draftId, notarizedDraft);
 
                 return draftCitation;
             } catch (cause) {
@@ -813,7 +805,6 @@ exports.api = function(notary, repository, debug) {
             try {
                 const notarizedMessage = await notary.notarizeDocument(message);
                 const queueId = queue.getValue();
-                await repository.createQueue(queueId).catch(function() {});
                 await repository.queueMessage(queueId, notarizedMessage);
             } catch (cause) {
                 const exception = bali.exception({

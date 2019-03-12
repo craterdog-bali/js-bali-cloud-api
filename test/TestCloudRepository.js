@@ -58,7 +58,7 @@ describe('Bali Nebula API™', function() {
             const identifier = 'NZRRDAB94B4ZH0WDRT5N3TGX2ZTVMSV2v1.2.3';
 
             // store a new draft in the repository
-            await repository.createDraft(identifier, source);
+            await repository.saveDraft(identifier, source);
 
             // make sure the new draft exists in the repository
             var exists = await repository.draftExists(identifier);
@@ -119,13 +119,6 @@ describe('Bali Nebula API™', function() {
         it('should perform a message queue lifecycle', async function() {
             const queueId = 'QSZNT8ABGSF75XR8FWHMYQCKTVK2WCPY';
 
-            // create a new queue
-            await repository.createQueue(queueId);
-
-            // make sure the queue exists
-            var exists = await repository.queueExists(queueId);
-            expect(exists).is.true;  // jshint ignore:line
-
             // make sure the message queue is empty
             var none = await repository.dequeueMessage(queueId);
             expect(none).to.not.exist;  // jshint ignore:line
@@ -143,13 +136,6 @@ describe('Bali Nebula API™', function() {
             // make sure the message queue is empty
             none = await repository.dequeueMessage(queueId);
             expect(none).to.not.exist;  // jshint ignore:line
-
-            // delete the queue
-            await repository.deleteQueue(queueId);
-
-            // make sure the queue no longer exists
-            exists = await repository.queueExists(queueId);
-            expect(exists).is.false;  // jshint ignore:line
 
         });
 

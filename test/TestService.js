@@ -184,33 +184,12 @@ const getDraft = async function(request, response) {
 
 const postDraft = async function(request, response) {
     const draftId = request.params.identifier;
-    var message = 'Service: post draft document: ' + draftId + '\n' + request.body;
+    var message = 'Service: post draft: ' + draftId + '\n' + request.body;
     if (debug) console.log(message);
-    try {
-        const draft = request.body;
-        if (await repository.documentExists(draftId)) {
-            message = 'Service: a committed document ' + draftId + ' already exists.';
-            if (debug) console.log(message);
-            response.writeHead(409, message);
-            response.end();
-        } else if (await repository.draftExists(draftId)) {
-            message = 'Service: draft document ' + draftId + ' already exists.';
-            if (debug) console.log(message);
-            response.writeHead(409, message);
-            response.end();
-        } else {
-            await repository.createDraft(draftId, draft);
-            message = 'Service: draft ' + draftId + ' was stored.';
-            if (debug) console.log(message);
-            response.writeHead(201, message);
-            response.end();
-        }
-    } catch (e) {
-        message = 'Service: the request was badly formed: ' + e.message;
-        if (debug) console.log(message);
-        response.writeHead(400, message);
-        response.end();
-    }
+    message = 'Service: drafts cannot be posted.';
+    if (debug) console.log(message);
+    response.writeHead(405, message);
+    response.end();
 };
 
 
@@ -225,14 +204,9 @@ const putDraft = async function(request, response) {
             if (debug) console.log(message);
             response.writeHead(409, message);
             response.end();
-        } else if (!await repository.draftExists(draftId)) {
-            message = 'Service: draft document ' + draftId + ' does not exist.';
-            if (debug) console.log(message);
-            response.writeHead(404, message);
-            response.end();
         } else {
-            await repository.updateDraft(draftId, draft);
-            message = 'Service: draft ' + draftId + ' was updated.';
+            await repository.saveDraft(draftId, draft);
+            message = 'Service: draft ' + draftId + ' was saved.';
             if (debug) console.log(message);
             response.writeHead(201, message);
             response.end();
@@ -491,43 +465,21 @@ const pingQueue = async function(request, response) {
     const queueId = request.params.identifier;
     var message = 'Service: ping queue: ' + queueId;
     if (debug) console.log(message);
-    try {
-        if (await repository.queueExists(queueId)) {
-            message = 'Service: queue ' + queueId + ' exists.';
-            if (debug) console.log(message);
-            response.writeHead(200, message);
-            response.end();
-        } else {
-            message = 'Service: queue ' + queueId + ' does not exist.';
-            if (debug) console.log(message);
-            response.writeHead(404, message);
-            response.end();
-        }
-    } catch (e) {
-        message = 'Service: the request was badly formed: ' + e.message;
-        if (debug) console.log(message);
-        response.writeHead(400, message);
-        response.end();
-    }
+    message = 'Service: queues cannot be pinged.';
+    if (debug) console.log(message);
+    response.writeHead(405, message);
+    response.end();
 };
 
 
 const postQueue = async function(request, response) {
     const queueId = request.params.identifier;
-    var message = 'Service: post queue: ' + queueId;
+    var message = 'Service: post queue: ' + queueId + '\n' + request.body;
     if (debug) console.log(message);
-    try {
-        await repository.createQueue(queueId);
-        message = 'Service: queue ' + queueId + ' was created.';
-        if (debug) console.log(message);
-        response.writeHead(201, message);
-        response.end();
-    } catch (e) {
-        message = 'Service: the request was badly formed: ' + e.message;
-        if (debug) console.log(message);
-        response.writeHead(400, message);
-        response.end();
-    }
+    message = 'Service: queues cannot be posted.';
+    if (debug) console.log(message);
+    response.writeHead(405, message);
+    response.end();
 };
 
 
@@ -535,25 +487,10 @@ const deleteQueue = async function(request, response) {
     const queueId = request.params.identifier;
     var message = 'Service: delete queue: ' + queueId;
     if (debug) console.log(message);
-    try {
-        if (await repository.queueExists(queueId)) {
-            await repository.deleteQueue(queueId);
-            message = 'Service: queue ' + queueId + ' was deleted.';
-            if (debug) console.log(message);
-            response.writeHead(200, message);
-            response.end();
-        } else {
-            message = 'Service: queue ' + queueId + ' does not exist.';
-            if (debug) console.log(message);
-            response.writeHead(404, message);
-            response.end();
-        }
-    } catch (e) {
-        message = 'Service: the request was badly formed: ' + e.message;
-        if (debug) console.log(message);
-        response.writeHead(400, message);
-        response.end();
-    }
+    message = 'Service: queues cannot be deleted.';
+    if (debug) console.log(message);
+    response.writeHead(405, message);
+    response.end();
 };
 
 
@@ -562,19 +499,12 @@ const putMessage = async function(request, response) {
     var message = 'Service: put message on queue: ' + queueId + '\n' + request.body;
     if (debug) console.log(message);
     try {
-        if (await repository.queueExists(queueId)) {
-            message = request.body;
-            await repository.queueMessage(queueId, message);
-            message = 'Service: message was added to queue ' + queueId + '.';
-            if (debug) console.log(message);
-            response.writeHead(201, message);
-            response.end();
-        } else {
-            message = 'Service: queue ' + queueId + ' does not exist.';
-            if (debug) console.log(message);
-            response.writeHead(404, message);
-            response.end();
-        }
+        message = request.body;
+        await repository.queueMessage(queueId, message);
+        message = 'Service: message was added to queue ' + queueId + '.';
+        if (debug) console.log(message);
+        response.writeHead(201, message);
+        response.end();
     } catch (e) {
         message = 'Service: the request was badly formed: ' + e.message;
         if (debug) console.log(message);
@@ -589,30 +519,22 @@ const getMessage = async function(request, response) {
     var message = 'Service: get message from queue: ' + queueId;
     if (debug) console.log(message);
     try {
-        const queueId = request.params.identifier;
-        if (await repository.queueExists(queueId)) {
-            message = await repository.dequeueMessage(queueId);
-            if (message) {
-                const data = message.toString();
-                message = 'Service: message was removed from queue ' + queueId + '.';
-                response.writeHead(200, message, {
-                    'Content-Length': data.length,
-                    'Content-Type': 'application/bali',
-                    'Cache-Control': 'no-store'
-                });
-                message = 'Service: message: ' + data;
-                if (debug) console.log(message);
-                response.end(data);
-            } else {
-                message = 'Service: queue ' + queueId + ' is empty.';
-                if (debug) console.log(message);
-                response.writeHead(204, message);
-                response.end();
-            }
-        } else {
-            message = 'Service: queue ' + queueId + ' does not exist.';
+        message = await repository.dequeueMessage(queueId);
+        if (message) {
+            const data = message.toString();
+            message = 'Service: message was removed from queue ' + queueId + '.';
+            response.writeHead(200, message, {
+                'Content-Length': data.length,
+                'Content-Type': 'application/bali',
+                'Cache-Control': 'no-store'
+            });
+            message = 'Service: message: ' + data;
             if (debug) console.log(message);
-            response.writeHead(404, message);
+            response.end(data);
+        } else {
+            message = 'Service: queue ' + queueId + ' is empty.';
+            if (debug) console.log(message);
+            response.writeHead(204, message);
             response.end();
         }
     } catch (e) {
