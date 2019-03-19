@@ -183,7 +183,7 @@ exports.api = function(notary, repository, debug) {
                     if (source) {
                         const notarizedCertificate = bali.parse(source);
                         validateCertificate(notary, citation, notarizedCertificate);
-                        certificate = notarizedCertificate.getValue('$component');
+                        certificate = notarizedCertificate.getValue('$document');
                         cache.createCertificate(certificateId, certificate);
                     }
                 }
@@ -233,7 +233,7 @@ exports.api = function(notary, repository, debug) {
                     if (source) {
                         const notarizedType = bali.parse(source);
                         validateDocument(notary, repository, notarizedType);
-                        type = notarizedType.getValue('$component');
+                        type = notarizedType.getValue('$document');
                         cache.createType(typeId, type);
                     }
                 }
@@ -300,7 +300,7 @@ exports.api = function(notary, repository, debug) {
                     });
                 }
                 await repository.createType(typeId, notarizedType);
-                type = notarizedType.getValue('$component');
+                type = notarizedType.getValue('$document');
                 cache.createType(typeId, type);
                 return typeCitation;
             } catch (cause) {
@@ -345,7 +345,7 @@ exports.api = function(notary, repository, debug) {
                 if (source) {
                     const notarizedDraft = bali.parse(source);
                     validateDocument(notary, repository, notarizedDraft);
-                    const draft = notarizedDraft.getValue('$component');
+                    const draft = notarizedDraft.getValue('$document');
                     // we don't cache drafts since they are mutable
                     return draft;
                 }
@@ -506,7 +506,7 @@ exports.api = function(notary, repository, debug) {
                     });
                 }
                 await repository.createDocument(documentId, notarizedDocument);
-                document = notarizedDocument.getValue('$component');
+                document = notarizedDocument.getValue('$document');
                 cache.createDocument(documentId, document);
                 await repository.deleteDraft(documentId);
                 return documentCitation;
@@ -555,7 +555,7 @@ exports.api = function(notary, repository, debug) {
                         const notarizedDocument = bali.parse(source);
                         validateCitation(notary, citation, notarizedDocument);
                         validateDocument(notary, repository, notarizedDocument);
-                        document = notarizedDocument.getValue('$component');
+                        document = notarizedDocument.getValue('$document');
                         cache.createDocument(documentId, document);
                     }
                 }
@@ -650,7 +650,7 @@ exports.api = function(notary, repository, debug) {
                 // validate and cache the document
                 validateCitation(notary, citation, notarizedDocument);
                 validateDocument(notary, repository, notarizedDocument);
-                const document = notarizedDocument.getValue('$component');
+                const document = notarizedDocument.getValue('$document');
                 cache.createDocument(documentId, document);
 
                 // store a draft copy of the document in the repository (NOTE: drafts are not cached)
@@ -852,7 +852,7 @@ exports.api = function(notary, repository, debug) {
                     // validate the document
                     const notarizedMessage = bali.parse(source);
                     validateDocument(notary, repository, notarizedMessage);
-                    const message = notarizedMessage.getValue('$component');
+                    const message = notarizedMessage.getValue('$document');
                     return message;
                 }
             } catch (cause) {
@@ -958,7 +958,7 @@ const validateCertificate = async function(notary, citation, document) {
             $text: '"The document was modified after it was committed."'
         });
     }
-    const certificate = document.getValue('$component');
+    const certificate = document.getValue('$document');
     const valid = await notary.documentIsValid(document, certificate);
     if (!valid) {
         throw bali.exception({
@@ -991,7 +991,7 @@ const validateDocument = async function(notary, repository, document) {
             if (source) {
                 const certificateDocument = bali.parse(source);
                 validateCertificate(notary, certificateCitation, certificateDocument);
-                certificate = certificateDocument.getValue('$component');
+                certificate = certificateDocument.getValue('$document');
                 cache.createCertificate(certificateId, certificate);
             } else {
                 throw bali.exception({
@@ -1014,7 +1014,7 @@ const validateDocument = async function(notary, repository, document) {
             });
         }
         try {
-            document = document.getValue('$component');
+            document = document.getValue('$document');
             certificateCitation = document.getValue('$citation');
         } catch (e) {
             // we have reached the root content so we are done

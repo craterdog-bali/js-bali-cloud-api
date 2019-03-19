@@ -16,7 +16,7 @@ const bali = require('bali-component-framework');
 const account = bali.parse('#GTDHQ9B8ZGS7WCBJJJBFF6KDCCF55R2P');
 const testDirectory = 'test/config/';
 const cloudURL = bali.reference('http://localhost:3000');
-const notary = require('bali-digital-notary').api(account, testDirectory, debug);
+const notary = require('bali-digital-notary').privateAPI(account, testDirectory, debug);
 const repository = require('../').cloud(notary, cloudURL, debug);
 
 const source =
@@ -35,7 +35,7 @@ describe('Bali Nebula API™', function() {
 
         it('should initialize the notary API once and only once', async function() {
             await notary.initializeAPI();
-            await notary.generateKeyPair();
+            await notary.generateKey();
             try {
                 await notary.initializeAPI();
                 assert.fail('The second attempt to initialize the API should have failed.');

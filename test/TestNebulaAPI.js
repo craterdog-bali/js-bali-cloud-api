@@ -39,13 +39,13 @@ describe('Bali Nebula API™', function() {
 
         it('should create the consumer notary API', async function() {
             const consumerTag = bali.tag();
-            consumerNotary = notary.api(consumerTag, testDirectory, debug);
+            consumerNotary = notary.privateAPI(consumerTag, testDirectory, debug);
             expect(consumerNotary).to.exist;  // jshint ignore:line
         });
 
         it('should create the merchant notary API', async function() {
             const merchantTag = bali.tag();
-            merchantNotary = notary.api(merchantTag, testDirectory, debug);
+            merchantNotary = notary.privateAPI(merchantTag, testDirectory, debug);
             expect(merchantNotary).to.exist;  // jshint ignore:line
         });
 
@@ -76,7 +76,7 @@ describe('Bali Nebula API™', function() {
         });
 
         it('should setup the digital notary for the consumer', async function() {
-            consumerCertificate = await consumerNotary.generateKeyPair();
+            consumerCertificate = await consumerNotary.generateKey();
             expect(consumerCertificate).to.exist;  // jshint ignore:line
             consumerCitation = await consumerNotary.getCitation();
             expect(consumerCitation).to.exist;  // jshint ignore:line
@@ -85,7 +85,7 @@ describe('Bali Nebula API™', function() {
         });
 
         it('should setup the digital notary for the merchant', async function() {
-            merchantCertificate = await merchantNotary.generateKeyPair();
+            merchantCertificate = await merchantNotary.generateKey();
             expect(merchantCertificate).to.exist;  // jshint ignore:line
             merchantCitation = await merchantNotary.getCitation();
             expect(merchantCitation).to.exist;  // jshint ignore:line
