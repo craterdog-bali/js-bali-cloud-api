@@ -39,13 +39,13 @@ describe('Bali Nebula API™', function() {
 
         it('should create the consumer notary API', async function() {
             const consumerTag = bali.tag();
-            consumerNotary = notary.privateAPI(consumerTag, testDirectory, debug);
+            consumerNotary = notary.api(consumerTag, testDirectory, debug);
             expect(consumerNotary).to.exist;  // jshint ignore:line
         });
 
         it('should create the merchant notary API', async function() {
             const merchantTag = bali.tag();
-            merchantNotary = notary.privateAPI(merchantTag, testDirectory, debug);
+            merchantNotary = notary.api(merchantTag, testDirectory, debug);
             expect(merchantNotary).to.exist;  // jshint ignore:line
         });
 
