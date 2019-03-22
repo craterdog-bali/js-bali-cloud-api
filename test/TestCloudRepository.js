@@ -54,8 +54,64 @@ describe('Bali Nebula API™', function() {
             };
         });
 
+        it('should perform a notary certificate lifecycle', async function() {
+            const identifier = 'KHMSK2LPXSWYMLZ8KJFNTL461A13M8Z7v3';
+
+            // store a new certificate in the repository
+            await repository.createCertificate(identifier, source);
+
+            // make sure the new certificate exists in the repository
+            exists = await repository.certificateExists(identifier);
+            expect(exists).is.true;  // jshint ignore:line
+
+            // fetch the new certificate from the repository
+            const certificate = await repository.fetchCertificate(identifier);
+            expect(certificate).to.equal(source);
+
+            // make sure the new certificate still exists in the repository
+            exists = await repository.certificateExists(identifier);
+            expect(exists).is.true;  // jshint ignore:line
+
+            // attempt to store the same certificate in the repository
+            try {
+                await repository.createCertificate(identifier, source);
+                assert.fail('The attempt to store the same certificate should have failed.');
+            } catch (error) {
+                // expected
+            };
+
+        });
+
+        it('should perform a component type lifecycle', async function() {
+            const identifier = '1T2KNYM32FZ83VZQYP1ATMPQGNMWDVYAv1';
+
+            // store a new type in the repository
+            await repository.createType(identifier, source);
+
+            // make sure the new type exists in the repository
+            exists = await repository.typeExists(identifier);
+            expect(exists).is.true;  // jshint ignore:line
+
+            // fetch the new type from the repository
+            const type = await repository.fetchType(identifier);
+            expect(type).to.equal(source);
+
+            // make sure the new type still exists in the repository
+            exists = await repository.typeExists(identifier);
+            expect(exists).is.true;  // jshint ignore:line
+
+            // attempt to store the same type in the repository
+            try {
+                await repository.createType(identifier, source);
+                assert.fail('The attempt to store the same type should have failed.');
+            } catch (error) {
+                // expected
+            };
+
+        });
+
         it('should perform a draft document lifecycle', async function() {
-            const identifier = 'NZRRDAB94B4ZH0WDRT5N3TGX2ZTVMSV2v1.2.3';
+            const identifier = 'PLR85ZV07WQ6K178XLMZSJ14NLZ03QCQv1.2.3';
 
             // store a new draft in the repository
             await repository.saveDraft(identifier, source);
@@ -85,7 +141,7 @@ describe('Bali Nebula API™', function() {
         });
 
         it('should perform a committed document lifecycle', async function() {
-            const identifier = 'YK4KPZHX2ZPVS0NNK2YH368XP7FR05Y9v3.4';
+            const identifier = 'YJM0T2PPPKQTCL0VTTBDH7V54XCHHKZAv3.4';
 
             // store a new document in the repository
             await repository.createDocument(identifier, source);
@@ -107,17 +163,17 @@ describe('Bali Nebula API™', function() {
             expect(exists).is.true;  // jshint ignore:line
 
             // attempt to store the same document in the repository
-            //expect(repository.createDocument.bind(repository, identifier, source)).to.throw();
-            await repository.createDocument(identifier, source).then(function() {
+            try {
+                await repository.createDocument(identifier, source);
                 assert.fail('The attempt to store the same document should have failed.');
-            }).catch(function(error) {
+            } catch (error) {
                 // expected
-            });
+            };
 
         });
 
         it('should perform a message queue lifecycle', async function() {
-            const queueId = 'QSZNT8ABGSF75XR8FWHMYQCKTVK2WCPY';
+            const queueId = 'JW1FBS2SJ8N8QQRNDDWGD7H8Z2NN0LDG';
 
             // make sure the message queue is empty
             var none = await repository.dequeueMessage(queueId);

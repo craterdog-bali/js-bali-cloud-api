@@ -424,7 +424,7 @@ const postType = async function(request, response) {
             response.writeHead(409, message);
             response.end();
         } else {
-            await repository.createDocument(typeId, type);
+            await repository.createType(typeId, type);
             message = 'Service: type ' + typeId + ' was stored.';
             if (debug) console.log(message);
             response.writeHead(201, message);
