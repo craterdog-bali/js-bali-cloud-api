@@ -108,7 +108,7 @@ exports.repository = function(directory, debug) {
          */
         certificateExists: async function(certificateId) {
             try {
-                const filename = certificates + certificateId + '.ndoc';
+                const filename = certificates + certificateId + '.bali';
                 const exists = await doesExist(filename);
                 return exists;
             } catch (cause) {
@@ -136,7 +136,7 @@ exports.repository = function(directory, debug) {
         fetchCertificate: async function(certificateId) {
             try {
                 var certificate;
-                const filename = certificates + certificateId + '.ndoc';
+                const filename = certificates + certificateId + '.bali';
                 const exists = await doesExist(filename);
                 if (exists) {
                     certificate = await pfs.readFile(filename);
@@ -164,7 +164,7 @@ exports.repository = function(directory, debug) {
          */
         createCertificate: async function(certificateId, certificate) {
             try {
-                const filename = certificates + certificateId + '.ndoc';
+                const filename = certificates + certificateId + '.bali';
                 const exists = await doesExist(filename);
                 if (exists) {
                     throw bali.exception({
@@ -201,7 +201,7 @@ exports.repository = function(directory, debug) {
          */
         draftExists: async function(draftId) {
             try {
-                const filename = drafts + draftId + '.ndoc';
+                const filename = drafts + draftId + '.bali';
                 const exists = await doesExist(filename);
                 return exists;
             } catch (exception) {
@@ -227,7 +227,7 @@ exports.repository = function(directory, debug) {
         fetchDraft: async function(draftId) {
             try {
                 var draft;
-                const filename = drafts + draftId + '.ndoc';
+                const filename = drafts + draftId + '.bali';
                 const exists = await doesExist(filename);
                 if (exists) {
                     draft = await pfs.readFile(filename);
@@ -255,7 +255,7 @@ exports.repository = function(directory, debug) {
          */
         saveDraft: async function(draftId, draft) {
             try {
-                const filename = drafts + draftId + '.ndoc';
+                const filename = drafts + draftId + '.bali';
                 const document = draft + EOL;  // add POSIX compliant <EOL>
                 await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o600});
             } catch (exception) {
@@ -279,7 +279,7 @@ exports.repository = function(directory, debug) {
          */
         deleteDraft: async function(draftId) {
             try {
-                const filename = drafts + draftId + '.ndoc';
+                const filename = drafts + draftId + '.bali';
                 const exists = await doesExist(filename);
                 if (exists) {
                     await pfs.unlink(filename);
@@ -306,7 +306,7 @@ exports.repository = function(directory, debug) {
          */
         documentExists: async function(documentId) {
             try {
-                const filename = documents + documentId + '.ndoc';
+                const filename = documents + documentId + '.bali';
                 const exists = await doesExist(filename);
                 return exists;
             } catch (exception) {
@@ -332,7 +332,7 @@ exports.repository = function(directory, debug) {
         fetchDocument: async function(documentId) {
             try {
                 var document;
-                const filename = documents + documentId + '.ndoc';
+                const filename = documents + documentId + '.bali';
                 const exists = await doesExist(filename);
                 if (exists) {
                     document = await pfs.readFile(filename);
@@ -360,7 +360,7 @@ exports.repository = function(directory, debug) {
          */
         createDocument: async function(documentId, document) {
             try {
-                const filename = documents + documentId + '.ndoc';
+                const filename = documents + documentId + '.bali';
                 const exists = await doesExist(filename);
                 if (exists) {
                     throw bali.exception({
@@ -397,7 +397,7 @@ exports.repository = function(directory, debug) {
          */
         typeExists: async function(typeId) {
             try {
-                const filename = types + typeId + '.ndoc';
+                const filename = types + typeId + '.bali';
                 const exists = await doesExist(filename);
                 return exists;
             } catch (exception) {
@@ -423,7 +423,7 @@ exports.repository = function(directory, debug) {
         fetchType: async function(typeId) {
             try {
                 var type;
-                const filename = types + typeId + '.ndoc';
+                const filename = types + typeId + '.bali';
                 const exists = await doesExist(filename);
                 if (exists) {
                     type = await pfs.readFile(filename);
@@ -451,7 +451,7 @@ exports.repository = function(directory, debug) {
          */
         createType: async function(typeId, type) {
             try {
-                const filename = types + typeId + '.ndoc';
+                const filename = types + typeId + '.bali';
                 const exists = await doesExist(filename);
                 if (exists) {
                     throw bali.exception({
@@ -489,7 +489,7 @@ exports.repository = function(directory, debug) {
             const messageId = bali.tag().getValue();
             try {
                 if (!await doesExist(queue)) await pfs.mkdir(queue, 0o700);
-                const filename = queue + messageId + '.ndoc';
+                const filename = queue + messageId + '.bali';
                 const document = message + EOL;  // add POSIX compliant <EOL>
                 await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o600});
             } catch (exception) {
