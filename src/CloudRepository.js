@@ -508,8 +508,8 @@ const sendRequest = async function(credentials, functionName, cloudURL, method, 
         case 'certificate':
             switch (method) {
                 case 'HEAD':
-                case 'GET':
                 case 'POST':
+                case 'GET':
                     break;
                 default:
                     const exception = bali.exception({
@@ -527,9 +527,8 @@ const sendRequest = async function(credentials, functionName, cloudURL, method, 
         case 'draft':
             switch (method) {
                 case 'HEAD':
-                case 'GET':
                 case 'PUT':
-                case 'POST':
+                case 'GET':
                 case 'DELETE':
                     break;
                 default:
@@ -547,8 +546,8 @@ const sendRequest = async function(credentials, functionName, cloudURL, method, 
         case 'document':
             switch (method) {
                 case 'HEAD':
-                case 'GET':
                 case 'POST':
+                case 'GET':
                     break;
                 default:
                     const exception = bali.exception({
@@ -565,8 +564,8 @@ const sendRequest = async function(credentials, functionName, cloudURL, method, 
         case 'type':
             switch (method) {
                 case 'HEAD':
-                case 'GET':
                 case 'POST':
+                case 'GET':
                     break;
                 default:
                     const exception = bali.exception({
@@ -582,11 +581,8 @@ const sendRequest = async function(credentials, functionName, cloudURL, method, 
             break;
         case 'queue':
             switch (method) {
-                case 'HEAD':
-                case 'GET':
                 case 'PUT':
-                case 'POST':
-                case 'DELETE':
+                case 'GET':
                     break;
                 default:
                     const exception = bali.exception({
