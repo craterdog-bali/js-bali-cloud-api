@@ -607,6 +607,7 @@ const sendRequest = async function(credentials, functionName, cloudURL, method, 
             throw exception;
     }
 
+    // setup the request URL and options
     const fullURL = cloudURL.getValue().toString() + type + '/' + identifier;
     const options = {
         url: fullURL,
@@ -622,6 +623,7 @@ const sendRequest = async function(credentials, functionName, cloudURL, method, 
         }
     };
 
+    // add headers for the data (if applicable)
     const data = document ? document.toString() : undefined;
     if (data) {
         options.data = data;
@@ -629,9 +631,21 @@ const sendRequest = async function(credentials, functionName, cloudURL, method, 
         options.headers['Content-Length'] = data.length;
     }
 
-    var result;
-    const response = await axios(options).catch(function(error) {
-        if (error.response) {
+    // send the request
+    try {
+        const response = await axios(options);
+        var result;
+        switch (method) {
+            case 'HEAD':
+            case 'DELETE':
+                result = (response.status !== 404);
+                break;
+            default:
+                result = response.data || undefined;
+            }
+        return result;
+    } catch (cause) {
+        if (cause.response) {
             // the server responded with an error status
             const exception = bali.exception({
                 $module: '$CloudRepository',
@@ -639,14 +653,13 @@ const sendRequest = async function(credentials, functionName, cloudURL, method, 
                 $exception: '$invalidRequest',
                 $url: bali.reference(options.url),
                 $method: bali.text(method),
-                $status: error.response.status,
-                $details: bali.text(error.response.statusText),
+                $status: cause.response.status,
+                $details: bali.text(cause.response.statusText),
                 $text: bali.text('The request was rejected by the Bali Nebula™.')
             });
             throw exception;
         }
-
-        if (error.request) {
+        if (cause.request) {
             // the request was sent but no response was received
             const exception = bali.exception({
                 $module: '$CloudRepository',
@@ -654,13 +667,12 @@ const sendRequest = async function(credentials, functionName, cloudURL, method, 
                 $exception: '$serverDown',
                 $url: bali.reference(options.url),
                 $method: bali.text(method),
-                $status: error.request.status,
-                $details: bali.text(error.request.statusText),
+                $status: cause.request.status,
+                $details: bali.text(cause.request.statusText),
                 $text: bali.text('The request received no response.')
             });
             throw exception;
         } 
-
         // the request could not be sent
         const exception = bali.exception({
             $module: '$CloudRepository',
@@ -671,17 +683,5 @@ const sendRequest = async function(credentials, functionName, cloudURL, method, 
             $text: bali.text('The request was not formed correctly.')
         });
         throw exception;
-
-    });
-
-    switch (method) {
-        case 'HEAD':
-        case 'DELETE':
-            result = (response.status !== 404);
-            break;
-        default:
-            result = response.data || undefined;
     }
-
-    return result;
 };

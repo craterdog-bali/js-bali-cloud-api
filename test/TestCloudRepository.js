@@ -29,7 +29,7 @@ const source =
     '    $total: 13.57(USD)\n' +
     ']';
 
-describe('Bali Nebula API™', function() {
+describe('Bali Nebula API™ - Test Cloud Repository', function() {
 
     describe('Test Cloud Repository', function() {
 

@@ -8,7 +8,7 @@
  * Source Initiative. (See http://opensource.org/licenses/MIT)          *
  ************************************************************************/
 
-const debug = true;  // set to true for error logging
+const debug = false;  // set to true for error logging
 const testDirectory = 'test/config/';
 const mocha = require('mocha');
 const assert = require('chai').assert;
@@ -16,7 +16,6 @@ const expect = require('chai').expect;
 const bali = require('bali-component-framework');
 const notary = require('bali-digital-notary');
 const nebula = require('../');
-const cloudURL = bali.reference('https://56wmjspb15.execute-api.us-east-1.amazonaws.com/blue/');
 
 function extractId(component) {
     const identifier = component.getValue('$tag').getValue();
@@ -24,7 +23,7 @@ function extractId(component) {
     return '' + identifier + version;
 }
 
-describe('Bali Nebula API™ - Test Remote API', function() {
+describe('Bali Nebula API™ - Test Local API', function() {
     var consumerNotary;
     var consumerRepository;
     var consumerClient;
@@ -51,7 +50,7 @@ describe('Bali Nebula API™ - Test Remote API', function() {
         });
 
         it('should initialize the consumer nebula API once and only once', async function() {
-            consumerRepository = nebula.cloud(consumerNotary, cloudURL, debug);
+            consumerRepository = nebula.local(testDirectory, debug);
             consumerClient = nebula.api(consumerNotary, consumerRepository, debug);
             expect(consumerClient).to.exist;  // jshint ignore:line
             await consumerClient.initializeAPI();
@@ -64,7 +63,7 @@ describe('Bali Nebula API™ - Test Remote API', function() {
         });
 
         it('should initialize the merchant nebula API once and only once', async function() {
-            merchantRepository = nebula.cloud(merchantNotary, cloudURL, debug);
+            merchantRepository = nebula.local(testDirectory, debug);
             merchantClient = nebula.api(merchantNotary, merchantRepository, debug);
             expect(merchantClient).to.exist;  // jshint ignore:line
             await merchantClient.initializeAPI();
@@ -112,7 +111,6 @@ describe('Bali Nebula API™ - Test Remote API', function() {
 
     });
 
-/*
     describe('Test Drafts', function() {
         var draft;
         var draftCitation;
@@ -305,5 +303,4 @@ describe('Bali Nebula API™ - Test Remote API', function() {
 
     });
 
-*/
 });
