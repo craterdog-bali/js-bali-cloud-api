@@ -17,7 +17,7 @@ describe('Bali Nebula API™', function() {
 
         it('should create the initial task context', function() {
             const bali = require('../index.js');
-            expect(bali).to.exist;  // jshint ignore:line
+            expect(bali).to.exist;
         });
 
     });

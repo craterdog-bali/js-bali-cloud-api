@@ -16,7 +16,7 @@ const expect = require('chai').expect;
 const bali = require('bali-component-framework');
 const notary = require('bali-digital-notary');
 const nebula = require('../');
-const cloudURL = bali.reference('https://56wmjspb15.execute-api.us-east-1.amazonaws.com/blue/');
+const cloudURL = bali.reference('https://bali-nebula.net/repository/');
 
 function extractId(component) {
     const identifier = component.getValue('$tag').getValue();
@@ -41,19 +41,19 @@ describe('Bali Nebula API™ - Test Remote API', function() {
         it('should create the consumer notary API', async function() {
             const consumerTag = bali.tag();
             consumerNotary = notary.api(consumerTag, testDirectory, debug);
-            expect(consumerNotary).to.exist;  // jshint ignore:line
+            expect(consumerNotary).to.exist;
         });
 
         it('should create the merchant notary API', async function() {
             const merchantTag = bali.tag();
             merchantNotary = notary.api(merchantTag, testDirectory, debug);
-            expect(merchantNotary).to.exist;  // jshint ignore:line
+            expect(merchantNotary).to.exist;
         });
 
         it('should initialize the consumer nebula API once and only once', async function() {
             consumerRepository = nebula.cloud(consumerNotary, cloudURL, debug);
             consumerClient = nebula.api(consumerNotary, consumerRepository, debug);
-            expect(consumerClient).to.exist;  // jshint ignore:line
+            expect(consumerClient).to.exist;
             await consumerClient.initializeAPI();
             try {
                 await consumerClient.initializeAPI();
@@ -66,7 +66,7 @@ describe('Bali Nebula API™ - Test Remote API', function() {
         it('should initialize the merchant nebula API once and only once', async function() {
             merchantRepository = nebula.cloud(merchantNotary, cloudURL, debug);
             merchantClient = nebula.api(merchantNotary, merchantRepository, debug);
-            expect(merchantClient).to.exist;  // jshint ignore:line
+            expect(merchantClient).to.exist;
             await merchantClient.initializeAPI();
             try {
                 await merchantClient.initializeAPI();
@@ -78,41 +78,40 @@ describe('Bali Nebula API™ - Test Remote API', function() {
 
         it('should setup the digital notary for the consumer', async function() {
             consumerCertificate = await consumerNotary.generateKey();
-            expect(consumerCertificate).to.exist;  // jshint ignore:line
+            expect(consumerCertificate).to.exist;
             consumerCitation = await consumerNotary.getCitation();
-            expect(consumerCitation).to.exist;  // jshint ignore:line
+            expect(consumerCitation).to.exist;
             const certificateId = extractId(consumerCitation);
             await consumerRepository.createCertificate(certificateId, consumerCertificate);
         });
 
         it('should setup the digital notary for the merchant', async function() {
             merchantCertificate = await merchantNotary.generateKey();
-            expect(merchantCertificate).to.exist;  // jshint ignore:line
+            expect(merchantCertificate).to.exist;
             merchantCitation = await merchantNotary.getCitation();
-            expect(merchantCitation).to.exist;  // jshint ignore:line
+            expect(merchantCitation).to.exist;
             const certificateId = extractId(merchantCitation);
             await merchantRepository.createCertificate(certificateId, merchantCertificate);
         });
 
         it('should setup the client environment for the consumer', async function() {
             const citation = await consumerClient.getCitation();
-            expect(citation).to.exist;  // jshint ignore:line
+            expect(citation).to.exist;
             expect(citation.isEqualTo(consumerCitation)).to.equal(true);
             consumerCertificate = await consumerClient.retrieveCertificate(consumerCitation);
-            expect(consumerCertificate).to.exist;  // jshint ignore:line
+            expect(consumerCertificate).to.exist;
         });
 
         it('should setup the client environment for the merchant', async function() {
             const citation = await merchantClient.getCitation();
-            expect(citation).to.exist;  // jshint ignore:line
+            expect(citation).to.exist;
             expect(citation.isEqualTo(merchantCitation)).to.equal(true);
             merchantCertificate = await merchantClient.retrieveCertificate(merchantCitation);
-            expect(merchantCertificate).to.exist;  // jshint ignore:line
+            expect(merchantCertificate).to.exist;
         });
 
     });
 
-/*
     describe('Test Drafts', function() {
         var draft;
         var draftCitation;
@@ -132,7 +131,7 @@ describe('Bali Nebula API™ - Test Remote API', function() {
 
         it('should retrieve the new draft document from the repository', async function() {
             draft = await consumerClient.retrieveDraft(draftCitation);
-            expect(draft).to.exist;  // jshint ignore:line
+            expect(draft).to.exist;
             expect(draft.toString()).to.equal(draftSource);
         });
 
@@ -150,7 +149,7 @@ describe('Bali Nebula API™ - Test Remote API', function() {
 
         it('should verify that the draft document no longer exists in the repository', async function() {
             draft = await consumerClient.retrieveDraft(draftCitation);
-            expect(draft).to.not.exist;  // jshint ignore:line
+            expect(draft).to.not.exist;
         });
 
     });
@@ -182,14 +181,14 @@ describe('Bali Nebula API™ - Test Remote API', function() {
         it('should retrieve the committed document from the repository', async function() {
             const newSource = document.toString();
             document = await consumerClient.retrieveDocument(documentCitation);
-            expect(document).to.exist;  // jshint ignore:line
+            expect(document).to.exist;
             expect(document.toString()).to.equal(newSource);
         });
 
         it('should checkout a draft of the new document from the repository', async function() {
             draftCitation = await consumerClient.checkoutDocument(documentCitation);
             draft = await consumerClient.retrieveDraft(draftCitation);
-            expect(draft).to.exist;  // jshint ignore:line
+            expect(draft).to.exist;
             expect(draft.toString().includes('$foo: "bar"')).to.equal(true);
         });
 
@@ -201,7 +200,7 @@ describe('Bali Nebula API™ - Test Remote API', function() {
 
         it('should retrieve the updated committed document from the repository', async function() {
             document = await consumerClient.retrieveDocument(documentCitation);
-            expect(document).to.exist;  // jshint ignore:line
+            expect(document).to.exist;
             expect(document.getValue('$bar').toString()).to.equal('"baz"');
         });
 
@@ -216,13 +215,13 @@ describe('Bali Nebula API™ - Test Remote API', function() {
 
         it('should verify that the draft document no longer exists in the repository', async function() {
             draft = await consumerClient.retrieveDraft(draftCitation);
-            expect(draft).to.not.exist;  // jshint ignore:line
+            expect(draft).to.not.exist;
         });
 
         it('should make sure the new document still exists in the repository', async function() {
             const newSource = document.toString();
             document = await consumerClient.retrieveDocument(documentCitation);
-            expect(document).to.exist;  // jshint ignore:line
+            expect(document).to.exist;
             expect(document.toString()).to.equal(newSource);
         });
 
@@ -236,14 +235,14 @@ describe('Bali Nebula API™ - Test Remote API', function() {
             type.setValue('$foo', '"bar"');
             const documentCitation = await merchantClient.saveDraft(type);
             typeCitation = await merchantClient.commitType(type);
-            expect(typeCitation).to.exist;  // jshint ignore:line
+            expect(typeCitation).to.exist;
         });
 
         it('should allow a compiled type to be retrieved', async function() {
             const expected = await merchantClient.retrieveType(typeCitation);
-            expect(expected).to.exist;  // jshint ignore:line
+            expect(expected).to.exist;
             const type = await consumerClient.retrieveType(typeCitation);
-            expect(type).to.exist;  // jshint ignore:line
+            expect(type).to.exist;
             expect(type.toString()).to.equal(expected.toString());
         });
 
@@ -263,7 +262,7 @@ describe('Bali Nebula API™ - Test Remote API', function() {
 
         it('should allow the merchant to verify that the queue is empty', async function() {
             const message = await merchantClient.receiveMessage(queue);
-            expect(message).to.not.exist;  // jshint ignore:line
+            expect(message).to.not.exist;
         });
 
         it('should allow the consumer to place some transactions on the queue', async function() {
@@ -305,5 +304,4 @@ describe('Bali Nebula API™ - Test Remote API', function() {
 
     });
 
-*/
 });
