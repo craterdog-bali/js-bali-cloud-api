@@ -131,7 +131,7 @@ exports.api = function(notary, repository, debug) {
                     const source = await repository.fetchCertificate(certificateId);
                     if (source) {
                         const notarizedCertificate = bali.parse(source);
-                        validateCertificate(notary, citation, notarizedCertificate);
+                        await validateCertificate(notary, citation, notarizedCertificate);
                         certificate = notarizedCertificate.getValue('$document');
                         cache.createCertificate(certificateId, certificate);
                     }
@@ -179,7 +179,7 @@ exports.api = function(notary, repository, debug) {
                     const source = await repository.fetchType(typeId);
                     if (source) {
                         const notarizedType = bali.parse(source);
-                        validateDocument(notary, repository, notarizedType);
+                        await validateDocument(notary, repository, notarizedType);
                         type = notarizedType.getValue('$document');
                         cache.createType(typeId, type);
                     }
@@ -275,7 +275,7 @@ exports.api = function(notary, repository, debug) {
                 const source = await repository.fetchDraft(documentId);
                 if (source) {
                     const notarizedDraft = bali.parse(source);
-                    validateDocument(notary, repository, notarizedDraft);
+                    await validateDocument(notary, repository, notarizedDraft);
                     const draft = notarizedDraft.getValue('$document');
                     // we don't cache drafts since they are mutable
                     return draft;
@@ -466,8 +466,8 @@ exports.api = function(notary, repository, debug) {
                     const source = await repository.fetchDocument(documentId);
                     if (source) {
                         const notarizedDocument = bali.parse(source);
-                        validateCitation(notary, citation, notarizedDocument);
-                        validateDocument(notary, repository, notarizedDocument);
+                        await validateCitation(notary, citation, notarizedDocument);
+                        await validateDocument(notary, repository, notarizedDocument);
                         document = notarizedDocument.getValue('$document');
                         cache.createDocument(documentId, document);
                     }
@@ -559,8 +559,8 @@ exports.api = function(notary, repository, debug) {
                 const notarizedDocument = bali.parse(source);
 
                 // validate and cache the document
-                validateCitation(notary, citation, notarizedDocument);
-                validateDocument(notary, repository, notarizedDocument);
+                await validateCitation(notary, citation, notarizedDocument);
+                await validateDocument(notary, repository, notarizedDocument);
                 const document = notarizedDocument.getValue('$document');
                 cache.createDocument(documentId, document);
 
@@ -754,7 +754,7 @@ exports.api = function(notary, repository, debug) {
                 if (source) {
                     // validate the document
                     const notarizedMessage = bali.parse(source);
-                    validateDocument(notary, repository, notarizedMessage);
+                    await validateDocument(notary, repository, notarizedMessage);
                     const message = notarizedMessage.getValue('$document');
                     return message;
                 }
