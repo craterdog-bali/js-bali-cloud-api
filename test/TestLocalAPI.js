@@ -49,30 +49,16 @@ describe('Bali Nebula API™ - Test Local API', function() {
             expect(merchantNotary).to.exist;
         });
 
-        it('should initialize the consumer nebula API once and only once', async function() {
+        it('should create the consumer nebula API', async function() {
             consumerRepository = nebula.local(testDirectory, debug);
             consumerClient = nebula.api(consumerNotary, consumerRepository, debug);
             expect(consumerClient).to.exist;
-            await consumerClient.initializeAPI();
-            try {
-                await consumerClient.initializeAPI();
-                assert.fail('The second attempt to initialize the API should have failed.');
-            } catch(error) {
-                // expected
-            };
         });
 
-        it('should initialize the merchant nebula API once and only once', async function() {
+        it('should create the merchant nebula API', async function() {
             merchantRepository = nebula.local(testDirectory, debug);
             merchantClient = nebula.api(merchantNotary, merchantRepository, debug);
             expect(merchantClient).to.exist;
-            await merchantClient.initializeAPI();
-            try {
-                await merchantClient.initializeAPI();
-                assert.fail('The second attempt to initialize the API should have failed.');
-            } catch(error) {
-                // expected
-            };
         });
 
         it('should setup the digital notary for the consumer', async function() {
@@ -161,8 +147,14 @@ describe('Bali Nebula API™ - Test Local API', function() {
         var documentCitation;
 
         it('should create a new draft document from a component', async function() {
-            const catalog = bali.catalog();
-            catalog.setValue('$foo', '"bar"');
+            const catalog = bali.catalog({
+                $foo: '"bar"'
+            }, bali.parameters({
+                $tag: bali.tag(),
+                $version: bali.version(),
+                $permissions: '$Private',
+                $previous: bali.NONE
+            }));
             draftCitation = await consumerClient.saveDraft(catalog);
             draft = await consumerClient.retrieveDraft(draftCitation);
             draftSource = draft.toString();
@@ -230,8 +222,15 @@ describe('Bali Nebula API™ - Test Local API', function() {
         var typeCitation;
 
         it('should allow a new compiled type to be committed', async function() {
-            const type = bali.catalog();
-            type.setValue('$foo', '"bar"');
+            const type = bali.catalog({
+                $foo: '"bar"'
+            }, bali.parameters({
+                $type: '$Type',
+                $tag: bali.tag(),
+                $version: bali.version(),
+                $permissions: '$Public',
+                $previous: bali.NONE
+            }));
             const documentCitation = await merchantClient.saveDraft(type);
             typeCitation = await merchantClient.commitType(type);
             expect(typeCitation).to.exist;
@@ -249,15 +248,6 @@ describe('Bali Nebula API™ - Test Local API', function() {
 
     describe('Test Messages', function() {
         var queue = bali.tag();
-        const source =
-            '[\n' +
-            '    $date: <2018-04-01>\n' +
-            '    $product: "Snickers Bar"\n' +
-            '    $quantity: 10\n' +
-            '    $price: 1.25(USD)\n' +
-            '    $tax: 1.07(USD)\n' +
-            '    $total: 13.57(USD)\n' +
-            ']\n';
 
         it('should allow the merchant to verify that the queue is empty', async function() {
             const message = await merchantClient.receiveMessage(queue);
@@ -266,7 +256,19 @@ describe('Bali Nebula API™ - Test Local API', function() {
 
         it('should allow the consumer to place some transactions on the queue', async function() {
             for (var i = 0; i < 3; i++) {
-                transaction = bali.parse(source);
+                transaction = bali.catalog({
+                    $timestamp: bali.moment(),
+                    $product: bali.text('Snickers Bar'),
+                    $quantity: i,
+                    $price: bali.parse('1.25($USD)'),
+                    $tax: bali.parse('1.07($USD)'),
+                    $total: bali.parse('13.57($USD)')
+                }, bali.parameters({
+                    $tag: bali.tag(),
+                    $version: bali.version(),
+                    $permissions: '$Public',
+                    $previous: bali.NONE
+                }));
                 await consumerClient.queueMessage(queue, transaction);
             }
         });
@@ -289,14 +291,18 @@ describe('Bali Nebula API™ - Test Local API', function() {
     });
 
     describe('Test Events', function() {
-        const source =
-            '[\n' +
-            '    $type: $TransactionPosted\n' +
-            '    $transaction: <bali:?[$protocol:v1,$tag:#WTFL0GLK7V5SJBZKCX9NH0KQWH0JYBL9,$version:v1,$hash:\'R5BXA11KMC4W117RNY197MQVJ78VND18FXTXPT1A0PL2TYKYPHZTAAVVA6FHBRZ9N46P7102GSY8PVTQBBFTF3QYS8Q02H9S3ZLP8L8\']>\n' +
-            ']\n';
+        const event = bali.catalog({
+            $type: '$TransactionPosted',
+            $transactionId: bali.tag(),
+            $timestamp: bali.moment()
+        }, bali.parameters({
+            $tag: bali.tag(),
+            $version: bali.version(),
+            $permissions: '$Public',
+            $previous: bali.NONE
+        }));
 
         it('should allow the merchant to publish an event', async function() {
-            const event = bali.parse(source);
             await merchantClient.publishEvent(event);
         });
 

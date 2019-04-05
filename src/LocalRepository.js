@@ -107,6 +107,7 @@ exports.repository = function(directory, debug) {
          * @returns {Boolean} Whether or not the certificate exists.
          */
         certificateExists: async function(certificateId) {
+            if (this.initializeAPI) await this.initializeAPI();
             try {
                 const filename = certificates + certificateId + '.bali';
                 const exists = await doesExist(filename);
@@ -134,6 +135,7 @@ exports.repository = function(directory, debug) {
          * <code>undefined</code> if it doesn't exist.
          */
         fetchCertificate: async function(certificateId) {
+            if (this.initializeAPI) await this.initializeAPI();
             try {
                 var certificate;
                 const filename = certificates + certificateId + '.bali';
@@ -163,6 +165,7 @@ exports.repository = function(directory, debug) {
          * @param {String} certificate The canonical source string for the certificate.
          */
         createCertificate: async function(certificateId, certificate) {
+            if (this.initializeAPI) await this.initializeAPI();
             try {
                 const filename = certificates + certificateId + '.bali';
                 const exists = await doesExist(filename);
@@ -200,6 +203,7 @@ exports.repository = function(directory, debug) {
          * @returns {Boolean} Whether or not the draft document exists.
          */
         draftExists: async function(draftId) {
+            if (this.initializeAPI) await this.initializeAPI();
             try {
                 const filename = drafts + draftId + '.bali';
                 const exists = await doesExist(filename);
@@ -225,6 +229,7 @@ exports.repository = function(directory, debug) {
          * <code>undefined</code> if it doesn't exist.
          */
         fetchDraft: async function(draftId) {
+            if (this.initializeAPI) await this.initializeAPI();
             try {
                 var draft;
                 const filename = drafts + draftId + '.bali';
@@ -254,6 +259,7 @@ exports.repository = function(directory, debug) {
          * @param {String} draft The canonical source string for the draft document.
          */
         saveDraft: async function(draftId, draft) {
+            if (this.initializeAPI) await this.initializeAPI();
             try {
                 const filename = drafts + draftId + '.bali';
                 const document = draft + EOL;  // add POSIX compliant <EOL>
@@ -278,6 +284,7 @@ exports.repository = function(directory, debug) {
          * the draft document being deleted.
          */
         deleteDraft: async function(draftId) {
+            if (this.initializeAPI) await this.initializeAPI();
             try {
                 const filename = drafts + draftId + '.bali';
                 const exists = await doesExist(filename);
@@ -305,6 +312,7 @@ exports.repository = function(directory, debug) {
          * @returns {Boolean} Whether or not the document exists.
          */
         documentExists: async function(documentId) {
+            if (this.initializeAPI) await this.initializeAPI();
             try {
                 const filename = documents + documentId + '.bali';
                 const exists = await doesExist(filename);
@@ -330,6 +338,7 @@ exports.repository = function(directory, debug) {
          * <code>undefined</code> if it doesn't exist.
          */
         fetchDocument: async function(documentId) {
+            if (this.initializeAPI) await this.initializeAPI();
             try {
                 var document;
                 const filename = documents + documentId + '.bali';
@@ -359,6 +368,7 @@ exports.repository = function(directory, debug) {
          * @param {String} document The canonical source string for the document.
          */
         createDocument: async function(documentId, document) {
+            if (this.initializeAPI) await this.initializeAPI();
             try {
                 const filename = documents + documentId + '.bali';
                 const exists = await doesExist(filename);
@@ -396,6 +406,7 @@ exports.repository = function(directory, debug) {
          * @returns {Boolean} Whether or not the type exists.
          */
         typeExists: async function(typeId) {
+            if (this.initializeAPI) await this.initializeAPI();
             try {
                 const filename = types + typeId + '.bali';
                 const exists = await doesExist(filename);
@@ -421,6 +432,7 @@ exports.repository = function(directory, debug) {
          * <code>undefined</code> if it doesn't exist.
          */
         fetchType: async function(typeId) {
+            if (this.initializeAPI) await this.initializeAPI();
             try {
                 var type;
                 const filename = types + typeId + '.bali';
@@ -450,6 +462,7 @@ exports.repository = function(directory, debug) {
          * @param {String} type The canonical source string for the type.
          */
         createType: async function(typeId, type) {
+            if (this.initializeAPI) await this.initializeAPI();
             try {
                 const filename = types + typeId + '.bali';
                 const exists = await doesExist(filename);
@@ -485,6 +498,7 @@ exports.repository = function(directory, debug) {
          * @param {String} message The canonical source string for the message.
          */
         queueMessage: async function(queueId, message) {
+            if (this.initializeAPI) await this.initializeAPI();
             const queue = queues + queueId + '/';
             const messageId = bali.tag().getValue();
             try {
@@ -511,6 +525,7 @@ exports.repository = function(directory, debug) {
          * @returns {String} The canonical source string for the message.
          */
         dequeueMessage: async function(queueId) {
+            if (this.initializeAPI) await this.initializeAPI();
             const queue = queues + queueId + '/';
             try {
                 var message;

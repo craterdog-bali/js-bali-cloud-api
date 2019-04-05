@@ -29,7 +29,7 @@ const axios = require('axios');
  */
 exports.repository = function(notary, cloudURL, debug) {
     debug = debug || false;
-    var account = bali.NONE;
+    const account = notary.getAccount();
 
     // return a singleton object for the API
     return {
@@ -55,28 +55,6 @@ exports.repository = function(notary, cloudURL, debug) {
          */
         getURL: function() {
             return cloudURL;
-        },
-
-        /**
-         * This function initializes the document repository.  It must be called before any
-         * other API function and can only be called once.
-         */
-        initializeAPI: async function() {
-            try {
-                account = await notary.getAccount();
-                this.initializeAPI = undefined;  // can only be called once
-            } catch (cause) {
-                const exception = bali.exception({
-                    $module: '$CloudRepository',
-                    $function: '$initializeAPI',
-                    $exception: '$unexpected',
-                    $account: account || bali.NONE,
-                    $url: cloudURL || bali.NONE,
-                    $text: bali.text('An unexpected error occurred while attempting to initialize the API.')
-                }, cause);
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
         },
 
         /**
@@ -496,7 +474,13 @@ exports.repository = function(notary, cloudURL, debug) {
 
 const generateCredentials = async function(notary) {
     const citation = await notary.getCitation();
-    const credentials = await notary.notarizeDocument(citation);
+    const document = bali.duplicate(citation);
+    const parameters = document.getParameters();
+    parameters.setParameter('$tag', bali.tag());
+    parameters.setParameter('$version', bali.version());
+    parameters.setParameter('$permissions', '$Private');
+    parameters.setParameter('$previous', bali.NONE);
+    const credentials = await notary.notarizeDocument(document);
     return credentials;
 };
 

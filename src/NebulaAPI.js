@@ -36,30 +36,6 @@ const bali = require('bali-component-framework');
 exports.api = function(notary, repository, debug) {
     // validate the parameters
     debug = debug || false;
-    // notary should not yet be initialized
-    if (!notary || !notary.initializeAPI) {
-        const exception = bali.exception({
-            $module: '$NebulaAPI',
-            $function: '$api',
-            $exception: '$invalidParameter',
-            $parameter: notary ? bali.text(notary.toString()) : bali.NONE,
-            $text: bali.text('The digital notary is invalid.')
-        });
-        if (debug) console.error(exception.toString());
-        throw exception;
-    }
-    // repository should not yet be initialized
-    if (!repository || !repository.initializeAPI) {
-        const exception = bali.exception({
-            $module: '$NebulaAPI',
-            $function: '$api',
-            $exception: '$invalidParameter',
-            $parameter: repository ? bali.text(repository.toString()) : bali.NONE,
-            $text: bali.text('The document repository is invalid.')
-        });
-        if (debug) console.error(exception.toString());
-        throw exception;
-    }
 
     // TODO: these need to be shared with the virtual machine
     const SEND_QUEUE_ID = 'JXT095QY01HBLHPAW04ZR5WSH41MWG4H';
@@ -105,37 +81,12 @@ exports.api = function(notary, repository, debug) {
         },
 
         /**
-         * This function initializes the Bali Nebula API™.  It must be called before any
-         * other API function and can only be called once.
-         */
-        initializeAPI: async function() {
-            try {
-                // initialize the digital notary and document repository
-                await notary.initializeAPI();
-                await repository.initializeAPI();
-
-                this.initializeAPI = undefined;  // can only be called once
-            } catch (cause) {
-                const exception = bali.exception({
-                    $module: '$NebulaAPI',
-                    $function: '$initializeAPI',
-                    $exception: '$unexpected',
-                    $account: notary.getAccount(),
-                    $text: bali.text('An unexpected error occurred while attempting to initialize the API.')
-                }, cause);
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
-        },
-
-        /**
          * This method retrieves from the Bali Nebula™ the certificate citation
          * for the digital notary for this client.
          * 
          * @returns {Catalog} The certificate citation for the digital notary for this client.
          */
         getCitation: async function() {
-            checkInitialization(this, '$getCitation');
             try {
                 const citation = await notary.getCitation();
                 return citation;
@@ -160,8 +111,6 @@ exports.api = function(notary, repository, debug) {
          * @returns {Catalog} The desired notary certificate.
          */
         retrieveCertificate: async function(citation) {
-            checkInitialization(this, '$retrieveCertificate');
-
             // validate the parameters
             if (!citation || !citation.getTypeId || citation.getTypeId() !== bali.types.CATALOG) {
                 const exception = bali.exception({
@@ -210,8 +159,6 @@ exports.api = function(notary, repository, debug) {
          * @returns {Catalog} The compiled type document.
          */
         retrieveType: async function(citation) {
-            checkInitialization(this, '$retrieveType');
-
             // validate the parameters
             if (!citation || !citation.getTypeId || citation.getTypeId() !== bali.types.CATALOG) {
                 const exception = bali.exception({
@@ -257,12 +204,9 @@ exports.api = function(notary, repository, debug) {
          * the account calling it to have additional privileges.
          * 
          * @param {Catalog} type A catalog containing the compiled type to be committed.
-         * @param {Catalog} previous A document citation for the previous version of the type.
          * @returns {Catalog} A document citation for the committed type document.
          */
-        commitType: async function(type, previous) {
-            checkInitialization(this, '$commitType');
-
+        commitType: async function(type) {
             // validate the parameters
             if (!type || !type.getTypeId || type.getTypeId() !== bali.types.CATALOG) {
                 const exception = bali.exception({
@@ -275,20 +219,9 @@ exports.api = function(notary, repository, debug) {
                 if (debug) console.error(exception.toString());
                 throw exception;
             }
-            if (previous && (!previous.getTypeId || previous.getTypeId() !== bali.types.CATALOG)) {
-                const exception = bali.exception({
-                    $module: '$NebulaAPI',
-                    $function: '$commitType',
-                    $exception: '$invalidParameter',
-                    $parameter: bali.text(previous.toString()),
-                    $text: bali.text('The previous version citation is invalid.')
-                });
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
 
             try {
-                const notarizedType = await notary.notarizeDocument(type, previous);
+                const notarizedType = await notary.notarizeDocument(type);
                 const typeCitation = await notary.citeDocument(notarizedType);
                 const typeId = extractId(typeCitation);
                 if (await repository.typeExists(typeId)) {
@@ -324,8 +257,6 @@ exports.api = function(notary, repository, debug) {
          * @returns {Component} The desired draft document.
          */
         retrieveDraft: async function(citation) {
-            checkInitialization(this, '$retrieveDraft');
-
             // validate the parameters
             if (!citation || !citation.getTypeId || citation.getTypeId() !== bali.types.CATALOG) {
                 const exception = bali.exception({
@@ -370,12 +301,12 @@ exports.api = function(notary, repository, debug) {
          * @returns {Catalog} A document citation for the draft document.
          */
         saveDraft: async function(draft) {
-            checkInitialization(this, '$saveDraft');
-
             // validate the parameters
             draft = draft || bali.catalog({}, bali.parameters({
                 $tag: bali.tag(),
-                $version: bali.version()
+                $version: bali.version(),
+                $permissions: '$Private',
+                $previous: bali.NONE
             }));
             if (!draft.getTypeId) {
                 const exception = bali.exception({
@@ -426,8 +357,6 @@ exports.api = function(notary, repository, debug) {
          * @param {Catalog} citation The document citation for the draft document to be deleted.
          */
         discardDraft: async function(citation) {
-            checkInitialization(this, '$discardDraft');
-
             // validate the parameters
             if (!citation || !citation.getTypeId || citation.getTypeId() !== bali.types.CATALOG) {
                 const exception = bali.exception({
@@ -462,12 +391,9 @@ exports.api = function(notary, repository, debug) {
          * to be associated with the specified document citation.
          * 
          * @param {Component} document The draft document to be committed.
-         * @param {Catalog} previous A document citation for the previous version of the document.
          * @returns {Catalog} The updated citation for the committed document.
          */
-        commitDocument: async function(document, previous) {
-            checkInitialization(this, '$commitDocument');
-
+        commitDocument: async function(document) {
             // validate the parameters
             if (!document || !document.getTypeId) {
                 const exception = bali.exception({
@@ -480,20 +406,9 @@ exports.api = function(notary, repository, debug) {
                 if (debug) console.error(exception.toString());
                 throw exception;
             }
-            if (previous && (!previous.getTypeId || previous.getTypeId() !== bali.types.CATALOG)) {
-                const exception = bali.exception({
-                    $module: '$NebulaAPI',
-                    $function: '$commitDocument',
-                    $exception: '$invalidParameter',
-                    $parameter: bali.text(previous.toString()),
-                    $text: bali.text('The previous version citation is invalid.')
-                });
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
 
             try {
-                const notarizedDocument = await notary.notarizeDocument(document, previous);
+                const notarizedDocument = await notary.notarizeDocument(document);
                 const documentCitation = await notary.citeDocument(notarizedDocument);
                 const documentId = extractId(documentCitation);
                 if (cache.documentExists(documentId) || await repository.documentExists(documentId)) {
@@ -531,8 +446,6 @@ exports.api = function(notary, repository, debug) {
          * @returns {Component} The desired document.
          */
         retrieveDocument: async function(citation) {
-            checkInitialization(this, '$retrieveDocument');
-
             // validate the parameters
             if (!citation || !citation.getTypeId || citation.getTypeId() !== bali.types.CATALOG) {
                 const exception = bali.exception({
@@ -590,8 +503,6 @@ exports.api = function(notary, repository, debug) {
          * @returns {Catalog} The document citation for the new draft document.
          */
         checkoutDocument: async function(citation, level) {
-            checkInitialization(this, '$checkoutDocument');
-
             // validate the parameters
             if (!citation || !citation.getTypeId || citation.getTypeId() !== bali.types.CATALOG) {
                 const exception = bali.exception({
@@ -682,8 +593,6 @@ exports.api = function(notary, repository, debug) {
          * @param {Catalog} event The Bali catalog documenting the event.
          */
         publishEvent: async function(event) {
-            checkInitialization(this, '$publishEvent');
-
             // validate the parameters
             if (!event || !event.getTypeId || event.getTypeId() !== bali.types.CATALOG) {
                 const exception = bali.exception({
@@ -723,8 +632,6 @@ exports.api = function(notary, repository, debug) {
          * @param {Catalog} message The message to be sent to the target component.
          */
         sendMessage: async function(target, message) {
-            checkInitialization(this, '$sendMessage');
-
             // validate the parameters
             if (target && (!target.getTypeId || target.getTypeId() !== bali.types.CATALOG)) {
                 const exception = bali.exception({
@@ -776,8 +683,6 @@ exports.api = function(notary, repository, debug) {
          * @param {Catalog} message The message to be placed on the queue.
          */
         queueMessage: async function(queue, message) {
-            checkInitialization(this, '$queueMessage');
-
             // validate the parameters
             if (queue && (!queue.getTypeId || queue.getTypeId() !== bali.types.TAG)) {
                 const exception = bali.exception({
@@ -830,8 +735,6 @@ exports.api = function(notary, repository, debug) {
          * @returns {Component} The message received from the queue.
          */
         receiveMessage: async function(queue) {
-            checkInitialization(this, '$receiveMessage');
-
             // validate the parameters
             if (queue && (!queue.getTypeId || queue.getTypeId() !== bali.types.TAG)) {
                 const exception = bali.exception({
@@ -872,26 +775,6 @@ exports.api = function(notary, repository, debug) {
 
 
 // PRIVATE HELPER FUNCTIONS
-
-/**
- * This function throws an exception if the API has not yet been initialized.
- * 
- * @param {Object} api The object that implements the API.
- * @param {String} functionName The name of the API function being called.
- */
-const checkInitialization = function(api, functionName) {
-    if (api.initializeAPI) {
-        const exception = bali.exception({
-            $module: '$NebulaAPI',
-            $function: functionName,
-            $exception: '$notInitialized',
-            $text: bali.text('The Bali Nebula API™ has not been initialized.')
-        });
-        console.error(exception.toString());  // log no matter what
-        throw exception;
-    }
-};
-
 
 /**
  * This function extracts the '$tag' and '$version' attributes from the specified catalog
@@ -943,8 +826,8 @@ const validateCitation = async function(notary, citation, document) {
  * @param {Object} notary The notary to be used for validating the certificate.
  * @param {Catalog} citation A document citation for the notary certificate that is
  * specified.
- * @param {Catalog} document A self-notarized document containing the public key
- * associated with the private notary key that notarized the certificate.
+ * @param {Catalog} document A self-notarized document containing the public certificate
+ * associated with the private notary key that notarized the document.
  */
 const validateCertificate = async function(notary, citation, document) {
     const matches = await notary.citationMatches(citation, document);
@@ -982,7 +865,7 @@ const validateCertificate = async function(notary, citation, document) {
  * @param {Catalog} document The notarized document to be validated.
  */
 const validateDocument = async function(notary, repository, document) {
-    var certificateCitation = document.getValue('$citation');
+    var certificateCitation = document.getValue('$certificate');
     while (certificateCitation && !certificateCitation.getValue('$digest').isEqualTo(bali.NONE)) {
         const certificateId = extractId(certificateCitation);
         var certificate = cache.fetchCertificate(certificateId);
@@ -1015,7 +898,7 @@ const validateDocument = async function(notary, repository, document) {
         }
         try {
             document = document.getValue('$document');
-            certificateCitation = document.getValue('$citation');
+            certificateCitation = document.getValue('$certificate');
         } catch (e) {
             // we have reached the root content so we are done
             break;

@@ -592,9 +592,7 @@ service.use('/document', documentRouter);
 service.use('/type', typeRouter);
 service.use('/queue', queueRouter);
 
-repository.initializeAPI().then(function() {
-    service.listen(3000, function() {
-        var message = 'Service: Server running on port 3000';
-        if (debug) console.log(message);
-    });
+service.listen(3000, function() {
+    var message = 'Service: Server running on port 3000';
+    if (debug) console.log(message);
 });

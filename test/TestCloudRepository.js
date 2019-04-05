@@ -19,43 +19,31 @@ const cloudURL = bali.reference('http://localhost:3000');
 const notary = require('bali-digital-notary').api(account, testDirectory, debug);
 const repository = require('../').cloud(notary, cloudURL, debug);
 
-const source =
-    '[\n' +
-    '    $date: <2018-04-01>\n' +
-    '    $product: "Snickers Bar"\n' +
-    '    $quantity: 10\n' +
-    '    $price: 1.25(USD)\n' +
-    '    $tax: 1.07(USD)\n' +
-    '    $total: 13.57(USD)\n' +
-    ']';
+const transaction = bali.catalog({
+    $timestamp: bali.moment(),
+    $product: bali.text('Snickers Bar'),
+    $quantity: 10,
+    $price: bali.parse('1.25($USD)'),
+    $tax: bali.parse('1.07($USD)'),
+    $total: bali.parse('13.57($USD)')
+}, bali.parameters({
+    $tag: bali.tag(),
+    $version: bali.version(),
+    $permissions: '$Public',
+    $previous: bali.NONE
+}));
+
+const source = transaction.toString();
 
 describe('Bali Nebula API™ - Test Cloud Repository', function() {
 
     describe('Test Cloud Repository', function() {
 
-        it('should initialize the notary API once and only once', async function() {
-            await notary.initializeAPI();
-            await notary.generateKey();
-            try {
-                await notary.initializeAPI();
-                assert.fail('The second attempt to initialize the API should have failed.');
-            } catch(error) {
-                // expected
-            };
-        });
-
-        it('should initialize the cloud API once and only once', async function() {
-            await repository.initializeAPI();
-            try {
-                await repository.initializeAPI();
-                assert.fail('The second attempt to initialize the API should have failed.');
-            } catch(error) {
-                // expected
-            };
-        });
-
         it('should perform a notary certificate lifecycle', async function() {
             const identifier = 'KHMSK2LPXSWYMLZ8KJFNTL461A13M8Z7v3';
+
+            // generate a new notary key
+            await notary.generateKey();
 
             // store a new certificate in the repository
             await repository.createCertificate(identifier, source);
