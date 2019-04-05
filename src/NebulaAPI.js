@@ -873,7 +873,7 @@ const validateDocument = async function(notary, repository, document) {
             const source = await repository.fetchCertificate(certificateId);
             if (source) {
                 const certificateDocument = bali.parse(source);
-                validateCertificate(notary, certificateCitation, certificateDocument);
+                await validateCertificate(notary, certificateCitation, certificateDocument);
                 certificate = certificateDocument.getValue('$document');
                 cache.createCertificate(certificateId, certificate);
             } else {
