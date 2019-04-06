@@ -131,6 +131,7 @@ exports.api = function(notary, repository, debug) {
                     const source = await repository.fetchCertificate(certificateId);
                     if (source) {
                         const notarizedCertificate = bali.parse(source);
+                        await validateCitation(notary, citation, notarizedCertificate);
                         await validateDocument(notary, repository, notarizedCertificate);
                         certificate = notarizedCertificate.getValue('$document');
                         cache.createCertificate(certificateId, certificate);
@@ -179,6 +180,7 @@ exports.api = function(notary, repository, debug) {
                     const source = await repository.fetchType(typeId);
                     if (source) {
                         const notarizedType = bali.parse(source);
+                        await validateCitation(notary, citation, notarizedType);
                         await validateDocument(notary, repository, notarizedType);
                         type = notarizedType.getValue('$document');
                         cache.createType(typeId, type);
@@ -275,6 +277,7 @@ exports.api = function(notary, repository, debug) {
                 const source = await repository.fetchDraft(documentId);
                 if (source) {
                     const notarizedDraft = bali.parse(source);
+                    await validateCitation(notary, citation, notarizedDraft);
                     await validateDocument(notary, repository, notarizedDraft);
                     const draft = notarizedDraft.getValue('$document');
                     // we don't cache drafts since they are mutable
@@ -910,7 +913,7 @@ const validateDocument = async function(notary, repository, document) {
             });
         }
 
-        // attempt to handle nested documents
+        // validate any nested documents
         try {
             document = document.getValue('$document');
             certificateCitation = document.getValue('$certificate');
