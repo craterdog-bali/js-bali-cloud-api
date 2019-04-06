@@ -35,6 +35,6 @@
   "dependencies": {
     "axios": "^0.18.0",
     "bali-component-framework": "^1.10.3",
-    "bali-digital-notary": "^1.6.6"
+    "bali-digital-notary": "^1.6.7"
   }
 }

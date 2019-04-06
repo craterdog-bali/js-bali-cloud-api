@@ -8,7 +8,7 @@
  * Source Initiative. (See http://opensource.org/licenses/MIT)          *
  ************************************************************************/
 
-const debug = false;  // set to true for error logging
+const debug = true;  // set to true for error logging
 const testDirectory = 'test/config/';
 const mocha = require('mocha');
 const assert = require('chai').assert;
@@ -75,7 +75,13 @@ describe('Bali Nebula API™ - Test Local API', function() {
             expect(merchantCertificate).to.exist;
             merchantCitation = await merchantNotary.getCitation();
             expect(merchantCitation).to.exist;
-            const certificateId = extractId(merchantCitation);
+            var certificateId = extractId(merchantCitation);
+            await merchantRepository.createCertificate(certificateId, merchantCertificate);
+            merchantCertificate = await merchantNotary.generateKey();  // test regeneration
+            expect(merchantCertificate).to.exist;
+            merchantCitation = await merchantNotary.getCitation();
+            expect(merchantCitation).to.exist;
+            certificateId = extractId(merchantCitation);
             await merchantRepository.createCertificate(certificateId, merchantCertificate);
         });
 

@@ -42,6 +42,7 @@ module.exports = function(grunt) {
         },
         src: [
           'test/**/*.js'
+          //'!test/TestNebulaAPI.js'
         ]
       }
     },
