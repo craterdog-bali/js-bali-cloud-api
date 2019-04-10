@@ -52,7 +52,7 @@ exports.api = function(notary, repository, debug) {
         toString: function() {
             const catalog = bali.catalog({
                 $module: '$NebulaAPI',
-                $account: this.getAccount(),
+                $accountId: this.getAccountId(),
                 $url: this.getURL()
             });
             return catalog.toString();
@@ -65,8 +65,8 @@ exports.api = function(notary, repository, debug) {
          * @returns {Tag} The unique tag for the account that owns the notary key for
          * this client.
          */
-        getAccount: function() {
-            return notary.getAccount();
+        getAccountId: function() {
+            return notary.getAccountId();
         },
 
         /**
@@ -95,8 +95,50 @@ exports.api = function(notary, repository, debug) {
                     $module: '$NebulaAPI',
                     $function: '$getCitation',
                     $exception: '$unexpected',
-                    $account: notary.getAccount(),
+                    $accountId: notary.getAccountId(),
                     $text: bali.text('An unexpected error occurred while attempting to retrieve the notary certificate citation.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
+        },
+
+        registerAccount: async function(account, certificate) {
+            try {
+                validateParameter('$registerAccount', 'account', account);
+                validateParameter('$registerAccount', 'certificate', certificate);
+                const accountCitation = await notary.citeDocument(account);
+                const accountId = notary.getAccountId();
+                if (await repository.accountExists(accountId)) {
+                    throw bali.exception({
+                        $module: '$NebulaAPI',
+                        $function: '$registerAccount',
+                        $exception: '$versionExists',
+                        $tag: accountId,
+                        $text: '"A committed version of the account already exists."'
+                    });
+                }
+                const certificateCitation = await notary.citeDocument(certificate);
+                const certificateId = extractId(certificateCitation);
+                if (await repository.certificateExists(certificateId)) {
+                    throw bali.exception({
+                        $module: '$NebulaAPI',
+                        $function: '$registerAccount',
+                        $exception: '$versionExists',
+                        $tag: certificateCitation.getValue('$tag'),
+                        $version: certificateCitation.getValue('$version'),
+                        $text: '"A committed version of the certificate already exists."'
+                    });
+                }
+                await repository.createAccount(accountId, account);
+                await repository.createCertificate(certificateId, certificate);
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '$NebulaAPI',
+                    $function: '$registerAccount',
+                    $exception: '$unexpected',
+                    $accountId: notary.getAccountId(),
+                    $text: bali.text('An unexpected error occurred while attempting to register a new account.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -111,20 +153,8 @@ exports.api = function(notary, repository, debug) {
          * @returns {Catalog} The desired notary certificate.
          */
         retrieveCertificate: async function(citation) {
-            // validate the parameters
-            if (!citation || !citation.getTypeId || citation.getTypeId() !== bali.types.CATALOG) {
-                const exception = bali.exception({
-                    $module: '$NebulaAPI',
-                    $function: '$retrieveCertificate',
-                    $exception: '$invalidParameter',
-                    $parameter: citation ? bali.text(citation.toString()) : bali.NONE,
-                    $text: bali.text('The certificate citation is invalid.')
-                });
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
-
             try {
+                validateParameter('$retrieveCertificate', 'citation', citation);
                 const certificateId = extractId(citation);
                 var certificate = cache.fetchCertificate(certificateId);
                 if (!certificate) {
@@ -143,7 +173,7 @@ exports.api = function(notary, repository, debug) {
                     $module: '$NebulaAPI',
                     $function: '$retrieveCertificate',
                     $exception: '$unexpected',
-                    $account: notary.getAccount(),
+                    $accountId: notary.getAccountId(),
                     $text: bali.text('An unexpected error occurred while attempting to retrieve the notary certificate.')
                 }, cause);
                 if (debug) console.error(exception.toString());
@@ -160,20 +190,8 @@ exports.api = function(notary, repository, debug) {
          * @returns {Catalog} The compiled type document.
          */
         retrieveType: async function(citation) {
-            // validate the parameters
-            if (!citation || !citation.getTypeId || citation.getTypeId() !== bali.types.CATALOG) {
-                const exception = bali.exception({
-                    $module: '$NebulaAPI',
-                    $function: '$retrieveType',
-                    $exception: '$invalidParameter',
-                    $parameter: citation ? bali.text(citation.toString()) : bali.NONE,
-                    $text: bali.text('The type citation is invalid.')
-                });
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
-
             try {
+                validateParameter('$retrieveType', 'citation', citation);
                 const typeId = extractId(citation);
                 var type = cache.fetchType(typeId);
                 if (!type) {
@@ -192,7 +210,7 @@ exports.api = function(notary, repository, debug) {
                     $module: '$NebulaAPI',
                     $function: '$retrieveType',
                     $exception: '$unexpected',
-                    $account: notary.getAccount(),
+                    $accountId: notary.getAccountId(),
                     $text: bali.text('An unexpected error occurred while attempting to retrieve the compiled type.')
                 }, cause);
                 if (debug) console.error(exception.toString());
@@ -209,25 +227,15 @@ exports.api = function(notary, repository, debug) {
          * @returns {Catalog} A document citation for the committed type document.
          */
         commitType: async function(type) {
-            // validate the parameters
-            if (!type || !type.getTypeId || type.getTypeId() !== bali.types.CATALOG) {
-                const exception = bali.exception({
-                    $module: '$NebulaAPI',
-                    $function: '$commitType',
-                    $exception: '$invalidParameter',
-                    $parameter: type ? bali.text(type.toString()) : bali.NONE,
-                    $text: bali.text('The type citation is invalid.')
-                });
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
-
             try {
+                validateParameter('$commitType', 'type', type);
                 const notarizedType = await notary.signComponent(type);
                 const typeCitation = await notary.citeDocument(notarizedType);
                 const typeId = extractId(typeCitation);
                 if (await repository.typeExists(typeId)) {
                     throw bali.exception({
+                        $module: '$NebulaAPI',
+                        $function: '$commitType',
                         $exception: '$versionExists',
                         $tag: typeCitation.getValue('$tag'),
                         $version: typeCitation.getValue('$version'),
@@ -243,7 +251,7 @@ exports.api = function(notary, repository, debug) {
                     $module: '$NebulaAPI',
                     $function: '$commitType',
                     $exception: '$unexpected',
-                    $account: notary.getAccount(),
+                    $accountId: notary.getAccountId(),
                     $text: bali.text('An unexpected error occurred while attempting to commit the compiled type.')
                 }, cause);
                 if (debug) console.error(exception.toString());
@@ -259,20 +267,8 @@ exports.api = function(notary, repository, debug) {
          * @returns {Component} The desired draft document.
          */
         retrieveDraft: async function(citation) {
-            // validate the parameters
-            if (!citation || !citation.getTypeId || citation.getTypeId() !== bali.types.CATALOG) {
-                const exception = bali.exception({
-                    $module: '$NebulaAPI',
-                    $function: '$retrieveDraft',
-                    $exception: '$invalidParameter',
-                    $parameter: citation ? bali.text(citation.toString()) : bali.NONE,
-                    $text: bali.text('The draft document citation is invalid.')
-                });
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
-
             try {
+                validateParameter('$retrieveDraft', 'citation', citation);
                 const documentId = extractId(citation);
                 const source = await repository.fetchDraft(documentId);
                 if (source) {
@@ -288,7 +284,7 @@ exports.api = function(notary, repository, debug) {
                     $module: '$NebulaAPI',
                     $function: '$retrieveDraft',
                     $exception: '$unexpected',
-                    $account: notary.getAccount(),
+                    $accountId: notary.getAccountId(),
                     $text: bali.text('An unexpected error occurred while attempting to retrieve a draft document.')
                 }, cause);
                 if (debug) console.error(exception.toString());
@@ -297,33 +293,14 @@ exports.api = function(notary, repository, debug) {
         },
 
         /**
-         * This method saves in the Bali Nebula™ a draft document. If no
-         * draft content is provided, an empty catalog is created.
+         * This method saves in the Bali Nebula™ a draft document.
          * 
-         * @param {Component} draft An optional draft document to be saved.
+         * @param {Component} draft The draft document to be saved.
          * @returns {Catalog} A document citation for the draft document.
          */
         saveDraft: async function(draft) {
-            // validate the parameters
-            draft = draft || bali.catalog({}, bali.parameters({
-                $tag: bali.tag(),
-                $version: bali.version(),
-                $permissions: bali.parse('/bali/permissions/Private/v1'),
-                $previous: bali.NONE
-            }));
-            if (!draft.getTypeId) {
-                const exception = bali.exception({
-                    $module: '$NebulaAPI',
-                    $function: '$saveDraft',
-                    $exception: '$invalidParameter',
-                    $parameter: draft ? bali.text(draft.toString()) : bali.NONE,
-                    $text: bali.text('The draft document is invalid.')
-                });
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
-
             try {
+                validateParameter('$saveDraft', 'draft', draft);
                 const notarizedDraft = await notary.signComponent(draft);
                 const draftCitation = await notary.citeDocument(notarizedDraft);
                 const draftId = extractId(draftCitation);
@@ -345,7 +322,7 @@ exports.api = function(notary, repository, debug) {
                     $module: '$NebulaAPI',
                     $function: '$saveDraft',
                     $exception: '$unexpected',
-                    $account: notary.getAccount(),
+                    $accountId: notary.getAccountId(),
                     $text: bali.text('An unexpected error occurred while attempting to update a draft document.')
                 }, cause);
                 if (debug) console.error(exception.toString());
@@ -360,20 +337,8 @@ exports.api = function(notary, repository, debug) {
          * @param {Catalog} citation The document citation for the draft document to be deleted.
          */
         discardDraft: async function(citation) {
-            // validate the parameters
-            if (!citation || !citation.getTypeId || citation.getTypeId() !== bali.types.CATALOG) {
-                const exception = bali.exception({
-                    $module: '$NebulaAPI',
-                    $function: '$discardDraft',
-                    $exception: '$invalidParameter',
-                    $parameter: citation ? bali.text(citation.toString()) : bali.NONE,
-                    $text: bali.text('The draft document citation is invalid.')
-                });
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
-
             try {
+                validateParameter('$discardDraft', 'citation', citation);
                 const documentId = extractId(citation);
                 await repository.deleteDraft(documentId);
             } catch (cause) {
@@ -381,7 +346,7 @@ exports.api = function(notary, repository, debug) {
                     $module: '$NebulaAPI',
                     $function: '$discardDraft',
                     $exception: '$unexpected',
-                    $account: notary.getAccount(),
+                    $accountId: notary.getAccountId(),
                     $text: bali.text('An unexpected error occurred while attempting to discard a draft document.')
                 }, cause);
                 if (debug) console.error(exception.toString());
@@ -397,20 +362,8 @@ exports.api = function(notary, repository, debug) {
          * @returns {Catalog} The updated citation for the committed document.
          */
         commitDocument: async function(document) {
-            // validate the parameters
-            if (!document || !document.getTypeId) {
-                const exception = bali.exception({
-                    $module: '$NebulaAPI',
-                    $function: '$commitDocument',
-                    $exception: '$invalidParameter',
-                    $parameter: document ? bali.text(document.toString()) : bali.NONE,
-                    $text: bali.text('The draft document is invalid.')
-                });
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
-
             try {
+                validateParameter('$commitDocument', 'document', document);
                 const notarizedDocument = await notary.signComponent(document);
                 const documentCitation = await notary.citeDocument(notarizedDocument);
                 const documentId = extractId(documentCitation);
@@ -433,7 +386,7 @@ exports.api = function(notary, repository, debug) {
                     $module: '$NebulaAPI',
                     $function: '$commitDocument',
                     $exception: '$unexpected',
-                    $account: notary.getAccount(),
+                    $accountId: notary.getAccountId(),
                     $text: bali.text('An unexpected error occurred while attempting to commit a draft document.')
                 }, cause);
                 if (debug) console.error(exception.toString());
@@ -449,20 +402,8 @@ exports.api = function(notary, repository, debug) {
          * @returns {Component} The desired document.
          */
         retrieveDocument: async function(citation) {
-            // validate the parameters
-            if (!citation || !citation.getTypeId || citation.getTypeId() !== bali.types.CATALOG) {
-                const exception = bali.exception({
-                    $module: '$NebulaAPI',
-                    $function: '$retrieveDocument',
-                    $exception: '$invalidParameter',
-                    $parameter: citation ? bali.text(citation.toString()) : bali.NONE,
-                    $text: bali.text('The document citation is invalid.')
-                });
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
-
             try {
+                validateParameter('$retrieveDocument', 'citation', citation);
                 const documentId = extractId(citation);
                 var document = cache.fetchDocument(documentId);
                 if (!document) {
@@ -481,7 +422,7 @@ exports.api = function(notary, repository, debug) {
                     $module: '$NebulaAPI',
                     $function: '$retrieveDocument',
                     $exception: '$unexpected',
-                    $account: notary.getAccount(),
+                    $accountId: notary.getAccountId(),
                     $text: bali.text('An unexpected error occurred while attempting to retrieve a document.')
                 }, cause);
                 if (debug) console.error(exception.toString());
@@ -506,31 +447,11 @@ exports.api = function(notary, repository, debug) {
          * @returns {Catalog} The document citation for the new draft document.
          */
         checkoutDocument: async function(citation, level) {
-            // validate the parameters
-            if (!citation || !citation.getTypeId || citation.getTypeId() !== bali.types.CATALOG) {
-                const exception = bali.exception({
-                    $module: '$NebulaAPI',
-                    $function: '$checkoutDocument',
-                    $exception: '$invalidParameter',
-                    $parameter: citation ? bali.text(citation.toString()) : bali.NONE,
-                    $text: bali.text('The document citation is invalid.')
-                });
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
-            if (level && typeof level !== 'number') {
-                const exception = bali.exception({
-                    $module: '$NebulaAPI',
-                    $function: '$checkoutDocument',
-                    $exception: '$invalidParameter',
-                    $parameter: level ? bali.text(level.toString()) : bali.NONE,
-                    $text: bali.text('The version level is invalid.')
-                });
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
-
             try {
+                // validate the parameters
+                validateParameter('$checkoutDocument', 'citation', citation);
+                validateParameter('$checkoutDocument', 'level', level);
+
                 // create the draft citation
                 const documentVersion = citation.getValue('$version');
                 const draftVersion = bali.version.nextVersion(documentVersion, level);
@@ -580,7 +501,7 @@ exports.api = function(notary, repository, debug) {
                     $module: '$NebulaAPI',
                     $function: '$checkoutDocument',
                     $exception: '$unexpected',
-                    $account: notary.getAccount(),
+                    $accountId: notary.getAccountId(),
                     $text: bali.text('An unexpected error occurred while attempting to checkout a document.')
                 }, cause);
                 if (debug) console.error(exception.toString());
@@ -596,20 +517,8 @@ exports.api = function(notary, repository, debug) {
          * @param {Catalog} event The Bali catalog documenting the event.
          */
         publishEvent: async function(event) {
-            // validate the parameters
-            if (!event || !event.getTypeId || event.getTypeId() !== bali.types.CATALOG) {
-                const exception = bali.exception({
-                    $module: '$NebulaAPI',
-                    $function: '$publishEvent',
-                    $exception: '$invalidParameter',
-                    $parameter: event ? bali.text(event.toString()) : bali.NONE,
-                    $text: bali.text('The event is invalid.')
-                });
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
-
             try {
+                validateParameter('$publishEvent', 'event', event);
                 const notarizedEvent = await notary.signComponent(event);
                 await repository.queueMessage(EVENT_QUEUE_ID, notarizedEvent);
             } catch (cause) {
@@ -617,7 +526,7 @@ exports.api = function(notary, repository, debug) {
                     $module: '$NebulaAPI',
                     $function: '$publishEvent',
                     $exception: '$unexpected',
-                    $account: notary.getAccount(),
+                    $accountId: notary.getAccountId(),
                     $text: bali.text('An unexpected error occurred while attempting to publish an event.')
                 }, cause);
                 if (debug) console.error(exception.toString());
@@ -635,31 +544,9 @@ exports.api = function(notary, repository, debug) {
          * @param {Catalog} message The message to be sent to the target component.
          */
         sendMessage: async function(target, message) {
-            // validate the parameters
-            if (target && (!target.getTypeId || target.getTypeId() !== bali.types.CATALOG)) {
-                const exception = bali.exception({
-                    $module: '$NebulaAPI',
-                    $function: '$sendMessage',
-                    $exception: '$invalidParameter',
-                    $parameter: target ? bali.text(target.toString()) : bali.NONE,
-                    $text: bali.text('The target citation is invalid.')
-                });
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
-            if (message && (!message.getTypeId || message.getTypeId() !== bali.types.CATALOG)) {
-                const exception = bali.exception({
-                    $module: '$NebulaAPI',
-                    $function: '$sendMessage',
-                    $exception: '$invalidParameter',
-                    $parameter: bali.text(message.toString()),
-                    $text: bali.text('The message is invalid.')
-                });
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
-
             try {
+                validateParameter('$sendMessage', 'target', target);
+                validateParameter('$sendMessage', 'message', message);
                 message.setValue('$target', target);
                 const notarizedMessage = await notary.signComponent(message);
                 await repository.queueMessage(SEND_QUEUE_ID, notarizedMessage);
@@ -668,7 +555,7 @@ exports.api = function(notary, repository, debug) {
                     $module: '$NebulaAPI',
                     $function: '$sendMessage',
                     $exception: '$unexpected',
-                    $account: notary.getAccount(),
+                    $accountId: notary.getAccountId(),
                     $text: bali.text('An unexpected error occurred while attempting to send a message.')
                 }, cause);
                 if (debug) console.error(exception.toString());
@@ -686,31 +573,9 @@ exports.api = function(notary, repository, debug) {
          * @param {Catalog} message The message to be placed on the queue.
          */
         queueMessage: async function(queue, message) {
-            // validate the parameters
-            if (queue && (!queue.getTypeId || queue.getTypeId() !== bali.types.TAG)) {
-                const exception = bali.exception({
-                    $module: '$NebulaAPI',
-                    $function: '$queueMessage',
-                    $exception: '$invalidParameter',
-                    $parameter: queue ? bali.text(queue.toString()) : bali.NONE,
-                    $text: bali.text('The queue identifier is invalid.')
-                });
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
-            if (message && (!message.getTypeId || message.getTypeId() !== bali.types.CATALOG)) {
-                const exception = bali.exception({
-                    $module: '$NebulaAPI',
-                    $function: '$queueMessage',
-                    $exception: '$invalidParameter',
-                    $parameter: bali.text(message.toString()),
-                    $text: bali.text('The message is invalid.')
-                });
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
-
             try {
+                validateParameter('$queueMessage', 'queue', queue);
+                validateParameter('$queueMessage', 'message', message);
                 const notarizedMessage = await notary.signComponent(message);
                 const queueId = queue.getValue();
                 await repository.queueMessage(queueId, notarizedMessage);
@@ -719,7 +584,7 @@ exports.api = function(notary, repository, debug) {
                     $module: '$NebulaAPI',
                     $function: '$queueMessage',
                     $exception: '$unexpected',
-                    $account: notary.getAccount(),
+                    $accountId: notary.getAccountId(),
                     $text: bali.text('An unexpected error occurred while attempting to queue a message.')
                 }, cause);
                 if (debug) console.error(exception.toString());
@@ -738,20 +603,8 @@ exports.api = function(notary, repository, debug) {
          * @returns {Component} The message received from the queue.
          */
         receiveMessage: async function(queue) {
-            // validate the parameters
-            if (queue && (!queue.getTypeId || queue.getTypeId() !== bali.types.TAG)) {
-                const exception = bali.exception({
-                    $module: '$NebulaAPI',
-                    $function: '$receiveMessage',
-                    $exception: '$invalidParameter',
-                    $parameter: queue ? bali.text(queue.toString()) : bali.NONE,
-                    $text: bali.text('The queue identifier is invalid.')
-                });
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
-
             try {
+                validateParameter('$receiveMessage', 'queue', queue);
                 const queueId = queue.getValue();
                 const source = await repository.dequeueMessage(queueId);
                 if (source) {
@@ -766,7 +619,7 @@ exports.api = function(notary, repository, debug) {
                     $module: '$NebulaAPI',
                     $function: '$receiveMessage',
                     $exception: '$unexpected',
-                    $account: notary.getAccount(),
+                    $accountId: notary.getAccountId(),
                     $text: bali.text('An unexpected error occurred while attempting to receive a message.')
                 }, cause);
                 if (debug) console.error(exception.toString());
@@ -997,4 +850,127 @@ const cache = {
         }
         this.types.set(typeId, type);
     }
+};
+
+
+// PRIVATE FUNCTIONS
+
+const validateParameter = function(functionName, parameterName, parameterValue, type) {
+    type = type || parameterName;
+    /*
+    if (parameterValue) {
+        switch (type) {
+            case 'binary':
+            case 'moment':
+            case 'name':
+            case 'tag':
+            case 'version':
+                // Primitive types must have a typeId and their type must match the passed in type
+                if (parameterValue.getTypeId && parameterValue.getTypeId() === bali.types[type.toUpperCase()]) return;
+                break;
+            case 'directory':
+                // A directory must be a string that matches a specific pattern
+                const pattern = new RegExp('/?(\\w+/)+');
+                if (typeof parameterValue === 'string' && pattern.test(parameterValue)) return;
+                break;
+            case 'component':
+                // A component must just have a typeId
+                if (parameterValue.getTypeId) return;
+                break;
+            case 'citation':
+                // A certificate must have the following:
+                //  * a parameterized type of /bali/types/Citation/v...
+                //  * exactly five specific attributes
+                if (parameterValue.getTypeId && parameterValue.isEqualTo(bali.NONE)) return;
+                if (parameterValue.getTypeId && parameterValue.getTypeId() === bali.types.CATALOG && parameterValue.getSize() === 5) {
+                    validateParameter(functionName, parameterName + '.protocol', parameterValue.getValue('$protocol'), 'version');
+                    validateParameter(functionName, parameterName + '.timestamp', parameterValue.getValue('$timestamp'), 'moment');
+                    validateParameter(functionName, parameterName + '.tag', parameterValue.getValue('$tag'), 'tag');
+                    validateParameter(functionName, parameterName + '.version', parameterValue.getValue('$version'), 'version');
+                    validateParameter(functionName, parameterName + '.digest', parameterValue.getValue('$digest'), 'binary');
+                    const parameters = parameterValue.getParameters();
+                    if (parameters && parameters.getSize() === 1) {
+                        validateParameter(functionName, parameterName + '.parameters.type', parameters.getParameter('$type'), 'name');
+                        if (parameters.getParameter('$type').toString().startsWith('/bali/types/Citation/v')) return;
+                    }
+                }
+                break;
+            case 'certificate':
+                // A certificate must have the following:
+                //  * a parameterized type of /bali/types/Certificate/v...
+                //  * exactly four specific attributes
+                //  * and be parameterized with exactly 5 specific parameters
+                if (parameterValue.getTypeId && parameterValue.getTypeId() === bali.types.CATALOG && parameterValue.getSize() === 4) {
+                    validateParameter(functionName, parameterName + '.protocol', parameterValue.getValue('$protocol'), 'version');
+                    validateParameter(functionName, parameterName + '.timestamp', parameterValue.getValue('$timestamp'), 'moment');
+                    validateParameter(functionName, parameterName + '.account', parameterValue.getValue('$account'), 'tag');
+                    validateParameter(functionName, parameterName + '.publicKey', parameterValue.getValue('$publicKey'), 'binary');
+                    const parameters = parameterValue.getParameters();
+                    if (parameters && parameters.getSize() === 5) {
+                        validateParameter(functionName, parameterName + '.parameters.type', parameters.getParameter('$type'), 'name');
+                        validateParameter(functionName, parameterName + '.parameters.tag', parameters.getParameter('$tag'), 'tag');
+                        validateParameter(functionName, parameterName + '.parameters.version', parameters.getParameter('$version'), 'version');
+                        validateParameter(functionName, parameterName + '.parameters.permissions', parameters.getParameter('$permissions'), 'name');
+                        validateParameter(functionName, parameterName + '.parameters.previous', parameters.getParameter('$previous'), 'citation');
+                        if (parameters.getParameter('$type').toString().startsWith('/bali/types/Certificate/v') &&
+                            parameters.getParameter('$permissions').toString().startsWith('/bali/permissions/Public/v')) return;
+                    }
+                }
+                break;
+            case 'aem':
+                // An authenticated encrypted message (AEM) must have the following:
+                //  * a parameterized type of /bali/types/AEM/v...
+                //  * exactly six specific attributes
+                if (parameterValue.getTypeId && parameterValue.getTypeId() === bali.types.CATALOG && parameterValue.getSize() === 6) {
+                    validateParameter(functionName, parameterName + '.protocol', parameterValue.getValue('$protocol'), 'version');
+                    validateParameter(functionName, parameterName + '.timestamp', parameterValue.getValue('$timestamp'), 'moment');
+                    validateParameter(functionName, parameterName + '.seed', parameterValue.getValue('$seed'), 'binary');
+                    validateParameter(functionName, parameterName + '.iv', parameterValue.getValue('$iv'), 'binary');
+                    validateParameter(functionName, parameterName + '.auth', parameterValue.getValue('$auth'), 'binary');
+                    validateParameter(functionName, parameterName + '.ciphertext', parameterValue.getValue('$ciphertext'), 'binary');
+                    const parameters = parameterValue.getParameters();
+                    if (parameters && parameters.getSize() === 1) {
+                        validateParameter(functionName, parameterName + '.parameters.type', parameters.getParameter('$type'), 'name');
+                        if (parameters.getParameter('$type').toString().startsWith('/bali/types/AEM/v')) return;
+                    }
+                }
+                break;
+            case 'document':
+                // A document must have the following:
+                //  * a parameterized type of /bali/types/Document/v...
+                //  * exactly five specific attributes including a $component attribute
+                //  * the $component attribute must be parameterized with at least four parameters
+                //  * the $component attribute may have a parameterized type as well
+                if (parameterValue.getTypeId && parameterValue.getTypeId() === bali.types.CATALOG && parameterValue.getSize() === 5) {
+                    validateParameter(functionName, parameterName + '.component', parameterValue.getValue('$component'), 'component');
+                    validateParameter(functionName, parameterName + '.protocol', parameterValue.getValue('$protocol'), 'version');
+                    validateParameter(functionName, parameterName + '.timestamp', parameterValue.getValue('$timestamp'), 'moment');
+                    validateParameter(functionName, parameterName + '.certificate', parameterValue.getValue('$certificate'), 'citation');
+                    validateParameter(functionName, parameterName + '.signature', parameterValue.getValue('$signature'), 'binary');
+                    var parameters = parameterValue.getValue('$component').getParameters();
+                    if (parameters) {
+                        if (parameters.getParameter('$type')) validateParameter(functionName, parameterName + '.parameters.type', parameters.getParameter('$type'), 'name');
+                        validateParameter(functionName, parameterName + '.parameters.tag', parameters.getParameter('$tag'), 'tag');
+                        validateParameter(functionName, parameterName + '.parameters.version', parameters.getParameter('$version'), 'version');
+                        validateParameter(functionName, parameterName + '.parameters.permissions', parameters.getParameter('$permissions'), 'name');
+                        validateParameter(functionName, parameterName + '.parameters.previous', parameters.getParameter('$previous'), 'citation');
+                        parameters = parameterValue.getParameters();
+                        if (parameters && parameters.getSize() === 1) {
+                            if (parameters.getParameter('$type').toString().startsWith('/bali/types/Document/v')) return;
+                        }
+                    }
+                }
+                break;
+        }
+    }
+    const exception = bali.exception({
+        $module: '$DigitalNotary',
+        $function: functionName,
+        $exception: '$invalidParameter',
+        $parameter: bali.text(parameterName),
+        $value: parameterValue ? bali.text(parameterValue.toString()) : bali.NONE,
+        $text: bali.text('An invalid parameter value was passed to the function.')
+    });
+    throw exception;
+    */
 };

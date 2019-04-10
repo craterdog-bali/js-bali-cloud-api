@@ -12,10 +12,10 @@ const mocha = require('mocha');
 const assert = require('chai').assert;
 const expect = require('chai').expect;
 const bali = require('bali-component-framework');
-const account = bali.parse('#GTDHQ9B8ZGS7WCBJJJBFF6KDCCF55R2P');
-const testDirectory = 'test/config/';
+const accountId = bali.parse('#GTDHQ9B8ZGS7WCBJJJBFF6KDCCF55R2P');
+const directory = 'test/config/';
 const cloudURL = bali.reference('http://localhost:3000');
-const notary = require('bali-digital-notary').api(account, testDirectory);
+const notary = require('bali-digital-notary').api(accountId, directory);
 const repository = require('../').cloud(notary, cloudURL);
 
 const transaction = bali.catalog({

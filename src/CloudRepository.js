@@ -27,7 +27,7 @@ const axios = require('axios');
  * @returns {Object} An object implementing the document repository interface.
  */
 exports.repository = function(notary, cloudURL) {
-    const account = notary.getAccount();
+    const accountId = notary.getAccountId();
 
     // return a singleton object for the API
     return {
@@ -40,7 +40,7 @@ exports.repository = function(notary, cloudURL) {
         toString: function() {
             const catalog = bali.catalog({
                 $module: '$CloudRepository',
-                $account: account,
+                $accountId: accountId,
                 $url: cloudURL
             });
             return catalog.toString();

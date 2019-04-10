@@ -9,7 +9,7 @@
  ************************************************************************/
 
 const debug = true;  // set to true for error logging
-const testDirectory = 'test/config/';
+const directory = 'test/config/';
 const mocha = require('mocha');
 const assert = require('chai').assert;
 const expect = require('chai').expect;
@@ -40,13 +40,13 @@ describe('Bali Nebula API™ - Test Remote API', function() {
 
         it('should create the consumer notary API', async function() {
             const consumerTag = bali.tag();
-            consumerNotary = notary.api(consumerTag, testDirectory);
+            consumerNotary = notary.api(consumerTag, directory);
             expect(consumerNotary).to.exist;
         });
 
         it('should create the merchant notary API', async function() {
             const merchantTag = bali.tag();
-            merchantNotary = notary.api(merchantTag, testDirectory);
+            merchantNotary = notary.api(merchantTag, directory);
             expect(merchantNotary).to.exist;
         });
 
@@ -99,16 +99,16 @@ describe('Bali Nebula API™ - Test Remote API', function() {
     });
 
     describe('Test Drafts', function() {
-        var draft;
+        var draft = bali.catalog({
+            $foo: bali.text('bar')
+        }, bali.parameters({
+            $tag: bali.tag(),
+            $version: bali.version(),
+            $permissions: bali.parse('/bali/permissions/Public/v1'),
+            $previous: bali.NONE
+        }));
         var draftCitation;
-        var draftSource;
-
-        it('should create a new empty draft document', async function() {
-            draftCitation = await consumerClient.saveDraft();
-            draft = await consumerClient.retrieveDraft(draftCitation);
-            draft.setValue('$foo', '"bar"');
-            draftSource = draft.toString();
-        });
+        var draftSource = draft.toString();
 
         it('should save a new draft document in the repository', async function() {
             draftCitation = await consumerClient.saveDraft(draft);

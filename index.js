@@ -12,13 +12,13 @@
 /**
  * This function initializes a test document repository for the Bali Nebula™.
  * 
- * @param {String} testDirectory A test directory to be used as a local document repository.
+ * @param {String} directory A test directory to be used as a local document repository.
  * @param {Boolean} debug An optional flag that determines whether or not exceptions
  * will be logged to the error console.
  * @returns {Object} A singleton object containing the initialized document repository.
  */
-exports.local = function(testDirectory, debug) {
-    const repository = require('./src/LocalRepository').repository(testDirectory, debug);
+exports.local = function(directory, debug) {
+    const repository = require('./src/LocalRepository').repository(directory, debug);
     return repository;
 };
 
