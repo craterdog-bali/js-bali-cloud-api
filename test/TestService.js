@@ -10,7 +10,7 @@
 
 const debug = false;  // set to true for request-response logging
 const bali = require('bali-component-framework');
-const repository = require('../').local('test/config/', debug);
+const repository = require('../').local('test/config/');
 const express = require("express");
 const bodyParser = require('body-parser');
 

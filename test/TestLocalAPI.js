@@ -39,24 +39,24 @@ describe('Bali Nebula API™ - Test Local API', function() {
 
         it('should create the consumer notary API', async function() {
             const consumerTag = bali.tag();
-            consumerNotary = notary.api(consumerTag, testDirectory, debug);
+            consumerNotary = notary.api(consumerTag, testDirectory);
             expect(consumerNotary).to.exist;
         });
 
         it('should create the merchant notary API', async function() {
             const merchantTag = bali.tag();
-            merchantNotary = notary.api(merchantTag, testDirectory, debug);
+            merchantNotary = notary.api(merchantTag, testDirectory);
             expect(merchantNotary).to.exist;
         });
 
         it('should create the consumer nebula API', async function() {
-            consumerRepository = nebula.local(testDirectory, debug);
+            consumerRepository = nebula.local(testDirectory);
             consumerClient = nebula.api(consumerNotary, consumerRepository, debug);
             expect(consumerClient).to.exist;
         });
 
         it('should create the merchant nebula API', async function() {
-            merchantRepository = nebula.local(testDirectory, debug);
+            merchantRepository = nebula.local(testDirectory);
             merchantClient = nebula.api(merchantNotary, merchantRepository, debug);
             expect(merchantClient).to.exist;
         });
@@ -158,7 +158,7 @@ describe('Bali Nebula API™ - Test Local API', function() {
             }, bali.parameters({
                 $tag: bali.tag(),
                 $version: bali.version(),
-                $permissions: '$Private',
+                $permissions: bali.parse('/bali/permissions/Private/v1'),
                 $previous: bali.NONE
             }));
             draftCitation = await consumerClient.saveDraft(catalog);
@@ -231,10 +231,10 @@ describe('Bali Nebula API™ - Test Local API', function() {
             const type = bali.catalog({
                 $foo: '"bar"'
             }, bali.parameters({
-                $type: '$Type',
+                $type: bali.parse('/bali/types/Type/v1'),
                 $tag: bali.tag(),
                 $version: bali.version(),
-                $permissions: '$Public',
+                $permissions: bali.parse('/bali/permissions/Public/v1'),
                 $previous: bali.NONE
             }));
             const documentCitation = await merchantClient.saveDraft(type);
@@ -272,7 +272,7 @@ describe('Bali Nebula API™ - Test Local API', function() {
                 }, bali.parameters({
                     $tag: bali.tag(),
                     $version: bali.version(),
-                    $permissions: '$Public',
+                    $permissions: bali.parse('/bali/permissions/Public/v1'),
                     $previous: bali.NONE
                 }));
                 await consumerClient.queueMessage(queue, transaction);
@@ -304,7 +304,7 @@ describe('Bali Nebula API™ - Test Local API', function() {
         }, bali.parameters({
             $tag: bali.tag(),
             $version: bali.version(),
-            $permissions: '$Public',
+            $permissions: bali.parse('/bali/permissions/Public/v1'),
             $previous: bali.NONE
         }));
 

@@ -8,11 +8,10 @@
  * Source Initiative. (See http://opensource.org/licenses/MIT)          *
  ************************************************************************/
 
-const debug = false;  // set to true for error logging
 const mocha = require('mocha');
 const assert = require('chai').assert;
 const expect = require('chai').expect;
-const repository = require('../').local('test/config/', debug);
+const repository = require('../').local('test/config/');
 
 const source =
     '[\n' +

@@ -8,7 +8,7 @@
  * Source Initiative. (See http://opensource.org/licenses/MIT)          *
  ************************************************************************/
 
-const debug = false;  // set to true for error logging
+const debug = true;  // set to true for error logging
 const testDirectory = 'test/config/';
 const mocha = require('mocha');
 const assert = require('chai').assert;
@@ -40,24 +40,24 @@ describe('Bali Nebula API™ - Test Remote API', function() {
 
         it('should create the consumer notary API', async function() {
             const consumerTag = bali.tag();
-            consumerNotary = notary.api(consumerTag, testDirectory, debug);
+            consumerNotary = notary.api(consumerTag, testDirectory);
             expect(consumerNotary).to.exist;
         });
 
         it('should create the merchant notary API', async function() {
             const merchantTag = bali.tag();
-            merchantNotary = notary.api(merchantTag, testDirectory, debug);
+            merchantNotary = notary.api(merchantTag, testDirectory);
             expect(merchantNotary).to.exist;
         });
 
         it('should create the consumer nebula API', async function() {
-            consumerRepository = nebula.cloud(consumerNotary, cloudURL, debug);
+            consumerRepository = nebula.cloud(consumerNotary, cloudURL);
             consumerClient = nebula.api(consumerNotary, consumerRepository, debug);
             expect(consumerClient).to.exist;
         });
 
         it('should create the merchant nebula API', async function() {
-            merchantRepository = nebula.cloud(merchantNotary, cloudURL, debug);
+            merchantRepository = nebula.cloud(merchantNotary, cloudURL);
             merchantClient = nebula.api(merchantNotary, merchantRepository, debug);
             expect(merchantClient).to.exist;
         });
@@ -153,7 +153,7 @@ describe('Bali Nebula API™ - Test Remote API', function() {
             }, bali.parameters({
                 $tag: bali.tag(),
                 $version: bali.version(),
-                $permissions: '$Private',
+                $permissions: bali.parse('/bali/permissions/Private/v1'),
                 $previous: bali.NONE
             }));
             draftCitation = await consumerClient.saveDraft(catalog);
@@ -226,10 +226,10 @@ describe('Bali Nebula API™ - Test Remote API', function() {
             const type = bali.catalog({
                 $foo: '"bar"'
             }, bali.parameters({
-                $type: '$Type',
+                $type: bali.parse('/bali/types/Type/v1'),
                 $tag: bali.tag(),
                 $version: bali.version(),
-                $permissions: '$Public',
+                $permissions: bali.parse('/bali/permissions/Public/v1'),
                 $previous: bali.NONE
             }));
             const documentCitation = await merchantClient.saveDraft(type);
@@ -267,7 +267,7 @@ describe('Bali Nebula API™ - Test Remote API', function() {
                 }, bali.parameters({
                     $tag: bali.tag(),
                     $version: bali.version(),
-                    $permissions: '$Public',
+                    $permissions: bali.parse('/bali/permissions/Public/v1'),
                     $previous: bali.NONE
                 }));
                 await consumerClient.queueMessage(queue, transaction);
@@ -299,7 +299,7 @@ describe('Bali Nebula API™ - Test Remote API', function() {
         }, bali.parameters({
             $tag: bali.tag(),
             $version: bali.version(),
-            $permissions: '$Public',
+            $permissions: bali.parse('/bali/permissions/Public/v1'),
             $previous: bali.NONE
         }));
 

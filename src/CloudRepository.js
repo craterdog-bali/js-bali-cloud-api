@@ -23,12 +23,10 @@ const axios = require('axios');
  * 
  * @param {Object} notary An object that implements the API for the digital notary.
  * @param {Reference} cloudURL A reference that defines the URL for the cloud repository.
- * @param {Boolean} debug An optional flag that determines whether or not exceptions
  * will be logged to the error console.
  * @returns {Object} An object implementing the document repository interface.
  */
-exports.repository = function(notary, cloudURL, debug) {
-    debug = debug || false;
+exports.repository = function(notary, cloudURL) {
     const account = notary.getAccount();
 
     // return a singleton object for the API
@@ -66,23 +64,9 @@ exports.repository = function(notary, cloudURL, debug) {
          * @returns {Boolean} Whether or not the certificate exists.
          */
         certificateExists: async function(certificateId) {
-            try {
-                const credentials = await generateCredentials(notary);
-                const status = await sendRequest(credentials, '$certificateExists', cloudURL, 'HEAD', 'certificate', certificateId);
-                return status;
-            } catch (cause) {
-                const exception = bali.exception({
-                    $module: '$CloudRepository',
-                    $function: '$certificateExists',
-                    $exception: '$unexpected',
-                    $account: account || bali.NONE,
-                    $url: cloudURL || bali.NONE,
-                    $certificateId: certificateId ? bali.text(certificateId) : bali.NONE,
-                    $text: bali.text('An unexpected error occurred while attempting check to see if the certificate exists.')
-                }, cause);
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
+            const credentials = await generateCredentials(notary);
+            const status = await sendRequest(credentials, '$certificateExists', cloudURL, 'HEAD', 'certificate', certificateId);
+            return status;
         },
 
         /**
@@ -94,23 +78,9 @@ exports.repository = function(notary, cloudURL, debug) {
          * <code>undefined</code> if it doesn't exist.
          */
         fetchCertificate: async function(certificateId) {
-            try {
-                const credentials = await generateCredentials(notary);
-                const certificate = await sendRequest(credentials, '$fetchCertificate', cloudURL, 'GET', 'certificate', certificateId);
-                return certificate;
-            } catch (cause) {
-                const exception = bali.exception({
-                    $module: '$CloudRepository',
-                    $function: '$fetchCertificate',
-                    $exception: '$unexpected',
-                    $account: account || bali.NONE,
-                    $url: cloudURL || bali.NONE,
-                    $certificateId: certificateId ? bali.text(certificateId) : bali.NONE,
-                    $text: bali.text('An unexpected error occurred while attempting to fetch the certificate.')
-                }, cause);
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
+            const credentials = await generateCredentials(notary);
+            const certificate = await sendRequest(credentials, '$fetchCertificate', cloudURL, 'GET', 'certificate', certificateId);
+            return certificate;
         },
 
         /**
@@ -121,23 +91,8 @@ exports.repository = function(notary, cloudURL, debug) {
          * @param {String} certificate The canonical source string for the certificate.
          */
         createCertificate: async function(certificateId, certificate) {
-            try {
-                const credentials = await generateCredentials(notary);
-                await sendRequest(credentials, '$createCertificate', cloudURL, 'POST', 'certificate', certificateId, certificate);
-            } catch (cause) {
-                const exception = bali.exception({
-                    $module: '$CloudRepository',
-                    $function: '$createCertificate',
-                    $exception: '$unexpected',
-                    $account: account || bali.NONE,
-                    $url: cloudURL || bali.NONE,
-                    $certificateId: certificateId ? bali.text(certificateId) : bali.NONE,
-                    $certificate: certificate || bali.NONE,
-                    $text: bali.text('An unexpected error occurred while attempting to create the certificate.')
-                }, cause);
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
+            const credentials = await generateCredentials(notary);
+            await sendRequest(credentials, '$createCertificate', cloudURL, 'POST', 'certificate', certificateId, certificate);
         },
 
         /**
@@ -149,23 +104,9 @@ exports.repository = function(notary, cloudURL, debug) {
          * @returns {Boolean} Whether or not the draft document exists.
          */
         draftExists: async function(draftId) {
-            try {
-                const credentials = await generateCredentials(notary);
-                const status = await sendRequest(credentials, '$draftExists', cloudURL, 'HEAD', 'draft', draftId);
-                return status;
-            } catch (cause) {
-                const exception = bali.exception({
-                    $module: '$CloudRepository',
-                    $function: '$draftExists',
-                    $exception: '$unexpected',
-                    $account: account || bali.NONE,
-                    $url: cloudURL || bali.NONE,
-                    $draftId: draftId ? bali.text(draftId) : bali.NONE,
-                    $text: bali.text('An unexpected error occurred while attempting check to see if the draft exists.')
-                }, cause);
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
+            const credentials = await generateCredentials(notary);
+            const status = await sendRequest(credentials, '$draftExists', cloudURL, 'HEAD', 'draft', draftId);
+            return status;
         },
 
         /**
@@ -177,23 +118,9 @@ exports.repository = function(notary, cloudURL, debug) {
          * <code>undefined</code> if it doesn't exist.
          */
         fetchDraft: async function(draftId) {
-            try {
-                const credentials = await generateCredentials(notary);
-                const draft = await sendRequest(credentials, '$fetchDraft', cloudURL, 'GET', 'draft', draftId);
-                return draft;
-            } catch (cause) {
-                const exception = bali.exception({
-                    $module: '$CloudRepository',
-                    $function: '$fetchDraft',
-                    $exception: '$unexpected',
-                    $account: account || bali.NONE,
-                    $url: cloudURL || bali.NONE,
-                    $draftId: draftId ? bali.text(draftId) : bali.NONE,
-                    $text: bali.text('An unexpected error occurred while attempting to fetch the draft.')
-                }, cause);
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
+            const credentials = await generateCredentials(notary);
+            const draft = await sendRequest(credentials, '$fetchDraft', cloudURL, 'GET', 'draft', draftId);
+            return draft;
         },
 
         /**
@@ -204,23 +131,8 @@ exports.repository = function(notary, cloudURL, debug) {
          * @param {String} draft The canonical source string for the draft document.
          */
         saveDraft: async function(draftId, draft) {
-            try {
-                const credentials = await generateCredentials(notary);
-                await sendRequest(credentials, '$saveDraft', cloudURL, 'PUT', 'draft', draftId, draft);
-            } catch (cause) {
-                const exception = bali.exception({
-                    $module: '$CloudRepository',
-                    $function: '$saveDraft',
-                    $exception: '$unexpected',
-                    $account: account || bali.NONE,
-                    $url: cloudURL || bali.NONE,
-                    $draftId: draftId ? bali.text(draftId) : bali.NONE,
-                    $draft: draft || bali.NONE,
-                    $text: bali.text('An unexpected error occurred while attempting to create the draft.')
-                }, cause);
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
+            const credentials = await generateCredentials(notary);
+            await sendRequest(credentials, '$saveDraft', cloudURL, 'PUT', 'draft', draftId, draft);
         },
 
         /**
@@ -230,22 +142,8 @@ exports.repository = function(notary, cloudURL, debug) {
          * the draft document being deleted.
          */
         deleteDraft: async function(draftId) {
-            try {
-                const credentials = await generateCredentials(notary);
-                await sendRequest(credentials, '$deleteDraft', cloudURL, 'DELETE', 'draft', draftId);
-            } catch (cause) {
-                const exception = bali.exception({
-                    $module: '$CloudRepository',
-                    $function: '$deleteDraft',
-                    $exception: '$unexpected',
-                    $account: account || bali.NONE,
-                    $url: cloudURL || bali.NONE,
-                    $draftId: draftId ? bali.text(draftId) : bali.NONE,
-                    $text: bali.text('An unexpected error occurred while attempting to delete the draft.')
-                }, cause);
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
+            const credentials = await generateCredentials(notary);
+            await sendRequest(credentials, '$deleteDraft', cloudURL, 'DELETE', 'draft', draftId);
         },
 
         /**
@@ -257,23 +155,9 @@ exports.repository = function(notary, cloudURL, debug) {
          * @returns {Boolean} Whether or not the document exists.
          */
         documentExists: async function(documentId) {
-            try {
-                const credentials = await generateCredentials(notary);
-                const status = await sendRequest(credentials, '$documentExists', cloudURL, 'HEAD', 'document', documentId);
-                return status;
-            } catch (cause) {
-                const exception = bali.exception({
-                    $module: '$CloudRepository',
-                    $function: '$documentExists',
-                    $exception: '$unexpected',
-                    $account: account || bali.NONE,
-                    $url: cloudURL || bali.NONE,
-                    $documentId: documentId ? bali.text(documentId) : bali.NONE,
-                    $text: bali.text('An unexpected error occurred while attempting check to see if the document exists.')
-                }, cause);
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
+            const credentials = await generateCredentials(notary);
+            const status = await sendRequest(credentials, '$documentExists', cloudURL, 'HEAD', 'document', documentId);
+            return status;
         },
 
         /**
@@ -285,23 +169,9 @@ exports.repository = function(notary, cloudURL, debug) {
          * <code>undefined</code> if it doesn't exist.
          */
         fetchDocument: async function(documentId) {
-            try {
-                const credentials = await generateCredentials(notary);
-                const document = await sendRequest(credentials, '$fetchDocument', cloudURL, 'GET', 'document', documentId);
-                return document;
-            } catch (cause) {
-                const exception = bali.exception({
-                    $module: '$CloudRepository',
-                    $function: '$fetchDocument',
-                    $exception: '$unexpected',
-                    $account: account || bali.NONE,
-                    $url: cloudURL || bali.NONE,
-                    $documentId: documentId ? bali.text(documentId) : bali.NONE,
-                    $text: bali.text('An unexpected error occurred while attempting to fetch the document.')
-                }, cause);
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
+            const credentials = await generateCredentials(notary);
+            const document = await sendRequest(credentials, '$fetchDocument', cloudURL, 'GET', 'document', documentId);
+            return document;
         },
 
         /**
@@ -312,23 +182,8 @@ exports.repository = function(notary, cloudURL, debug) {
          * @param {String} document The canonical source string for the document.
          */
         createDocument: async function(documentId, document) {
-            try {
-                const credentials = await generateCredentials(notary);
-                await sendRequest(credentials, '$createDocument', cloudURL, 'POST', 'document', documentId, document);
-            } catch (cause) {
-                const exception = bali.exception({
-                    $module: '$CloudRepository',
-                    $function: '$createDocument',
-                    $exception: '$unexpected',
-                    $account: account || bali.NONE,
-                    $url: cloudURL || bali.NONE,
-                    $documentId: documentId ? bali.text(documentId) : bali.NONE,
-                    $document: document || bali.NONE,
-                    $text: bali.text('An unexpected error occurred while attempting to create the document.')
-                }, cause);
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
+            const credentials = await generateCredentials(notary);
+            await sendRequest(credentials, '$createDocument', cloudURL, 'POST', 'document', documentId, document);
         },
 
         /**
@@ -340,23 +195,9 @@ exports.repository = function(notary, cloudURL, debug) {
          * @returns {Boolean} Whether or not the type exists.
          */
         typeExists: async function(typeId) {
-            try {
-                const credentials = await generateCredentials(notary);
-                const status = await sendRequest(credentials, '$typeExists', cloudURL, 'HEAD', 'type', typeId);
-                return status;
-            } catch (cause) {
-                const exception = bali.exception({
-                    $module: '$CloudRepository',
-                    $function: '$typeExists',
-                    $exception: '$unexpected',
-                    $account: account || bali.NONE,
-                    $url: cloudURL || bali.NONE,
-                    $typeId: typeId ? bali.text(typeId) : bali.NONE,
-                    $text: bali.text('An unexpected error occurred while attempting check to see if the type exists.')
-                }, cause);
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
+            const credentials = await generateCredentials(notary);
+            const status = await sendRequest(credentials, '$typeExists', cloudURL, 'HEAD', 'type', typeId);
+            return status;
         },
 
         /**
@@ -368,23 +209,9 @@ exports.repository = function(notary, cloudURL, debug) {
          * <code>undefined</code> if it doesn't exist.
          */
         fetchType: async function(typeId) {
-            try {
-                const credentials = await generateCredentials(notary);
-                const type = await sendRequest(credentials, '$fetchType', cloudURL, 'GET', 'type', typeId);
-                return type;
-            } catch (cause) {
-                const exception = bali.exception({
-                    $module: '$CloudRepository',
-                    $function: '$fetchType',
-                    $exception: '$unexpected',
-                    $account: account || bali.NONE,
-                    $url: cloudURL || bali.NONE,
-                    $typeId: typeId ? bali.text(typeId) : bali.NONE,
-                    $text: bali.text('An unexpected error occurred while attempting to fetch the type.')
-                }, cause);
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
+            const credentials = await generateCredentials(notary);
+            const type = await sendRequest(credentials, '$fetchType', cloudURL, 'GET', 'type', typeId);
+            return type;
         },
 
         /**
@@ -395,23 +222,8 @@ exports.repository = function(notary, cloudURL, debug) {
          * @param {String} type The canonical source string for the type.
          */
         createType: async function(typeId, type) {
-            try {
-                const credentials = await generateCredentials(notary);
-                await sendRequest(credentials, '$createType', cloudURL, 'POST', 'type', typeId, type);
-            } catch (cause) {
-                const exception = bali.exception({
-                    $module: '$CloudRepository',
-                    $function: '$createType',
-                    $exception: '$unexpected',
-                    $account: account || bali.NONE,
-                    $url: cloudURL || bali.NONE,
-                    $typeId: typeId ? bali.text(typeId) : bali.NONE,
-                    $type: type || bali.NONE,
-                    $text: bali.text('An unexpected error occurred while attempting to create the type.')
-                }, cause);
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
+            const credentials = await generateCredentials(notary);
+            await sendRequest(credentials, '$createType', cloudURL, 'POST', 'type', typeId, type);
         },
 
         /**
@@ -421,23 +233,8 @@ exports.repository = function(notary, cloudURL, debug) {
          * @param {String} message The canonical source string for the message.
          */
         queueMessage: async function(queueId, message) {
-            try {
-                const credentials = await generateCredentials(notary);
-                await sendRequest(credentials, '$queueMessage', cloudURL, 'PUT', 'queue', queueId, message);
-            } catch (cause) {
-                const exception = bali.exception({
-                    $module: '$CloudRepository',
-                    $function: '$queueMessage',
-                    $exception: '$unexpected',
-                    $account: account || bali.NONE,
-                    $url: cloudURL || bali.NONE,
-                    $queueId: queueId ? bali.text(queueId) : bali.NONE,
-                    $message: message || bali.NONE,
-                    $text: bali.text('An unexpected error occurred while attempting to queue the message.')
-                }, cause);
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
+            const credentials = await generateCredentials(notary);
+            await sendRequest(credentials, '$queueMessage', cloudURL, 'PUT', 'queue', queueId, message);
         },
 
         /**
@@ -447,23 +244,9 @@ exports.repository = function(notary, cloudURL, debug) {
          * @returns {String} The canonical source string for the message.
          */
         dequeueMessage: async function(queueId) {
-            try {
-                const credentials = await generateCredentials(notary);
-                const message = await sendRequest(credentials, '$dequeueMessage', cloudURL, 'GET', 'queue', queueId);
-                return message;
-            } catch (cause) {
-                const exception = bali.exception({
-                    $module: '$CloudRepository',
-                    $function: '$dequeueMessage',
-                    $exception: '$unexpected',
-                    $account: account || bali.NONE,
-                    $url: cloudURL || bali.NONE,
-                    $queueId: queueId ? bali.text(queueId) : bali.NONE,
-                    $text: bali.text('An unexpected error occurred while attempting to dequeue the message.')
-                }, cause);
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
+            const credentials = await generateCredentials(notary);
+            const message = await sendRequest(credentials, '$dequeueMessage', cloudURL, 'GET', 'queue', queueId);
+            return message;
         }
 
     };
@@ -472,124 +255,42 @@ exports.repository = function(notary, cloudURL, debug) {
 
 // PRIVATE FUNCTIONS
 
+/**
+ * This function generates a set of signed credentials for the client making a request on
+ * the cloud repository. The credentials can be used by the cloud repository to authenticate
+ * the client and verify their permissions.
+ * 
+ * @param {Object} notary An object that implements the API for the digital notary.
+ * @returns {Catalog} The newly generated credentials.
+ */
 const generateCredentials = async function(notary) {
     const citation = await notary.getCitation();
     const document = bali.duplicate(citation);
     const parameters = document.getParameters();
     parameters.setParameter('$tag', bali.tag());
     parameters.setParameter('$version', bali.version());
-    parameters.setParameter('$permissions', '$Private');
+    parameters.setParameter('$permissions', bali.parse('/bali/permissions/Private/v1'));
     parameters.setParameter('$previous', bali.NONE);
-    const credentials = await notary.notarizeDocument(document);
+    const credentials = await notary.signComponent(document);
     return credentials;
 };
 
 
+/**
+ * This function sends a RESTful web request to the web service specified by the cloudURL,
+ * method, type and identifier. If a document is included it is sent as the body of the
+ * request. The result that is returned by the web service is returned from this function.
+ * 
+ * @param {Catalog} credentials The signed credentials for the client making the request. 
+ * @param {String} functionName The name of the API function sending the request.
+ * @param {Reference} cloudURL A reference containing the URL of the web service.
+ * @param {String} method The HTTP method type of the request.
+ * @param {String} type The type of resource being acted upon.
+ * @param {String} identifier An identifier for the specific resource being acted upon.
+ * @param {Catalog} document An optional signed document to be passed to the web service.
+ * @returns {Boolean|Catalog} The result of the request.
+ */
 const sendRequest = async function(credentials, functionName, cloudURL, method, type, identifier, document) {
-
-    // analyze the parameters
-    switch (type) {
-        case 'certificate':
-            switch (method) {
-                case 'HEAD':
-                case 'POST':
-                case 'GET':
-                    break;
-                default:
-                    const exception = bali.exception({
-                        $module: '$CloudRepository',
-                        $function: functionName,
-                        $exception: '$invalidParameter',
-                        $url: cloudURL || bali.NONE,
-                        $method: bali.text(method.toString()),
-                        $type: bali.text(type.toString()),
-                        $text: bali.text('An invalid method and document type combination was specified.')
-                    });
-                    throw exception;
-            }
-            break;
-        case 'draft':
-            switch (method) {
-                case 'HEAD':
-                case 'PUT':
-                case 'GET':
-                case 'DELETE':
-                    break;
-                default:
-                    const exception = bali.exception({
-                        $module: '$CloudRepository',
-                        $function: functionName,
-                        $exception: '$invalidParameter',
-                        $method: bali.text(method.toString()),
-                        $type: bali.text(type.toString()),
-                        $text: bali.text('An invalid method and document type combination was specified.')
-                    });
-                    throw exception;
-            }
-            break;
-        case 'document':
-            switch (method) {
-                case 'HEAD':
-                case 'POST':
-                case 'GET':
-                    break;
-                default:
-                    const exception = bali.exception({
-                        $module: '$CloudRepository',
-                        $function: functionName,
-                        $exception: '$invalidParameter',
-                        $method: bali.text(method.toString()),
-                        $type: bali.text(type.toString()),
-                        $text: bali.text('An invalid method and document type combination was specified.')
-                    });
-                    throw exception;
-            }
-            break;
-        case 'type':
-            switch (method) {
-                case 'HEAD':
-                case 'POST':
-                case 'GET':
-                    break;
-                default:
-                    const exception = bali.exception({
-                        $module: '$CloudRepository',
-                        $function: functionName,
-                        $exception: '$invalidParameter',
-                        $method: bali.text(method.toString()),
-                        $type: bali.text(type.toString()),
-                        $text: bali.text('An invalid method and document type combination was specified.')
-                    });
-                    throw exception;
-            }
-            break;
-        case 'queue':
-            switch (method) {
-                case 'PUT':
-                case 'GET':
-                    break;
-                default:
-                    const exception = bali.exception({
-                        $module: '$CloudRepository',
-                        $function: functionName,
-                        $exception: '$invalidParameter',
-                        $method: bali.text(method.toString()),
-                        $type: bali.text(type.toString()),
-                        $text: bali.text('An invalid method and document type combination was specified.')
-                    });
-                    throw exception;
-            }
-            break;
-        default:
-            const exception = bali.exception({
-                $module: '$CloudRepository',
-                $function: functionName,
-                $exception: '$invalidParameter',
-                $parameter: bali.text(type.toString()),
-                $text: bali.text('An invalid document type was specified.')
-            });
-            throw exception;
-    }
 
     // setup the request URL and options
     const fullURL = cloudURL.getValue().toString() + type + '/' + identifier;

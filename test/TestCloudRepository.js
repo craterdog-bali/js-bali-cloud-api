@@ -8,7 +8,6 @@
  * Source Initiative. (See http://opensource.org/licenses/MIT)          *
  ************************************************************************/
 
-const debug = false;  // set to true for error logging
 const mocha = require('mocha');
 const assert = require('chai').assert;
 const expect = require('chai').expect;
@@ -16,8 +15,8 @@ const bali = require('bali-component-framework');
 const account = bali.parse('#GTDHQ9B8ZGS7WCBJJJBFF6KDCCF55R2P');
 const testDirectory = 'test/config/';
 const cloudURL = bali.reference('http://localhost:3000');
-const notary = require('bali-digital-notary').api(account, testDirectory, debug);
-const repository = require('../').cloud(notary, cloudURL, debug);
+const notary = require('bali-digital-notary').api(account, testDirectory);
+const repository = require('../').cloud(notary, cloudURL);
 
 const transaction = bali.catalog({
     $timestamp: bali.moment(),
@@ -29,7 +28,7 @@ const transaction = bali.catalog({
 }, bali.parameters({
     $tag: bali.tag(),
     $version: bali.version(),
-    $permissions: '$Public',
+    $permissions: bali.parse('/bali/permissions/Public/v1'),
     $previous: bali.NONE
 }));
 

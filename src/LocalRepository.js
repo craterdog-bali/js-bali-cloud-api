@@ -33,12 +33,10 @@ const EOL = '\n';  // POSIX compliant end of line
  * repository. If the repository does not yet exist it is created.
  * 
  * @param {String} directory The location of the directory to be used for the repository.
- * @param {Boolean} debug An optional flag that determines whether or not exceptions
  * will be logged to the error console.
  * @returns {Object} An object implementing the document repository interface.
  */
-exports.repository = function(directory, debug) {
-    debug = debug || false;
+exports.repository = function(directory) {
     const repositoryDirectory = directory + 'repository/';
     const certificates = repositoryDirectory + 'certificates/';
     const drafts = repositoryDirectory + 'drafts/';
@@ -71,31 +69,18 @@ exports.repository = function(directory, debug) {
         },
 
         /**
-         * This function initializes the document repository.  It must be called before any
-         * other API function and can only be called once.
+         * This function initializes the document repository.  It will be called before any
+         * other API function executes and can only be called once.
          */
         initializeAPI: async function() {
-            try {
-                // create the repository directory structure if necessary (with drwx------ permissions)
-                await pfs.mkdir(directory, 0o700).catch(function() {});
-                await pfs.mkdir(repositoryDirectory, 0o700).catch(function() {});
-                await pfs.mkdir(certificates, 0o700).catch(function() {});
-                await pfs.mkdir(drafts, 0o700).catch(function() {});
-                await pfs.mkdir(documents, 0o700).catch(function() {});
-                await pfs.mkdir(types, 0o700).catch(function() {});
-                await pfs.mkdir(queues, 0o700).catch(function() {});
-                this.initializeAPI = undefined;  // can only be called once
-            } catch (cause) {
-                const exception = bali.exception({
-                    $module: '$LocalRepository',
-                    $function: '$initializeAPI',
-                    $exception: '$unexpected',
-                    $url: this.getURL(),
-                    $text: bali.text('An unexpected error occurred while attempting to initialize the API.')
-                }, cause);
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
+            await pfs.mkdir(directory, 0o700).catch(function() {});
+            await pfs.mkdir(repositoryDirectory, 0o700).catch(function() {});
+            await pfs.mkdir(certificates, 0o700).catch(function() {});
+            await pfs.mkdir(drafts, 0o700).catch(function() {});
+            await pfs.mkdir(documents, 0o700).catch(function() {});
+            await pfs.mkdir(types, 0o700).catch(function() {});
+            await pfs.mkdir(queues, 0o700).catch(function() {});
+            this.initializeAPI = undefined;  // can only be called once
         },
 
         /**
@@ -108,22 +93,9 @@ exports.repository = function(directory, debug) {
          */
         certificateExists: async function(certificateId) {
             if (this.initializeAPI) await this.initializeAPI();
-            try {
-                const filename = certificates + certificateId + '.bali';
-                const exists = await doesExist(filename);
-                return exists;
-            } catch (cause) {
-                const exception = bali.exception({
-                    $module: '$LocalRepository',
-                    $function: '$certificateExists',
-                    $exception: '$unexpected',
-                    $url: bali.reference('file:' + directory),
-                    $certificateId: certificateId ? bali.text(certificateId) : bali.NONE,
-                    $text: bali.text('An unexpected error occurred while attempting to see if a certificate exists.')
-                }, cause);
-                if (debug) console.error(exception.toString());
-                throw exception;
-            }
+            const filename = certificates + certificateId + '.bali';
+            const exists = await doesExist(filename);
+            return exists;
         },
 
         /**
@@ -136,25 +108,14 @@ exports.repository = function(directory, debug) {
          */
         fetchCertificate: async function(certificateId) {
             if (this.initializeAPI) await this.initializeAPI();
-            try {
-                var certificate;
-                const filename = certificates + certificateId + '.bali';
-                const exists = await doesExist(filename);
-                if (exists) {
-                    certificate = await pfs.readFile(filename);
-                    certificate = certificate.toString().slice(0, -1);  // remove POSIX compliant <EOL>
-                }
-                return certificate;
-            } catch (exception) {
-                throw bali.exception({
-                    $module: '$LocalRepository',
-                    $function: '$fetchCertificate',
-                    $exception: '$directoryAccess',
-                    $url: bali.reference('file:' + directory),
-                    $certificateId: certificateId ? bali.text(certificateId) : bali.NONE,
-                    $text: bali.text('The local configuration directory could not be accessed.')
-                }, exception);
+            var certificate;
+            const filename = certificates + certificateId + '.bali';
+            const exists = await doesExist(filename);
+            if (exists) {
+                certificate = await pfs.readFile(filename);
+                certificate = certificate.toString().slice(0, -1);  // remove POSIX compliant <EOL>
             }
+            return certificate;
         },
 
         /**
@@ -166,32 +127,20 @@ exports.repository = function(directory, debug) {
          */
         createCertificate: async function(certificateId, certificate) {
             if (this.initializeAPI) await this.initializeAPI();
-            try {
-                const filename = certificates + certificateId + '.bali';
-                const exists = await doesExist(filename);
-                if (exists) {
-                    throw bali.exception({
-                        $module: '$LocalRepository',
-                        $function: '$createCertificate',
-                        $exception: '$fileExists',
-                        $url: bali.reference('file:' + directory),
-                        $file: bali.text(filename),
-                        $text: bali.text('The file to be written already exists.')
-                    });
-                }
-                const document = certificate + EOL;  // add POSIX compliant <EOL>
-                await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o400});
-            } catch (exception) {
+            const filename = certificates + certificateId + '.bali';
+            const exists = await doesExist(filename);
+            if (exists) {
                 throw bali.exception({
                     $module: '$LocalRepository',
                     $function: '$createCertificate',
-                    $exception: '$directoryAccess',
+                    $exception: '$fileExists',
                     $url: bali.reference('file:' + directory),
-                    $certificateId: certificateId ? bali.text(certificateId) : bali.NONE,
-                    $certificate: certificate || bali.NONE,
-                    $text: bali.text('The local configuration directory could not be accessed.')
-                }, exception);
+                    $file: bali.text(filename),
+                    $text: bali.text('The file to be written already exists.')
+                });
             }
+            const document = certificate + EOL;  // add POSIX compliant <EOL>
+            await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o400});
         },
 
         /**
@@ -204,20 +153,9 @@ exports.repository = function(directory, debug) {
          */
         draftExists: async function(draftId) {
             if (this.initializeAPI) await this.initializeAPI();
-            try {
-                const filename = drafts + draftId + '.bali';
-                const exists = await doesExist(filename);
-                return exists;
-            } catch (exception) {
-                throw bali.exception({
-                    $module: '$LocalRepository',
-                    $function: '$draftExists',
-                    $exception: '$directoryAccess',
-                    $url: bali.reference('file:' + directory),
-                    $draftId: draftId ? bali.text(draftId) : bali.NONE,
-                    $text: bali.text('The local configuration directory could not be accessed.')
-                }, exception);
-            }
+            const filename = drafts + draftId + '.bali';
+            const exists = await doesExist(filename);
+            return exists;
         },
 
         /**
@@ -230,25 +168,14 @@ exports.repository = function(directory, debug) {
          */
         fetchDraft: async function(draftId) {
             if (this.initializeAPI) await this.initializeAPI();
-            try {
-                var draft;
-                const filename = drafts + draftId + '.bali';
-                const exists = await doesExist(filename);
-                if (exists) {
-                    draft = await pfs.readFile(filename);
-                    draft = draft.toString().slice(0, -1);  // remove POSIX compliant <EOL>
-                }
-                return draft;
-            } catch (exception) {
-                throw bali.exception({
-                    $module: '$LocalRepository',
-                    $function: '$fetchDraft',
-                    $exception: '$directoryAccess',
-                    $url: bali.reference('file:' + directory),
-                    $draftId: draftId ? bali.text(draftId) : bali.NONE,
-                    $text: bali.text('The local configuration directory could not be accessed.')
-                }, exception);
+            var draft;
+            const filename = drafts + draftId + '.bali';
+            const exists = await doesExist(filename);
+            if (exists) {
+                draft = await pfs.readFile(filename);
+                draft = draft.toString().slice(0, -1);  // remove POSIX compliant <EOL>
             }
+            return draft;
         },
 
         /**
@@ -260,21 +187,9 @@ exports.repository = function(directory, debug) {
          */
         saveDraft: async function(draftId, draft) {
             if (this.initializeAPI) await this.initializeAPI();
-            try {
-                const filename = drafts + draftId + '.bali';
-                const document = draft + EOL;  // add POSIX compliant <EOL>
-                await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o600});
-            } catch (exception) {
-                throw bali.exception({
-                    $module: '$LocalRepository',
-                    $function: '$saveDraft',
-                    $exception: '$directoryAccess',
-                    $url: bali.reference('file:' + directory),
-                    $draftId: draftId ? bali.text(draftId) : bali.NONE,
-                    $draft: draft || bali.NONE,
-                    $text: bali.text('The local configuration directory could not be accessed.')
-                }, exception);
-            }
+            const filename = drafts + draftId + '.bali';
+            const document = draft + EOL;  // add POSIX compliant <EOL>
+            await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o600});
         },
 
         /**
@@ -285,21 +200,10 @@ exports.repository = function(directory, debug) {
          */
         deleteDraft: async function(draftId) {
             if (this.initializeAPI) await this.initializeAPI();
-            try {
-                const filename = drafts + draftId + '.bali';
-                const exists = await doesExist(filename);
-                if (exists) {
-                    await pfs.unlink(filename);
-                }
-            } catch (exception) {
-                throw bali.exception({
-                    $module: '$LocalRepository',
-                    $function: '$deleteDraft',
-                    $exception: '$directoryAccess',
-                    $url: bali.reference('file:' + directory),
-                    $draftId: draftId ? bali.text(draftId) : bali.NONE,
-                    $text: bali.text('The local configuration directory could not be accessed.')
-                }, exception);
+            const filename = drafts + draftId + '.bali';
+            const exists = await doesExist(filename);
+            if (exists) {
+                await pfs.unlink(filename);
             }
         },
 
@@ -313,20 +217,9 @@ exports.repository = function(directory, debug) {
          */
         documentExists: async function(documentId) {
             if (this.initializeAPI) await this.initializeAPI();
-            try {
-                const filename = documents + documentId + '.bali';
-                const exists = await doesExist(filename);
-                return exists;
-            } catch (exception) {
-                throw bali.exception({
-                    $module: '$LocalRepository',
-                    $function: '$documentExists',
-                    $exception: '$directoryAccess',
-                    $url: bali.reference('file:' + directory),
-                    $documentId: documentId ? bali.text(documentId) : bali.NONE,
-                    $text: bali.text('The local configuration directory could not be accessed.')
-                }, exception);
-            }
+            const filename = documents + documentId + '.bali';
+            const exists = await doesExist(filename);
+            return exists;
         },
 
         /**
@@ -339,25 +232,14 @@ exports.repository = function(directory, debug) {
          */
         fetchDocument: async function(documentId) {
             if (this.initializeAPI) await this.initializeAPI();
-            try {
-                var document;
-                const filename = documents + documentId + '.bali';
-                const exists = await doesExist(filename);
-                if (exists) {
-                    document = await pfs.readFile(filename);
-                    document = document.toString().slice(0, -1);  // remove POSIX compliant <EOL>
-                }
-                return document;
-            } catch (exception) {
-                throw bali.exception({
-                    $module: '$LocalRepository',
-                    $function: '$fetchDocument',
-                    $exception: '$directoryAccess',
-                    $url: bali.reference('file:' + directory),
-                    $documentId: documentId ? bali.text(documentId) : bali.NONE,
-                    $text: bali.text('The local configuration directory could not be accessed.')
-                }, exception);
+            var document;
+            const filename = documents + documentId + '.bali';
+            const exists = await doesExist(filename);
+            if (exists) {
+                document = await pfs.readFile(filename);
+                document = document.toString().slice(0, -1);  // remove POSIX compliant <EOL>
             }
+            return document;
         },
 
         /**
@@ -369,32 +251,20 @@ exports.repository = function(directory, debug) {
          */
         createDocument: async function(documentId, document) {
             if (this.initializeAPI) await this.initializeAPI();
-            try {
-                const filename = documents + documentId + '.bali';
-                const exists = await doesExist(filename);
-                if (exists) {
-                    throw bali.exception({
-                        $module: '$LocalRepository',
-                        $function: '$createDocument',
-                        $exception: '$fileExists',
-                        $url: bali.reference('file:' + directory),
-                        $file: bali.text(filename),
-                        $text: bali.text('The file to be written already exists.')
-                    });
-                }
-                document = document + EOL;  // add POSIX compliant <EOL>
-                await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o400});
-            } catch (exception) {
+            const filename = documents + documentId + '.bali';
+            const exists = await doesExist(filename);
+            if (exists) {
                 throw bali.exception({
                     $module: '$LocalRepository',
                     $function: '$createDocument',
-                    $exception: '$directoryAccess',
+                    $exception: '$fileExists',
                     $url: bali.reference('file:' + directory),
-                    $documentId: documentId ? bali.text(documentId) : bali.NONE,
-                    $document: document || bali.NONE,
-                    $text: bali.text('The local configuration directory could not be accessed.')
-                }, exception);
+                    $file: bali.text(filename),
+                    $text: bali.text('The file to be written already exists.')
+                });
             }
+            document = document + EOL;  // add POSIX compliant <EOL>
+            await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o400});
         },
 
         /**
@@ -407,20 +277,9 @@ exports.repository = function(directory, debug) {
          */
         typeExists: async function(typeId) {
             if (this.initializeAPI) await this.initializeAPI();
-            try {
-                const filename = types + typeId + '.bali';
-                const exists = await doesExist(filename);
-                return exists;
-            } catch (exception) {
-                throw bali.exception({
-                    $module: '$LocalRepository',
-                    $function: '$typeExists',
-                    $exception: '$directoryAccess',
-                    $url: bali.reference('file:' + directory),
-                    $typeId: typeId ? bali.text(typeId) : bali.NONE,
-                    $text: bali.text('The local configuration directory could not be accessed.')
-                }, exception);
-            }
+            const filename = types + typeId + '.bali';
+            const exists = await doesExist(filename);
+            return exists;
         },
 
         /**
@@ -433,25 +292,14 @@ exports.repository = function(directory, debug) {
          */
         fetchType: async function(typeId) {
             if (this.initializeAPI) await this.initializeAPI();
-            try {
-                var type;
-                const filename = types + typeId + '.bali';
-                const exists = await doesExist(filename);
-                if (exists) {
-                    type = await pfs.readFile(filename);
-                    type = type.toString().slice(0, -1);  // remove POSIX compliant <EOL>
-                }
-                return type;
-            } catch (exception) {
-                throw bali.exception({
-                    $module: '$LocalRepository',
-                    $function: '$fetchType',
-                    $exception: '$directoryAccess',
-                    $url: bali.reference('file:' + directory),
-                    $typeId: typeId ? bali.text(typeId) : bali.NONE,
-                    $text: bali.text('The local configuration directory could not be accessed.')
-                }, exception);
+            var type;
+            const filename = types + typeId + '.bali';
+            const exists = await doesExist(filename);
+            if (exists) {
+                type = await pfs.readFile(filename);
+                type = type.toString().slice(0, -1);  // remove POSIX compliant <EOL>
             }
+            return type;
         },
 
         /**
@@ -463,32 +311,20 @@ exports.repository = function(directory, debug) {
          */
         createType: async function(typeId, type) {
             if (this.initializeAPI) await this.initializeAPI();
-            try {
-                const filename = types + typeId + '.bali';
-                const exists = await doesExist(filename);
-                if (exists) {
-                    throw bali.exception({
-                        $module: '$LocalRepository',
-                        $function: '$createType',
-                        $exception: '$fileExists',
-                        $url: bali.reference('file:' + directory),
-                        $file: bali.text(filename),
-                        $text: bali.text('The file to be written already exists.')
-                    });
-                }
-                const document = type + EOL;  // add POSIX compliant <EOL>
-                await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o400});
-            } catch (exception) {
+            const filename = types + typeId + '.bali';
+            const exists = await doesExist(filename);
+            if (exists) {
                 throw bali.exception({
                     $module: '$LocalRepository',
                     $function: '$createType',
-                    $exception: '$directoryAccess',
+                    $exception: '$fileExists',
                     $url: bali.reference('file:' + directory),
-                    $typeId: typeId ? bali.text(typeId) : bali.NONE,
-                    $type: type || bali.NONE,
-                    $text: bali.text('The local configuration directory could not be accessed.')
-                }, exception);
+                    $file: bali.text(filename),
+                    $text: bali.text('The file to be written already exists.')
+                });
             }
+            const document = type + EOL;  // add POSIX compliant <EOL>
+            await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o400});
         },
 
         /**
@@ -501,21 +337,10 @@ exports.repository = function(directory, debug) {
             if (this.initializeAPI) await this.initializeAPI();
             const queue = queues + queueId + '/';
             const messageId = bali.tag().getValue();
-            try {
-                if (!await doesExist(queue)) await pfs.mkdir(queue, 0o700);
-                const filename = queue + messageId + '.bali';
-                const document = message + EOL;  // add POSIX compliant <EOL>
-                await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o600});
-            } catch (exception) {
-                throw bali.exception({
-                    $module: '$LocalRepository',
-                    $function: '$queueMessage',
-                    $exception: '$queueAccess',
-                    $queue: queue ? bali.text(queue) : bali.NONE,
-                    $messageId: messageId ? bali.text(messageId) : bali.NONE,
-                    $text: bali.text('The local queue could not be accessed.')
-                }, exception);
-            }
+            if (!await doesExist(queue)) await pfs.mkdir(queue, 0o700);
+            const filename = queue + messageId + '.bali';
+            const document = message + EOL;  // add POSIX compliant <EOL>
+            await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o600});
         },
 
         /**
@@ -527,39 +352,29 @@ exports.repository = function(directory, debug) {
         dequeueMessage: async function(queueId) {
             if (this.initializeAPI) await this.initializeAPI();
             const queue = queues + queueId + '/';
-            try {
-                var message;
-                while (await doesExist(queue)) {
-                    const messages = await pfs.readdir(queue);
-                    const count = messages.length;
-                    if (count) {
-                        // select a message a random since a distributed queue cannot guarantee FIFO
-                        const index = bali.random.index(count) - 1;  // convert to zero based indexing
-                        const messageFile = messages[index];
-                        const filename = queue + messageFile;
-                        message = await pfs.readFile(filename);
-                        message = message.toString().slice(0, -1);  // remove POSIX compliant <EOL>
-                        try {
-                            await pfs.unlink(filename);
-                            break; // we got there first
-                        } catch (exception) {
-                            // another process got there first
-                            message = undefined;
-                        }
-                    } else {
-                        break;  // no more messages
+            var message;
+            while (await doesExist(queue)) {
+                const messages = await pfs.readdir(queue);
+                const count = messages.length;
+                if (count) {
+                    // select a message a random since a distributed queue cannot guarantee FIFO
+                    const index = bali.random.index(count) - 1;  // convert to zero based indexing
+                    const messageFile = messages[index];
+                    const filename = queue + messageFile;
+                    message = await pfs.readFile(filename);
+                    message = message.toString().slice(0, -1);  // remove POSIX compliant <EOL>
+                    try {
+                        await pfs.unlink(filename);
+                        break; // we got there first
+                    } catch (exception) {
+                        // another process got there first
+                        message = undefined;
                     }
+                } else {
+                    break;  // no more messages
                 }
-                return message;
-            } catch (exception) {
-                throw bali.exception({
-                    $module: '$LocalRepository',
-                    $function: '$dequeueMessage',
-                    $exception: '$queueAccess',
-                    $queue: queue ? bali.text(queue) : bali.NONE,
-                    $text: bali.text('The local queue could not be accessed.')
-                }, exception);
             }
+            return message;
         }
 
     };
