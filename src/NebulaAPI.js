@@ -114,7 +114,7 @@ exports.api = function(notary, repository, debug) {
                         $module: '$NebulaAPI',
                         $function: '$registerAccount',
                         $exception: '$versionExists',
-                        $tag: accountId,
+                        $accountId: accountId,
                         $text: '"A committed version of the account already exists."'
                     });
                 }
