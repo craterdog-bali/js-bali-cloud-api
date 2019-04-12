@@ -56,6 +56,43 @@ exports.repository = function(notary, cloudURL) {
         },
 
         /**
+         * This function checks to see whether or not an account is associated with the
+         * specified identifier.
+         * 
+         * @param {String} accountId The unique identifier for the account being checked.
+         * @returns {Boolean} Whether or not the account exists.
+         */
+        accountExists: async function(accountId) {
+            const credentials = await generateCredentials(notary);
+            const status = await sendRequest(credentials, '$accountExists', cloudURL, 'HEAD', 'account', accountId);
+            return status;
+        },
+
+        /**
+         * This function attempts to retrieve the specified account from the repository.
+         * 
+         * @param {String} accountId The unique identifier for the account being fetched.
+         * @returns {String} The canonical source string for the account, or
+         * <code>undefined</code> if it doesn't exist.
+         */
+        fetchAccount: async function(accountId) {
+            const credentials = await generateCredentials(notary);
+            const account = await sendRequest(credentials, '$fetchAccount', cloudURL, 'GET', 'account', accountId);
+            return account;
+        },
+
+        /**
+         * This function creates a new account in the repository.
+         * 
+         * @param {String} accountId The unique identifier for the account being created.
+         * @param {String} account The canonical source string for the account.
+         */
+        createAccount: async function(accountId, account) {
+            const credentials = await generateCredentials(notary);
+            await sendRequest(credentials, '$createAccount', cloudURL, 'POST', 'account', accountId, account);
+        },
+
+        /**
          * This function checks to see whether or not a certificate is associated with the
          * specified identifier.
          * 
