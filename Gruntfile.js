@@ -41,8 +41,8 @@ module.exports = function(grunt) {
           timeout: 30000 
         },
         src: [
-          'test/**/*.js',
-          '!test/TestNebulaAPI.js'
+          'test/**/*.js'
+          //'!test/TestNebulaAPI.js'
         ]
       }
     },
