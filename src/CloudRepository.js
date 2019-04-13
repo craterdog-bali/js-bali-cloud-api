@@ -39,7 +39,7 @@ exports.repository = function(notary, cloudURL) {
          */
         toString: function() {
             const catalog = bali.catalog({
-                $module: '/bali/utilities/CloudRepository',
+                $module: '/bali/repositories/RemoteRepository',
                 $accountId: accountId,
                 $url: cloudURL
             });
@@ -370,7 +370,7 @@ const sendRequest = async function(credentials, functionName, cloudURL, method, 
         if (cause.response) {
             // the server responded with an error status
             const exception = bali.exception({
-                $module: '/bali/utilities/CloudRepository',
+                $module: '/bali/repositories/RemoteRepository',
                 $procedure: functionName,
                 $exception: '$invalidRequest',
                 $url: bali.reference(options.url),
@@ -384,7 +384,7 @@ const sendRequest = async function(credentials, functionName, cloudURL, method, 
         if (cause.request) {
             // the request was sent but no response was received
             const exception = bali.exception({
-                $module: '/bali/utilities/CloudRepository',
+                $module: '/bali/repositories/RemoteRepository',
                 $procedure: functionName,
                 $exception: '$serverDown',
                 $url: bali.reference(options.url),
@@ -397,7 +397,7 @@ const sendRequest = async function(credentials, functionName, cloudURL, method, 
         } 
         // the request could not be sent
         const exception = bali.exception({
-            $module: '/bali/utilities/CloudRepository',
+            $module: '/bali/repositories/RemoteRepository',
             $procedure: functionName,
             $exception: '$malformedRequest',
             $url: bali.reference(options.url),

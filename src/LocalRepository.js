@@ -55,7 +55,7 @@ exports.repository = function(directory) {
          */
         toString: function() {
             return bali.catalog({
-                $module: '/bali/utilities/LocalRepository',
+                $module: '/bali/repositories/LocalRepository',
                 $url: this.getURL()
             });
         },
@@ -129,7 +129,7 @@ exports.repository = function(directory) {
             const exists = await doesExist(filename);
             if (exists) {
                 throw bali.exception({
-                    $module: '/bali/utilities/LocalRepository',
+                    $module: '/bali/repositories/LocalRepository',
                     $procedure: '$createAccount',
                     $exception: '$fileExists',
                     $url: bali.reference('file:' + directory),
@@ -189,7 +189,7 @@ exports.repository = function(directory) {
             const exists = await doesExist(filename);
             if (exists) {
                 throw bali.exception({
-                    $module: '/bali/utilities/LocalRepository',
+                    $module: '/bali/repositories/LocalRepository',
                     $procedure: '$createCertificate',
                     $exception: '$fileExists',
                     $url: bali.reference('file:' + directory),
@@ -313,7 +313,7 @@ exports.repository = function(directory) {
             const exists = await doesExist(filename);
             if (exists) {
                 throw bali.exception({
-                    $module: '/bali/utilities/LocalRepository',
+                    $module: '/bali/repositories/LocalRepository',
                     $procedure: '$createDocument',
                     $exception: '$fileExists',
                     $url: bali.reference('file:' + directory),
@@ -373,7 +373,7 @@ exports.repository = function(directory) {
             const exists = await doesExist(filename);
             if (exists) {
                 throw bali.exception({
-                    $module: '/bali/utilities/LocalRepository',
+                    $module: '/bali/repositories/LocalRepository',
                     $procedure: '$createType',
                     $exception: '$fileExists',
                     $url: bali.reference('file:' + directory),

@@ -52,7 +52,7 @@ exports.api = function(notary, repository, debug) {
          */
         toString: function() {
             const catalog = bali.catalog({
-                $module: '/bali/utilities/NebulaAPI',
+                $module: '/bali/services/NebulaAPI',
                 $accountId: this.getAccountId(),
                 $url: this.getURL()
             });
@@ -93,7 +93,7 @@ exports.api = function(notary, repository, debug) {
                 return citation;
             } catch (cause) {
                 const exception = bali.exception({
-                    $module: '/bali/utilities/NebulaAPI',
+                    $module: '/bali/services/NebulaAPI',
                     $procedure: '$getCitation',
                     $exception: '$unexpected',
                     $accountId: notary.getAccountId(),
@@ -110,7 +110,7 @@ exports.api = function(notary, repository, debug) {
                 validateParameter('$registerAccount', 'certificate', certificate);
                 if (!(await notary.documentIsValid(account, certificate))) {
                     throw bali.exception({
-                        $module: '/bali/utilities/NebulaAPI',
+                        $module: '/bali/services/NebulaAPI',
                         $procedure: '$registerAccount',
                         $exception: '$accountInvalid',
                         $document: account,
@@ -122,7 +122,7 @@ exports.api = function(notary, repository, debug) {
                 const accountId = notary.getAccountId();
                 if (await repository.accountExists(accountId)) {
                     throw bali.exception({
-                        $module: '/bali/utilities/NebulaAPI',
+                        $module: '/bali/services/NebulaAPI',
                         $procedure: '$registerAccount',
                         $exception: '$versionExists',
                         $accountId: accountId,
@@ -133,7 +133,7 @@ exports.api = function(notary, repository, debug) {
                 const certificateId = extractId(certificateCitation);
                 if (await repository.certificateExists(certificateId)) {
                     throw bali.exception({
-                        $module: '/bali/utilities/NebulaAPI',
+                        $module: '/bali/services/NebulaAPI',
                         $procedure: '$registerAccount',
                         $exception: '$versionExists',
                         $tag: certificateCitation.getValue('$tag'),
@@ -145,7 +145,7 @@ exports.api = function(notary, repository, debug) {
                 await repository.createCertificate(certificateId, certificate);
             } catch (cause) {
                 const exception = bali.exception({
-                    $module: '/bali/utilities/NebulaAPI',
+                    $module: '/bali/services/NebulaAPI',
                     $procedure: '$registerAccount',
                     $exception: '$unexpected',
                     $accountId: notary.getAccountId(),
@@ -180,7 +180,7 @@ exports.api = function(notary, repository, debug) {
                 return certificate;
             } catch (cause) {
                 const exception = bali.exception({
-                    $module: '/bali/utilities/NebulaAPI',
+                    $module: '/bali/services/NebulaAPI',
                     $procedure: '$retrieveCertificate',
                     $exception: '$unexpected',
                     $accountId: notary.getAccountId(),
@@ -216,7 +216,7 @@ exports.api = function(notary, repository, debug) {
                 return type.getValue('$component');
             } catch (cause) {
                 const exception = bali.exception({
-                    $module: '/bali/utilities/NebulaAPI',
+                    $module: '/bali/services/NebulaAPI',
                     $procedure: '$retrieveType',
                     $exception: '$unexpected',
                     $accountId: notary.getAccountId(),
@@ -243,7 +243,7 @@ exports.api = function(notary, repository, debug) {
                 const typeId = extractId(typeCitation);
                 if (await repository.typeExists(typeId)) {
                     throw bali.exception({
-                        $module: '/bali/utilities/NebulaAPI',
+                        $module: '/bali/services/NebulaAPI',
                         $procedure: '$commitType',
                         $exception: '$versionExists',
                         $tag: typeCitation.getValue('$tag'),
@@ -256,7 +256,7 @@ exports.api = function(notary, repository, debug) {
                 return typeCitation;
             } catch (cause) {
                 const exception = bali.exception({
-                    $module: '/bali/utilities/NebulaAPI',
+                    $module: '/bali/services/NebulaAPI',
                     $procedure: '$commitType',
                     $exception: '$unexpected',
                     $accountId: notary.getAccountId(),
@@ -288,7 +288,7 @@ exports.api = function(notary, repository, debug) {
                 }
             } catch (cause) {
                 const exception = bali.exception({
-                    $module: '/bali/utilities/NebulaAPI',
+                    $module: '/bali/services/NebulaAPI',
                     $procedure: '$retrieveDraft',
                     $exception: '$unexpected',
                     $accountId: notary.getAccountId(),
@@ -313,7 +313,7 @@ exports.api = function(notary, repository, debug) {
                 const draftId = extractId(draftCitation);
                 if (cache.documentExists(draftId) || await repository.documentExists(draftId)) {
                     throw bali.exception({
-                        $module: '/bali/utilities/NebulaAPI',
+                        $module: '/bali/services/NebulaAPI',
                         $procedure: '$saveDraft',
                         $exception: '$versionExists',
                         $tag: draftCitation.getValue('$tag'),
@@ -326,7 +326,7 @@ exports.api = function(notary, repository, debug) {
                 return draftCitation;
             } catch (cause) {
                 const exception = bali.exception({
-                    $module: '/bali/utilities/NebulaAPI',
+                    $module: '/bali/services/NebulaAPI',
                     $procedure: '$saveDraft',
                     $exception: '$unexpected',
                     $accountId: notary.getAccountId(),
@@ -350,7 +350,7 @@ exports.api = function(notary, repository, debug) {
                 await repository.deleteDraft(documentId);
             } catch (cause) {
                 const exception = bali.exception({
-                    $module: '/bali/utilities/NebulaAPI',
+                    $module: '/bali/services/NebulaAPI',
                     $procedure: '$discardDraft',
                     $exception: '$unexpected',
                     $accountId: notary.getAccountId(),
@@ -376,7 +376,7 @@ exports.api = function(notary, repository, debug) {
                 const documentId = extractId(documentCitation);
                 if (cache.documentExists(documentId) || await repository.documentExists(documentId)) {
                     throw bali.exception({
-                        $module: '/bali/utilities/NebulaAPI',
+                        $module: '/bali/services/NebulaAPI',
                         $procedure: '$commitDocument',
                         $exception: '$versionExists',
                         $documentId: '"' + documentId + '"',
@@ -389,7 +389,7 @@ exports.api = function(notary, repository, debug) {
                 return documentCitation;
             } catch (cause) {
                 const exception = bali.exception({
-                    $module: '/bali/utilities/NebulaAPI',
+                    $module: '/bali/services/NebulaAPI',
                     $procedure: '$commitDocument',
                     $exception: '$unexpected',
                     $accountId: notary.getAccountId(),
@@ -424,7 +424,7 @@ exports.api = function(notary, repository, debug) {
                 return document.getValue('$component');
             } catch (cause) {
                 const exception = bali.exception({
-                    $module: '/bali/utilities/NebulaAPI',
+                    $module: '/bali/services/NebulaAPI',
                     $procedure: '$retrieveDocument',
                     $exception: '$unexpected',
                     $accountId: notary.getAccountId(),
@@ -465,7 +465,7 @@ exports.api = function(notary, repository, debug) {
                 const draftId = citation.getValue('$tag').getValue() + draftVersion;
                 if (cache.documentExists(draftId) || await repository.documentExists(draftId) || await repository.draftExists(draftId)) {
                     throw bali.exception({
-                        $module: '/bali/utilities/NebulaAPI',
+                        $module: '/bali/services/NebulaAPI',
                         $procedure: '$checkoutDocument',
                         $exception: '$versionExists',
                         $documentId: '"' + draftId + '"',
@@ -478,7 +478,7 @@ exports.api = function(notary, repository, debug) {
                 const source = await repository.fetchDocument(documentId);
                 if (source === undefined) {
                     throw bali.exception({
-                        $module: '/bali/utilities/NebulaAPI',
+                        $module: '/bali/services/NebulaAPI',
                         $procedure: '$checkoutDocument',
                         $exception: '$documentMissing',
                         $documentId: '"' + documentId + '"',
@@ -502,7 +502,7 @@ exports.api = function(notary, repository, debug) {
                 return draftCitation;
             } catch (cause) {
                 const exception = bali.exception({
-                    $module: '/bali/utilities/NebulaAPI',
+                    $module: '/bali/services/NebulaAPI',
                     $procedure: '$checkoutDocument',
                     $exception: '$unexpected',
                     $accountId: notary.getAccountId(),
@@ -527,7 +527,7 @@ exports.api = function(notary, repository, debug) {
                 await repository.queueMessage(EVENT_QUEUE_ID, event);
             } catch (cause) {
                 const exception = bali.exception({
-                    $module: '/bali/utilities/NebulaAPI',
+                    $module: '/bali/services/NebulaAPI',
                     $procedure: '$publishEvent',
                     $exception: '$unexpected',
                     $accountId: notary.getAccountId(),
@@ -556,7 +556,7 @@ exports.api = function(notary, repository, debug) {
                 await repository.queueMessage(SEND_QUEUE_ID, message);
             } catch (cause) {
                 const exception = bali.exception({
-                    $module: '/bali/utilities/NebulaAPI',
+                    $module: '/bali/services/NebulaAPI',
                     $procedure: '$sendMessage',
                     $exception: '$unexpected',
                     $accountId: notary.getAccountId(),
@@ -585,7 +585,7 @@ exports.api = function(notary, repository, debug) {
                 await repository.queueMessage(queueId, message);
             } catch (cause) {
                 const exception = bali.exception({
-                    $module: '/bali/utilities/NebulaAPI',
+                    $module: '/bali/services/NebulaAPI',
                     $procedure: '$queueMessage',
                     $exception: '$unexpected',
                     $accountId: notary.getAccountId(),
@@ -619,7 +619,7 @@ exports.api = function(notary, repository, debug) {
                 }
             } catch (cause) {
                 const exception = bali.exception({
-                    $module: '/bali/utilities/NebulaAPI',
+                    $module: '/bali/services/NebulaAPI',
                     $procedure: '$receiveMessage',
                     $exception: '$unexpected',
                     $accountId: notary.getAccountId(),
@@ -664,7 +664,7 @@ const validateCitation = async function(notary, citation, document) {
     const matches = await notary.citationMatches(citation, document);
     if (!matches) {
         throw bali.exception({
-            $module: '/bali/utilities/NebulaAPI',
+            $module: '/bali/services/NebulaAPI',
             $procedure: '$validateCitation',
             $exception: '$documentModified',
             $citation: citation,
@@ -694,7 +694,7 @@ const validateDocument = async function(notary, repository, document) {
             source = await repository.fetchDocument(previousId);
             if (!source) {
                 throw bali.exception({
-                    $module: '/bali/utilities/NebulaAPI',
+                    $module: '/bali/services/NebulaAPI',
                     $procedure: '$validateDocument',
                     $exception: '$documentMissing',
                     $previousId: '"' + previousId + '"',
@@ -704,7 +704,7 @@ const validateDocument = async function(notary, repository, document) {
             const previousDocument = bali.parse(source);
             if (!(await notary.citationMatches(previousCitation, previousDocument))) {
                 throw bali.exception({
-                    $module: '/bali/utilities/NebulaAPI',
+                    $module: '/bali/services/NebulaAPI',
                     $procedure: '$validateDocument',
                     $exception: '$invalidCitation',
                     $citation: previousCitation,
@@ -718,7 +718,7 @@ const validateDocument = async function(notary, repository, document) {
         if (certificateCitation.isEqualTo(bali.NONE)) {
             if (await notary.documentIsValid(document, document)) return;
             throw bali.exception({
-                $module: '/bali/utilities/NebulaAPI',
+                $module: '/bali/services/NebulaAPI',
                 $procedure: '$validateDocument',
                 $exception: '$documentInvalid',
                 $document: document,
@@ -733,7 +733,7 @@ const validateDocument = async function(notary, repository, document) {
             const source = await repository.fetchCertificate(certificateId);
             if (!source) {
                 throw bali.exception({
-                    $module: '/bali/utilities/NebulaAPI',
+                    $module: '/bali/services/NebulaAPI',
                     $procedure: '$validateDocument',
                     $exception: '$certificateMissing',
                     $certificateId: '"' + certificateId + '"',
@@ -750,7 +750,7 @@ const validateDocument = async function(notary, repository, document) {
         const valid = await notary.documentIsValid(document, certificate);
         if (!valid) {
             throw bali.exception({
-                $module: '/bali/utilities/NebulaAPI',
+                $module: '/bali/services/NebulaAPI',
                 $procedure: '$validateDocument',
                 $exception: '$documentInvalid',
                 $document: document,
@@ -956,7 +956,7 @@ const validateParameter = function(procedureName, parameterName, parameterValue,
         }
     }
     const exception = bali.exception({
-        $module: '/bali/utilities/NebulaAPI',
+        $module: '/bali/services/NebulaAPI',
         $procedure: procedureName,
         $exception: '$invalidParameter',
         $parameter: bali.text(parameterName),
