@@ -104,7 +104,7 @@ describe('Bali Nebula API™ - Test Remote API', function() {
         }, bali.parameters({
             $tag: bali.tag(),
             $version: bali.version(),
-            $permissions: bali.parse('/bali/permissions/Public/v1'),
+            $permissions: bali.parse('/bali/permissions/public/v1'),
             $previous: bali.NONE
         }));
         var draftCitation;
@@ -153,7 +153,7 @@ describe('Bali Nebula API™ - Test Remote API', function() {
             }, bali.parameters({
                 $tag: bali.tag(),
                 $version: bali.version(),
-                $permissions: bali.parse('/bali/permissions/Private/v1'),
+                $permissions: bali.parse('/bali/permissions/private/v1'),
                 $previous: bali.NONE
             }));
             draftCitation = await consumerClient.saveDraft(catalog);
@@ -226,10 +226,10 @@ describe('Bali Nebula API™ - Test Remote API', function() {
             const type = bali.catalog({
                 $foo: '"bar"'
             }, bali.parameters({
-                $type: bali.parse('/bali/types/Type/v1'),
+                $type: '/bali/abstractions/Type/v1',
                 $tag: bali.tag(),
                 $version: bali.version(),
-                $permissions: bali.parse('/bali/permissions/Public/v1'),
+                $permissions: '/bali/permissions/public/v1',
                 $previous: bali.NONE
             }));
             const documentCitation = await merchantClient.saveDraft(type);
@@ -267,7 +267,7 @@ describe('Bali Nebula API™ - Test Remote API', function() {
                 }, bali.parameters({
                     $tag: bali.tag(),
                     $version: bali.version(),
-                    $permissions: bali.parse('/bali/permissions/Public/v1'),
+                    $permissions: bali.parse('/bali/permissions/public/v1'),
                     $previous: bali.NONE
                 }));
                 await consumerClient.queueMessage(queue, transaction);
@@ -293,13 +293,13 @@ describe('Bali Nebula API™ - Test Remote API', function() {
 
     describe('Test Events', function() {
         const event = bali.catalog({
-            $type: '$TransactionPosted',
+            $type: '$transactionPosted',
             $transactionId: bali.tag(),
             $timestamp: bali.moment()
         }, bali.parameters({
             $tag: bali.tag(),
             $version: bali.version(),
-            $permissions: bali.parse('/bali/permissions/Public/v1'),
+            $permissions: bali.parse('/bali/permissions/public/v1'),
             $previous: bali.NONE
         }));
 

@@ -39,7 +39,7 @@ exports.repository = function(notary, cloudURL) {
          */
         toString: function() {
             const catalog = bali.catalog({
-                $module: '$CloudRepository',
+                $module: '/bali/utilities/CloudRepository',
                 $accountId: accountId,
                 $url: cloudURL
             });
@@ -306,7 +306,7 @@ const generateCredentials = async function(notary) {
     const parameters = document.getParameters();
     parameters.setParameter('$tag', bali.tag());
     parameters.setParameter('$version', bali.version());
-    parameters.setParameter('$permissions', bali.parse('/bali/permissions/Private/v1'));
+    parameters.setParameter('$permissions', bali.parse('/bali/permissions/private/v1'));
     parameters.setParameter('$previous', bali.NONE);
     const credentials = await notary.signComponent(document);
     return credentials;
@@ -370,8 +370,8 @@ const sendRequest = async function(credentials, functionName, cloudURL, method, 
         if (cause.response) {
             // the server responded with an error status
             const exception = bali.exception({
-                $module: '$CloudRepository',
-                $function: functionName,
+                $module: '/bali/utilities/CloudRepository',
+                $procedure: functionName,
                 $exception: '$invalidRequest',
                 $url: bali.reference(options.url),
                 $method: bali.text(method),
@@ -384,8 +384,8 @@ const sendRequest = async function(credentials, functionName, cloudURL, method, 
         if (cause.request) {
             // the request was sent but no response was received
             const exception = bali.exception({
-                $module: '$CloudRepository',
-                $function: functionName,
+                $module: '/bali/utilities/CloudRepository',
+                $procedure: functionName,
                 $exception: '$serverDown',
                 $url: bali.reference(options.url),
                 $method: bali.text(method),
@@ -397,8 +397,8 @@ const sendRequest = async function(credentials, functionName, cloudURL, method, 
         } 
         // the request could not be sent
         const exception = bali.exception({
-            $module: '$CloudRepository',
-            $function: functionName,
+            $module: '/bali/utilities/CloudRepository',
+            $procedure: functionName,
             $exception: '$malformedRequest',
             $url: bali.reference(options.url),
             $method: bali.text(options.method),

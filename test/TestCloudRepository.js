@@ -28,7 +28,7 @@ const transaction = bali.catalog({
 }, bali.parameters({
     $tag: bali.tag(),
     $version: bali.version(),
-    $permissions: bali.parse('/bali/permissions/Public/v1'),
+    $permissions: bali.parse('/bali/permissions/public/v1'),
     $previous: bali.NONE
 }));
 
