@@ -16,7 +16,7 @@ const expect = require('chai').expect;
 const bali = require('bali-component-framework');
 const notary = require('bali-digital-notary');
 const nebula = require('../');
-const cloudURL = bali.reference('https://bali-nebula.net/repository/');
+const url = bali.reference('https://bali-nebula.net/repository/');
 
 function extractId(component) {
     const identifier = component.getValue('$tag').getValue();
@@ -51,13 +51,13 @@ describe('Bali Nebula API™ - Test Remote API', function() {
         });
 
         it('should create the consumer nebula API', async function() {
-            consumerRepository = nebula.remote(consumerNotary, cloudURL);
+            consumerRepository = nebula.remote(consumerNotary, url);
             consumerClient = nebula.api(consumerNotary, consumerRepository, debug);
             expect(consumerClient).to.exist;
         });
 
         it('should create the merchant nebula API', async function() {
-            merchantRepository = nebula.remote(merchantNotary, cloudURL);
+            merchantRepository = nebula.remote(merchantNotary, url);
             merchantClient = nebula.api(merchantNotary, merchantRepository, debug);
             expect(merchantClient).to.exist;
         });

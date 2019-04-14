@@ -22,11 +22,11 @@ const axios = require('axios');
  * repository.
  * 
  * @param {Object} notary An object that implements the API for the digital notary.
- * @param {Reference} cloudURL A reference that defines the URL for the cloud repository.
+ * @param {Reference} url A reference that defines the URL for the cloud repository.
  * will be logged to the error console.
  * @returns {Object} An object implementing the document repository interface.
  */
-exports.repository = function(notary, cloudURL) {
+exports.repository = function(notary, url) {
     const accountId = notary.getAccountId();
 
     // return a singleton object for the API
@@ -41,7 +41,7 @@ exports.repository = function(notary, cloudURL) {
             const catalog = bali.catalog({
                 $module: '/bali/repositories/RemoteRepository',
                 $accountId: accountId,
-                $url: cloudURL
+                $url: url
             });
             return catalog.toString();
         },
@@ -52,7 +52,7 @@ exports.repository = function(notary, cloudURL) {
          * @returns {Reference} A reference to this document repository.
          */
         getURL: function() {
-            return cloudURL;
+            return url;
         },
 
         /**
@@ -64,7 +64,7 @@ exports.repository = function(notary, cloudURL) {
          */
         accountExists: async function(accountId) {
             const credentials = await generateCredentials(notary);
-            const status = await sendRequest(credentials, '$accountExists', cloudURL, 'HEAD', 'account', accountId);
+            const status = await sendRequest(credentials, '$accountExists', url, 'HEAD', 'account', accountId);
             return status;
         },
 
@@ -77,7 +77,7 @@ exports.repository = function(notary, cloudURL) {
          */
         fetchAccount: async function(accountId) {
             const credentials = await generateCredentials(notary);
-            const account = await sendRequest(credentials, '$fetchAccount', cloudURL, 'GET', 'account', accountId);
+            const account = await sendRequest(credentials, '$fetchAccount', url, 'GET', 'account', accountId);
             return account;
         },
 
@@ -89,7 +89,7 @@ exports.repository = function(notary, cloudURL) {
          */
         createAccount: async function(accountId, account) {
             const credentials = await generateCredentials(notary);
-            await sendRequest(credentials, '$createAccount', cloudURL, 'POST', 'account', accountId, account);
+            await sendRequest(credentials, '$createAccount', url, 'POST', 'account', accountId, account);
         },
 
         /**
@@ -102,7 +102,7 @@ exports.repository = function(notary, cloudURL) {
          */
         certificateExists: async function(certificateId) {
             const credentials = await generateCredentials(notary);
-            const status = await sendRequest(credentials, '$certificateExists', cloudURL, 'HEAD', 'certificate', certificateId);
+            const status = await sendRequest(credentials, '$certificateExists', url, 'HEAD', 'certificate', certificateId);
             return status;
         },
 
@@ -116,7 +116,7 @@ exports.repository = function(notary, cloudURL) {
          */
         fetchCertificate: async function(certificateId) {
             const credentials = await generateCredentials(notary);
-            const certificate = await sendRequest(credentials, '$fetchCertificate', cloudURL, 'GET', 'certificate', certificateId);
+            const certificate = await sendRequest(credentials, '$fetchCertificate', url, 'GET', 'certificate', certificateId);
             return certificate;
         },
 
@@ -129,7 +129,7 @@ exports.repository = function(notary, cloudURL) {
          */
         createCertificate: async function(certificateId, certificate) {
             const credentials = await generateCredentials(notary);
-            await sendRequest(credentials, '$createCertificate', cloudURL, 'POST', 'certificate', certificateId, certificate);
+            await sendRequest(credentials, '$createCertificate', url, 'POST', 'certificate', certificateId, certificate);
         },
 
         /**
@@ -142,7 +142,7 @@ exports.repository = function(notary, cloudURL) {
          */
         draftExists: async function(draftId) {
             const credentials = await generateCredentials(notary);
-            const status = await sendRequest(credentials, '$draftExists', cloudURL, 'HEAD', 'draft', draftId);
+            const status = await sendRequest(credentials, '$draftExists', url, 'HEAD', 'draft', draftId);
             return status;
         },
 
@@ -156,7 +156,7 @@ exports.repository = function(notary, cloudURL) {
          */
         fetchDraft: async function(draftId) {
             const credentials = await generateCredentials(notary);
-            const draft = await sendRequest(credentials, '$fetchDraft', cloudURL, 'GET', 'draft', draftId);
+            const draft = await sendRequest(credentials, '$fetchDraft', url, 'GET', 'draft', draftId);
             return draft;
         },
 
@@ -169,7 +169,7 @@ exports.repository = function(notary, cloudURL) {
          */
         saveDraft: async function(draftId, draft) {
             const credentials = await generateCredentials(notary);
-            await sendRequest(credentials, '$saveDraft', cloudURL, 'PUT', 'draft', draftId, draft);
+            await sendRequest(credentials, '$saveDraft', url, 'PUT', 'draft', draftId, draft);
         },
 
         /**
@@ -180,7 +180,7 @@ exports.repository = function(notary, cloudURL) {
          */
         deleteDraft: async function(draftId) {
             const credentials = await generateCredentials(notary);
-            await sendRequest(credentials, '$deleteDraft', cloudURL, 'DELETE', 'draft', draftId);
+            await sendRequest(credentials, '$deleteDraft', url, 'DELETE', 'draft', draftId);
         },
 
         /**
@@ -193,7 +193,7 @@ exports.repository = function(notary, cloudURL) {
          */
         documentExists: async function(documentId) {
             const credentials = await generateCredentials(notary);
-            const status = await sendRequest(credentials, '$documentExists', cloudURL, 'HEAD', 'document', documentId);
+            const status = await sendRequest(credentials, '$documentExists', url, 'HEAD', 'document', documentId);
             return status;
         },
 
@@ -207,7 +207,7 @@ exports.repository = function(notary, cloudURL) {
          */
         fetchDocument: async function(documentId) {
             const credentials = await generateCredentials(notary);
-            const document = await sendRequest(credentials, '$fetchDocument', cloudURL, 'GET', 'document', documentId);
+            const document = await sendRequest(credentials, '$fetchDocument', url, 'GET', 'document', documentId);
             return document;
         },
 
@@ -220,7 +220,7 @@ exports.repository = function(notary, cloudURL) {
          */
         createDocument: async function(documentId, document) {
             const credentials = await generateCredentials(notary);
-            await sendRequest(credentials, '$createDocument', cloudURL, 'POST', 'document', documentId, document);
+            await sendRequest(credentials, '$createDocument', url, 'POST', 'document', documentId, document);
         },
 
         /**
@@ -233,7 +233,7 @@ exports.repository = function(notary, cloudURL) {
          */
         typeExists: async function(typeId) {
             const credentials = await generateCredentials(notary);
-            const status = await sendRequest(credentials, '$typeExists', cloudURL, 'HEAD', 'type', typeId);
+            const status = await sendRequest(credentials, '$typeExists', url, 'HEAD', 'type', typeId);
             return status;
         },
 
@@ -247,7 +247,7 @@ exports.repository = function(notary, cloudURL) {
          */
         fetchType: async function(typeId) {
             const credentials = await generateCredentials(notary);
-            const type = await sendRequest(credentials, '$fetchType', cloudURL, 'GET', 'type', typeId);
+            const type = await sendRequest(credentials, '$fetchType', url, 'GET', 'type', typeId);
             return type;
         },
 
@@ -260,7 +260,7 @@ exports.repository = function(notary, cloudURL) {
          */
         createType: async function(typeId, type) {
             const credentials = await generateCredentials(notary);
-            await sendRequest(credentials, '$createType', cloudURL, 'POST', 'type', typeId, type);
+            await sendRequest(credentials, '$createType', url, 'POST', 'type', typeId, type);
         },
 
         /**
@@ -271,7 +271,7 @@ exports.repository = function(notary, cloudURL) {
          */
         queueMessage: async function(queueId, message) {
             const credentials = await generateCredentials(notary);
-            await sendRequest(credentials, '$queueMessage', cloudURL, 'PUT', 'queue', queueId, message);
+            await sendRequest(credentials, '$queueMessage', url, 'PUT', 'queue', queueId, message);
         },
 
         /**
@@ -282,7 +282,7 @@ exports.repository = function(notary, cloudURL) {
          */
         dequeueMessage: async function(queueId) {
             const credentials = await generateCredentials(notary);
-            const message = await sendRequest(credentials, '$dequeueMessage', cloudURL, 'GET', 'queue', queueId);
+            const message = await sendRequest(credentials, '$dequeueMessage', url, 'GET', 'queue', queueId);
             return message;
         }
 
@@ -314,23 +314,23 @@ const generateCredentials = async function(notary) {
 
 
 /**
- * This function sends a RESTful web request to the web service specified by the cloudURL,
+ * This function sends a RESTful web request to the web service specified by the url,
  * method, type and identifier. If a document is included it is sent as the body of the
  * request. The result that is returned by the web service is returned from this function.
  * 
  * @param {Catalog} credentials The signed credentials for the client making the request. 
  * @param {String} functionName The name of the API function sending the request.
- * @param {Reference} cloudURL A reference containing the URL of the web service.
+ * @param {Reference} url A reference containing the URL of the web service.
  * @param {String} method The HTTP method type of the request.
  * @param {String} type The type of resource being acted upon.
  * @param {String} identifier An identifier for the specific resource being acted upon.
  * @param {Catalog} document An optional signed document to be passed to the web service.
  * @returns {Boolean|Catalog} The result of the request.
  */
-const sendRequest = async function(credentials, functionName, cloudURL, method, type, identifier, document) {
+const sendRequest = async function(credentials, functionName, url, method, type, identifier, document) {
 
     // setup the request URL and options
-    const fullURL = cloudURL.getValue().toString() + type + '/' + identifier;
+    const fullURL = url.getValue().toString() + type + '/' + identifier;
     const options = {
         url: fullURL,
         method: method,
