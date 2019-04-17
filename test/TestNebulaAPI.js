@@ -9,6 +9,7 @@
  ************************************************************************/
 
 const debug = true;  // set to true for error logging
+const crypto = require('crypto');
 const directory = 'test/config/';
 const mocha = require('mocha');
 const assert = require('chai').assert;
@@ -39,14 +40,18 @@ describe('Bali Nebula API™ - Test Remote API', function() {
     describe('Initialize Environment', function() {
 
         it('should create the consumer notary API', async function() {
+            const secret = crypto.randomBytes(32);
             const consumerTag = bali.tag();
-            consumerNotary = notary.api(consumerTag, directory);
+            const consumerSSM = notary.ssm(secret, directory + consumerTag);
+            consumerNotary = notary.api(consumerSSM, consumerTag, directory);
             expect(consumerNotary).to.exist;
         });
 
         it('should create the merchant notary API', async function() {
+            const secret = crypto.randomBytes(32);
             const merchantTag = bali.tag();
-            merchantNotary = notary.api(merchantTag, directory);
+            const merchantSSM = notary.ssm(secret, directory + merchantTag);
+            merchantNotary = notary.api(merchantSSM, merchantTag, directory);
             expect(merchantNotary).to.exist;
         });
 

@@ -8,6 +8,7 @@
  * Source Initiative. (See http://opensource.org/licenses/MIT)          *
  ************************************************************************/
 
+const crypto = require('crypto');
 const mocha = require('mocha');
 const assert = require('chai').assert;
 const expect = require('chai').expect;
@@ -15,7 +16,9 @@ const bali = require('bali-component-framework');
 const accountId = bali.parse('#GTDHQ9B8ZGS7WCBJJJBFF6KDCCF55R2P');
 const directory = 'test/config/';
 const url = bali.reference('http://localhost:3000');
-const notary = require('bali-digital-notary').api(accountId, directory);
+const secret = crypto.randomBytes(32);
+const securityModule = require('bali-digital-notary').ssm(secret, directory + accountId);
+const notary = require('bali-digital-notary').api(securityModule, accountId, directory);
 const repository = require('../').remote(notary, url);
 
 const transaction = bali.catalog({
