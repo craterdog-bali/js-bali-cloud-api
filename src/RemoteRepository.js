@@ -56,6 +56,43 @@ exports.repository = function(notary, url) {
         },
 
         /**
+         * This function checks to see whether or not a citation is associated with the
+         * specified name.
+         * 
+         * @param {String} name The unique name for the citation being checked.
+         * @returns {Boolean} Whether or not the name exists.
+         */
+        nameExists: async function(name) {
+            const credentials = await generateCredentials(notary);
+            const status = await sendRequest(credentials, '$nameExists', url, 'HEAD', 'name', name);
+            return status;
+        },
+
+        /**
+         * This function attempts to retrieve a citation from the repository for the specified name.
+         * 
+         * @param {String} name The unique name for the citation being fetched.
+         * @returns {String} The canonical source string for the citation, or
+         * <code>undefined</code> if it doesn't exist.
+         */
+        fetchName: async function(name) {
+            const credentials = await generateCredentials(notary);
+            const citation = await sendRequest(credentials, '$fetchName', url, 'GET', 'name', name);
+            return citation;
+        },
+
+        /**
+         * This function associates a new name with the specified citation in the repository.
+         * 
+         * @param {String} name The unique name for the specified citation.
+         * @param {String} citation The canonical source string for the citation.
+         */
+        createName: async function(name, citation) {
+            const credentials = await generateCredentials(notary);
+            await sendRequest(credentials, '$createName', url, 'POST', 'name', name, citation);
+        },
+
+        /**
          * This function checks to see whether or not an account is associated with the
          * specified identifier.
          * 

@@ -41,16 +41,16 @@ describe('Bali Nebula API™ - Test Local API', function() {
         it('should create the consumer notary API', async function() {
             const secret = crypto.randomBytes(32);
             const consumerTag = bali.tag();
-            const consumerSSM = notary.ssm(secret, directory + consumerTag);
-            consumerNotary = notary.api(consumerSSM, consumerTag, directory);
+            const consumerSSM = notary.ssm(secret, directory + consumerTag.getValue() + '.keys');
+            consumerNotary = notary.api(consumerSSM, consumerTag, directory, debug);
             expect(consumerNotary).to.exist;
         });
 
         it('should create the merchant notary API', async function() {
             const secret = crypto.randomBytes(32);
             const merchantTag = bali.tag();
-            const merchantSSM = notary.ssm(secret, directory + merchantTag);
-            merchantNotary = notary.api(merchantSSM, merchantTag, directory);
+            const merchantSSM = notary.ssm(secret, directory + merchantTag.getValue() + '.keys');
+            merchantNotary = notary.api(merchantSSM, merchantTag, directory, debug);
             expect(merchantNotary).to.exist;
         });
 

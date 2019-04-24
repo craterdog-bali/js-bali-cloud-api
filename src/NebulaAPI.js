@@ -104,10 +104,11 @@ exports.api = function(notary, repository, debug) {
             }
         },
 
-        registerAccount: async function(account, certificate) {
+        registerAccount: async function(account, credentials) {
             try {
                 validateParameter('$registerAccount', 'account', account);
-                validateParameter('$registerAccount', 'certificate', certificate);
+                validateParameter('$registerAccount', 'credentials', credentials);
+                const certificate = credentials.getValue('$component');
                 if (!(await notary.documentIsValid(account, certificate))) {
                     throw bali.exception({
                         $module: '/bali/services/NebulaAPI',
@@ -129,7 +130,7 @@ exports.api = function(notary, repository, debug) {
                         $text: '"A committed version of the account already exists."'
                     });
                 }
-                const certificateCitation = await notary.citeDocument(certificate);
+                const certificateCitation = await notary.citeDocument(credentials);
                 const certificateId = extractId(certificateCitation);
                 if (await repository.certificateExists(certificateId)) {
                     throw bali.exception({
@@ -142,7 +143,7 @@ exports.api = function(notary, repository, debug) {
                     });
                 }
                 await repository.createAccount(accountId, account);
-                await repository.createCertificate(certificateId, certificate);
+                await repository.createCertificate(certificateId, credentials);
             } catch (cause) {
                 const exception = bali.exception({
                     $module: '/bali/services/NebulaAPI',
@@ -171,9 +172,10 @@ exports.api = function(notary, repository, debug) {
                 if (!certificate) {
                     const source = await repository.fetchCertificate(certificateId);
                     if (source) {
-                        certificate = bali.parse(source);
-                        await validateCitation(notary, citation, certificate);
-                        await validateDocument(notary, repository, certificate);
+                        const document = bali.parse(source);
+                        await validateCitation(notary, citation, document);
+                        await validateDocument(notary, repository, document);
+                        certificate = document.getValue('$component');
                         cache.createCertificate(certificateId, certificate);
                     }
                 }
@@ -207,13 +209,14 @@ exports.api = function(notary, repository, debug) {
                 if (!type) {
                     const source = await repository.fetchType(typeId);
                     if (source) {
-                        const type = bali.parse(source);
-                        await validateCitation(notary, citation, type);
-                        await validateDocument(notary, repository, type);
+                        const document = bali.parse(source);
+                        await validateCitation(notary, citation, document);
+                        await validateDocument(notary, repository, document);
+                        type = document.getValue('$component');
                         cache.createType(typeId, type);
                     }
                 }
-                return type.getValue('$component');
+                return type;
             } catch (cause) {
                 const exception = bali.exception({
                     $module: '/bali/services/NebulaAPI',
@@ -278,14 +281,16 @@ exports.api = function(notary, repository, debug) {
             try {
                 validateParameter('$retrieveDraft', 'citation', citation);
                 const documentId = extractId(citation);
+                var draft;
                 const source = await repository.fetchDraft(documentId);
                 if (source) {
-                    const draft = bali.parse(source);
-                    await validateCitation(notary, citation, draft);
-                    await validateDocument(notary, repository, draft);
+                    const document = bali.parse(source);
+                    await validateCitation(notary, citation, document);
+                    await validateDocument(notary, repository, document);
                     // we don't cache drafts since they are mutable
-                    return draft.getValue('$component');
+                    draft = document.getValue('$component');
                 }
+                return draft;
             } catch (cause) {
                 const exception = bali.exception({
                     $module: '/bali/services/NebulaAPI',
@@ -293,6 +298,41 @@ exports.api = function(notary, repository, debug) {
                     $exception: '$unexpected',
                     $accountId: notary.getAccountId(),
                     $text: bali.text('An unexpected error occurred while attempting to retrieve a draft document.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
+        },
+
+        /**
+         * This method creates a new draft document template based on the specified document
+         * type name.
+         * 
+         * @param {Name} type The name of the type of document to be created.
+         * @returns {Catalog} A document template for the new draft document.
+         */
+        createDraft: async function(type) {
+            try {
+                validateParameter('$createDraft', 'type', type, 'name');
+                var citation = cache.fetchName(type);
+                if (!citation) {
+                    const source = await repository.fetchName(type);
+                    if (source) {
+                        const document = bali.parse(source);
+                        await validateDocument(notary, repository, document);
+                        citation = document.getValue('$component');
+                        cache.createName(type, citation);
+                    }
+                }
+                const draft = constructTemplate(repository, citation);
+                return draft;
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '/bali/services/NebulaAPI',
+                    $procedure: '$createDraft',
+                    $exception: '$unexpected',
+                    $accountId: notary.getAccountId(),
+                    $text: bali.text('An unexpected error occurred while attempting to create a new draft document.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -384,6 +424,7 @@ exports.api = function(notary, repository, debug) {
                     });
                 }
                 await repository.createDocument(documentId, document);
+                document = document.getValue('$component');
                 cache.createDocument(documentId, document);
                 await repository.deleteDraft(documentId);
                 return documentCitation;
@@ -418,10 +459,11 @@ exports.api = function(notary, repository, debug) {
                         document = bali.parse(source);
                         await validateCitation(notary, citation, document);
                         await validateDocument(notary, repository, document);
+                        document = document.getValue('$component');
                         cache.createDocument(documentId, document);
                     }
                 }
-                return document.getValue('$component');
+                return document;
             } catch (cause) {
                 const exception = bali.exception({
                     $module: '/bali/services/NebulaAPI',
@@ -482,18 +524,19 @@ exports.api = function(notary, repository, debug) {
                         $procedure: '$checkoutDocument',
                         $exception: '$documentMissing',
                         $documentId: '"' + documentId + '"',
-                        $text: '"A committed version of the document referenced by the draft citation already exists."'
+                        $text: '"The document referenced by the citation does not exist."'
                     });
                 }
-                const document = bali.parse(source);
+                var document = bali.parse(source);
 
                 // validate and cache the document
                 await validateCitation(notary, citation, document);
                 await validateDocument(notary, repository, document);
+                document = document.getValue('$component');
                 cache.createDocument(documentId, document);
 
                 // store a draft copy of the document in the repository (NOTE: drafts are not cached)
-                var draft = bali.duplicate(document.getValue('$component'));
+                var draft = bali.duplicate(document);
                 draft.getParameters().setParameter('$version', draftVersion);
                 draft = await notary.signComponent(draft, citation);
                 const draftCitation = await notary.citeDocument(draft);
@@ -610,13 +653,15 @@ exports.api = function(notary, repository, debug) {
             try {
                 validateParameter('$receiveMessage', 'queue', queue);
                 const queueId = queue.getValue();
+                var message;
                 const source = await repository.dequeueMessage(queueId);
                 if (source) {
                     // validate the document
-                    const message = bali.parse(source);
-                    await validateDocument(notary, repository, message);
-                    return message.getValue('$component');
+                    const document = bali.parse(source);
+                    await validateDocument(notary, repository, document);
+                    message = document.getValue('$component');
                 }
+                return message;
             } catch (cause) {
                 const exception = bali.exception({
                     $module: '/bali/services/NebulaAPI',
@@ -715,8 +760,10 @@ const validateDocument = async function(notary, repository, document) {
         }
 
         // check for a self signed document
+        var certificate;
         if (certificateCitation.isEqualTo(bali.NONE)) {
-            if (await notary.documentIsValid(document, document)) return;
+            certificate = document.getValue('$component');
+            if (await notary.documentIsValid(document, certificate)) return;
             throw bali.exception({
                 $module: '/bali/services/NebulaAPI',
                 $procedure: '$validateDocument',
@@ -728,7 +775,7 @@ const validateDocument = async function(notary, repository, document) {
 
         // fetch and validate if necessary the certificate
         const certificateId = extractId(certificateCitation);
-        var certificate = cache.fetchCertificate(certificateId);
+        certificate = cache.fetchCertificate(certificateId);
         if (!certificate) {
             const source = await repository.fetchCertificate(certificateId);
             if (!source) {
@@ -740,9 +787,10 @@ const validateDocument = async function(notary, repository, document) {
                     $text: '"The certificate for the document does not exist."'
                 });
             }
-            certificate = bali.parse(source);
-            await validateCitation(notary, certificateCitation, certificate);
-            await validateDocument(notary, repository, certificate);
+            const document = bali.parse(source);
+            await validateCitation(notary, certificateCitation, document);
+            await validateDocument(notary, repository, document);
+            certificate = document.getValue('$component');
             cache.createCertificate(certificateId, certificate);
         }
 
@@ -769,83 +817,6 @@ const validateDocument = async function(notary, repository, document) {
     }
 };
 
-
-/*
- * This section defines the caches for the client side API.
- * Since all documents are immutable, there are no cache consistency issues.
- * The caching rules are as follows:
- * <pre>
- * 1) The cache is always checked before downloading a document.
- * 2) A downloaded document is always validated before use.
- * 3) A validated document is always cached locally.
- * 4) The cache will delete the oldest document when it is full.
- * </pre>
- */
-
-const cache = {
-
-    MAX_CERTIFICATES: 64,
-    MAX_DOCUMENTS: 128,
-    MAX_TYPES: 256,
-
-    certificates: new Map(),
-    documents: new Map(),
-    types: new Map(),
-
-    certificateExists: function(certificateId) {
-        return this.certificates.has(certificateId);
-    },
-
-    fetchCertificate: function(certificateId) {
-        return this.certificates.get(certificateId);
-    },
-
-    createCertificate: function(certificateId, certificate) {
-        if (this.certificates.size > this.MAX_CERTIFICATES) {
-            // delete the first (oldest) cached certificate
-            const key = this.certificates.keys().next().getValue();
-            this.certificates.delete(key);
-        }
-        this.certificates.set(certificateId, certificate);
-    },
-
-    documentExists: function(documentId) {
-        return this.documents.has(documentId);
-    },
-
-    fetchDocument: function(documentId) {
-        return this.documents.get(documentId);
-    },
-
-    createDocument: function(documentId, document) {
-        if (this.documents.size > this.MAX_DOCUMENTS) {
-            // delete the first (oldest) cached document
-            const key = this.documents.keys().next().getValue();
-            this.documents.delete(key);
-        }
-        this.documents.set(documentId, document);
-    },
-
-    typeExists: function(typeId) {
-        return this.types.has(typeId);
-    },
-
-    fetchType: function(typeId) {
-        return this.types.get(typeId);
-    },
-
-    createType: function(typeId, type) {
-        if (this.types.size > this.MAX_TYPES) {
-            // delete the first (oldest) cached type
-            const key = this.types.keys().next().getValue();
-            this.types.delete(key);
-        }
-        this.types.set(typeId, type);
-    }
-};
-
-
-// PRIVATE FUNCTIONS
 
 const validateParameter = function(procedureName, parameterName, parameterValue, type) {
     type = type || parameterName;
@@ -965,4 +936,103 @@ const validateParameter = function(procedureName, parameterName, parameterValue,
     });
     throw exception;
     */
+};
+
+
+const constructTemplate = async function(repository, type) {
+    const template = bali.catalog({}, bali.parameters({
+        $type: type,
+        $tag: bali.tag(),  // a new unique tag
+        $version: bali.version(),  // initial version
+        $permissions: '/bali/permissions/private/v1',
+        $previous: bali.NONE
+    }));
+    const attributes = type.getValue('$attributes');
+    if (attributes && attributes.getIterator) {
+        const iterator = attributes.getIterator();
+        while (iterator.hasNext()) {
+            var attribute = iterator.getNext();
+            var symbol = attribute.getKey();
+            var definition = attribute.getValue();
+            var value = definition.getValue('$default');
+            if (!value) value = constructTemplate(repository, definition.getValue('$type'));
+            template.setValue(symbol, value);
+        }
+    }
+    return template;
+};
+
+
+/*
+ * This section defines the caches for the client side API.
+ * Since all documents are immutable, there are no cache consistency issues.
+ * The caching rules are as follows:
+ * <pre>
+ * 1) The cache is always checked before downloading a document.
+ * 2) A downloaded document is always validated before use.
+ * 3) A validated document is always cached locally.
+ * 4) The cache will delete the oldest document when it is full.
+ * </pre>
+ */
+
+const cache = {
+
+    MAX_CERTIFICATES: 64,
+    MAX_DOCUMENTS: 128,
+    MAX_TYPES: 256,
+
+    certificates: new Map(),
+    documents: new Map(),
+    types: new Map(),
+
+    certificateExists: function(certificateId) {
+        return this.certificates.has(certificateId);
+    },
+
+    fetchCertificate: function(certificateId) {
+        return this.certificates.get(certificateId);
+    },
+
+    createCertificate: function(certificateId, certificate) {
+        if (this.certificates.size > this.MAX_CERTIFICATES) {
+            // delete the first (oldest) cached certificate
+            const key = this.certificates.keys().next().getValue();
+            this.certificates.delete(key);
+        }
+        this.certificates.set(certificateId, certificate);
+    },
+
+    documentExists: function(documentId) {
+        return this.documents.has(documentId);
+    },
+
+    fetchDocument: function(documentId) {
+        return this.documents.get(documentId);
+    },
+
+    createDocument: function(documentId, document) {
+        if (this.documents.size > this.MAX_DOCUMENTS) {
+            // delete the first (oldest) cached document
+            const key = this.documents.keys().next().getValue();
+            this.documents.delete(key);
+        }
+        this.documents.set(documentId, document);
+    },
+
+    typeExists: function(typeId) {
+        return this.types.has(typeId);
+    },
+
+    fetchType: function(typeId) {
+        return this.types.get(typeId);
+    },
+
+    createType: function(typeId, type) {
+        if (this.types.size > this.MAX_TYPES) {
+            // delete the first (oldest) cached type
+            const key = this.types.keys().next().getValue();
+            this.types.delete(key);
+        }
+        this.types.set(typeId, type);
+    }
 };

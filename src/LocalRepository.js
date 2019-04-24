@@ -38,6 +38,7 @@ const EOL = '\n';  // POSIX compliant end of line
  */
 exports.repository = function(directory) {
     const repositoryDirectory = directory + 'repository/';
+    const names = repositoryDirectory + 'names/';
     const accounts = repositoryDirectory + 'accounts/';
     const certificates = repositoryDirectory + 'certificates/';
     const drafts = repositoryDirectory + 'drafts/';
@@ -76,12 +77,70 @@ exports.repository = function(directory) {
         initializeAPI: async function() {
             await pfs.mkdir(directory, 0o700).catch(function() {});
             await pfs.mkdir(repositoryDirectory, 0o700).catch(function() {});
+            await pfs.mkdir(names, 0o700).catch(function() {});
             await pfs.mkdir(certificates, 0o700).catch(function() {});
             await pfs.mkdir(drafts, 0o700).catch(function() {});
             await pfs.mkdir(documents, 0o700).catch(function() {});
             await pfs.mkdir(types, 0o700).catch(function() {});
             await pfs.mkdir(queues, 0o700).catch(function() {});
             this.initializeAPI = undefined;  // can only be called once
+        },
+
+        /**
+         * This function checks to see whether or not a citation is associated with the
+         * specified name.
+         * 
+         * @param {String} name The unique name for the citation being checked.
+         * @returns {Boolean} Whether or not the name exists.
+         */
+        nameExists: async function(name) {
+            if (this.initializeAPI) await this.initializeAPI();
+            const filename = names + name.replace(/\//g, '_') + '.bali';
+            const exists = await doesExist(filename);
+            return exists;
+        },
+
+        /**
+         * This function attempts to retrieve a citation from the repository for the specified name.
+         * 
+         * @param {String} name The unique name for the citation being fetched.
+         * @returns {String} The canonical source string for the citation, or
+         * <code>undefined</code> if it doesn't exist.
+         */
+        fetchName: async function(name) {
+            if (this.initializeAPI) await this.initializeAPI();
+            var citation;
+            const filename = names + name.replace(/\//g, '_') + '.bali';
+            const exists = await doesExist(filename);
+            if (exists) {
+                citation = await pfs.readFile(filename);
+                citation = citation.toString().slice(0, -1);  // remove POSIX compliant <EOL>
+            }
+            return citation;
+        },
+
+        /**
+         * This function associates a new name with the specified citation in the repository.
+         * 
+         * @param {String} name The unique name for the specified citation.
+         * @param {String} citation The canonical source string for the citation.
+         */
+        createName: async function(name, citation) {
+            if (this.initializeAPI) await this.initializeAPI();
+            const filename = names + name.replace(/\//g, '_') + '.bali';
+            const exists = await doesExist(filename);
+            if (exists) {
+                throw bali.exception({
+                    $module: '/bali/repositories/LocalRepository',
+                    $procedure: '$createName',
+                    $exception: '$fileExists',
+                    $url: bali.reference('file:' + directory),
+                    $file: bali.text(filename),
+                    $text: bali.text('The file to be written already exists.')
+                });
+            }
+            const document = citation + EOL;  // add POSIX compliant <EOL>
+            await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o400});
         },
 
         /**

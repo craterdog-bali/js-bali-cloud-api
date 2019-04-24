@@ -8,6 +8,7 @@
  * Source Initiative. (See http://opensource.org/licenses/MIT)          *
  ************************************************************************/
 
+const debug = true;  // set to true for exception logging
 const crypto = require('crypto');
 const mocha = require('mocha');
 const assert = require('chai').assert;
@@ -17,8 +18,8 @@ const accountId = bali.parse('#GTDHQ9B8ZGS7WCBJJJBFF6KDCCF55R2P');
 const directory = 'test/config/';
 const url = bali.reference('http://localhost:3000');
 const secret = crypto.randomBytes(32);
-const securityModule = require('bali-digital-notary').ssm(secret, directory + accountId);
-const notary = require('bali-digital-notary').api(securityModule, accountId, directory);
+const securityModule = require('bali-digital-notary').ssm(secret, directory + accountId.getValue() + '.keys');
+const notary = require('bali-digital-notary').api(securityModule, accountId, directory, debug);
 const repository = require('../').remote(notary, url);
 
 const transaction = bali.catalog({
@@ -41,11 +42,26 @@ describe('Bali Nebula API™ - Test Cloud Repository', function() {
 
     describe('Test Cloud Repository', function() {
 
-        it('should perform a notary certificate lifecycle', async function() {
-            const identifier = 'KHMSK2LPXSWYMLZ8KJFNTL461A13M8Z7v3';
+        it('should perform a citation name lifecycle', async function() {
+            const name = 'bali/examples/name/v1.2.3.4';
 
             // generate a new notary key
             await notary.generateKey();
+
+            // store a new name in the repository
+            await repository.createName(name, source);
+
+            // make sure the new name exists in the repository
+            exists = await repository.nameExists(name);
+            expect(exists).is.true;
+
+            // fetch the new citation from the repository
+            const citation = await repository.fetchName(name);
+            expect(citation).to.equal(source);
+        });
+
+        it('should perform a notary certificate lifecycle', async function() {
+            const identifier = 'KHMSK2LPXSWYMLZ8KJFNTL461A13M8Z7v3';
 
             // store a new certificate in the repository
             await repository.createCertificate(identifier, source);

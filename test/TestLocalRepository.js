@@ -11,21 +11,43 @@
 const mocha = require('mocha');
 const assert = require('chai').assert;
 const expect = require('chai').expect;
+const bali = require('bali-component-framework');
 const repository = require('../').local('test/config/');
 
-const source =
-    '[\n' +
-    '    $date: <2018-04-01>\n' +
-    '    $product: "Snickers Bar"\n' +
-    '    $quantity: 10\n' +
-    '    $price: 1.25(USD)\n' +
-    '    $tax: 1.07(USD)\n' +
-    '    $total: 13.57(USD)\n' +
-    ']';
+const transaction = bali.catalog({
+    $timestamp: bali.moment(),
+    $product: bali.text('Snickers Bar'),
+    $quantity: 10,
+    $price: bali.parse('1.25($USD)'),
+    $tax: bali.parse('1.07($USD)'),
+    $total: bali.parse('13.57($USD)')
+}, bali.parameters({
+    $tag: bali.tag(),
+    $version: bali.version(),
+    $permissions: bali.parse('/bali/permissions/public/v1'),
+    $previous: bali.NONE
+}));
+
+const source = transaction.toString();
 
 describe('Bali Nebula API™ - Test Local Repository', function() {
 
     describe('Test Local Repository', function() {
+
+        it('should perform a citation name lifecycle', async function() {
+            const name = 'bali/examples/name/v1.2.3';
+
+            // store a new name in the repository
+            await repository.createName(name, source);
+
+            // make sure the new name exists in the repository
+            exists = await repository.nameExists(name);
+            expect(exists).is.true;
+
+            // fetch the new citation from the repository
+            const citation = await repository.fetchName(name);
+            expect(citation).to.equal(source);
+        });
 
         it('should perform a notary certificate lifecycle', async function() {
             const identifier = 'VRYA45CS3K1QL7AGY9TSAAHQK4Y2BJRXv3';

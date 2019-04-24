@@ -17,6 +17,220 @@ const bodyParser = require('body-parser');
 
 // PRIVATE FUNCTIONS
 
+const pingName = async function(request, response) {
+    const name = request.params.identifier;
+    var message = 'Service: ping name: ' + name;
+    if (debug) console.log(message);
+    try {
+        if (await repository.nameExists(name)) {
+            message = 'Service: name ' + name + ' exists.';
+            if (debug) console.log(message);
+            response.writeHead(200, message);
+            response.end();
+        } else {
+            message = 'Service: name ' + name + ' does not exist.';
+            if (debug) console.log(message);
+            response.writeHead(404, message);
+            response.end();
+        }
+    } catch (e) {
+        message = 'Service: the request was badly formed: ' + e.message;
+        if (debug) console.log(message);
+        response.writeHead(400, message);
+        response.end();
+    }
+};
+
+
+const getName = async function(request, response) {
+    const name = request.params.identifier;
+    var message = 'Service: get name: ' + name;
+    if (debug) console.log(message);
+    try {
+        const citation = await repository.fetchName(name);
+        if (citation) {
+            const data = citation.toString();
+            message = 'Service: citation for ' + name + ' was fetched.';
+            if (debug) console.log(message);
+            response.writeHead(200, message, {
+                'Content-Length': data.length,
+                'Content-Type': 'application/bali',
+                'Cache-Control': 'immutable'
+            });
+            message = 'Service: name: ' + data;
+            if (debug) console.log(message);
+            response.end(data);
+        } else {
+            message = 'Service: name ' + name + ' does not exist.';
+            if (debug) console.log(message);
+            response.writeHead(404, message);
+            response.end();
+        }
+    } catch (e) {
+        message = 'Service: the request was badly formed: ' + e.message;
+        if (debug) console.log(message);
+        response.writeHead(400, message);
+        response.end();
+    }
+};
+
+
+const postName = async function(request, response) {
+    const name = request.params.identifier;
+    var message = 'Service: post name: ' + name + '\n' + request.body;
+    if (debug) console.log(message);
+    try {
+        const citation = request.body;
+        if (await repository.nameExists(name)) {
+            message = 'Service: name ' + name + ' already exists.';
+            if (debug) console.log(message);
+            response.writeHead(409, message);
+            response.end();
+        } else {
+            await repository.createName(name, citation);
+            message = 'Service: name ' + name + ' was stored.';
+            if (debug) console.log(message);
+            response.writeHead(201, message);
+            response.end();
+        }
+    } catch (e) {
+        message = 'Service: the request was badly formed: ' + e.message;
+        if (debug) console.log(message);
+        response.writeHead(400, message);
+        response.end();
+    }
+};
+
+
+const putName = async function(request, response) {
+    const name = request.params.identifier;
+    var message = 'Service: put name: ' + name + '\n' + request.body;
+    if (debug) console.log(message);
+    message = 'Service: names cannot be updated.';
+    if (debug) console.log(message);
+    response.writeHead(405, message);
+    response.end();
+};
+
+
+const deleteName = async function(request, response) {
+    const name = request.params.identifier;
+    var message = 'Service: delete name: ' + name;
+    if (debug) console.log(message);
+    message = 'Service: names cannot be deleted.';
+    if (debug) console.log(message);
+    response.writeHead(405, message);
+    response.end();
+};
+
+
+const pingAccount = async function(request, response) {
+    const accountId = request.params.identifier;
+    var message = 'Service: ping account: ' + accountId;
+    if (debug) console.log(message);
+    try {
+        if (await repository.accountExists(accountId)) {
+            message = 'Service: account ' + accountId + ' exists.';
+            if (debug) console.log(message);
+            response.writeHead(200, message);
+            response.end();
+        } else {
+            message = 'Service: account ' + accountId + ' does not exist.';
+            if (debug) console.log(message);
+            response.writeHead(404, message);
+            response.end();
+        }
+    } catch (e) {
+        message = 'Service: the request was badly formed: ' + e.message;
+        if (debug) console.log(message);
+        response.writeHead(400, message);
+        response.end();
+    }
+};
+
+
+const getAccount = async function(request, response) {
+    const accountId = request.params.identifier;
+    var message = 'Service: get account: ' + accountId;
+    if (debug) console.log(message);
+    try {
+        const account = await repository.fetchAccount(accountId);
+        if (account) {
+            const data = account.toString();
+            message = 'Service: account ' + accountId + ' was fetched.';
+            if (debug) console.log(message);
+            response.writeHead(200, message, {
+                'Content-Length': data.length,
+                'Content-Type': 'application/bali',
+                'Cache-Control': 'immutable'
+            });
+            message = 'Service: account: ' + data;
+            if (debug) console.log(message);
+            response.end(data);
+        } else {
+            message = 'Service: account ' + accountId + ' does not exist.';
+            if (debug) console.log(message);
+            response.writeHead(404, message);
+            response.end();
+        }
+    } catch (e) {
+        message = 'Service: the request was badly formed: ' + e.message;
+        if (debug) console.log(message);
+        response.writeHead(400, message);
+        response.end();
+    }
+};
+
+
+const postAccount = async function(request, response) {
+    const accountId = request.params.identifier;
+    var message = 'Service: post account: ' + accountId + '\n' + request.body;
+    if (debug) console.log(message);
+    try {
+        const account = request.body;
+        if (await repository.accountExists(accountId)) {
+            message = 'Service: account ' + accountId + ' already exists.';
+            if (debug) console.log(message);
+            response.writeHead(409, message);
+            response.end();
+        } else {
+            await repository.createAccount(accountId, account);
+            message = 'Service: account ' + accountId + ' was stored.';
+            if (debug) console.log(message);
+            response.writeHead(201, message);
+            response.end();
+        }
+    } catch (e) {
+        message = 'Service: the request was badly formed: ' + e.message;
+        if (debug) console.log(message);
+        response.writeHead(400, message);
+        response.end();
+    }
+};
+
+
+const putAccount = async function(request, response) {
+    const accountId = request.params.identifier;
+    var message = 'Service: put account: ' + accountId + '\n' + request.body;
+    if (debug) console.log(message);
+    message = 'Service: accounts cannot be updated.';
+    if (debug) console.log(message);
+    response.writeHead(405, message);
+    response.end();
+};
+
+
+const deleteAccount = async function(request, response) {
+    const accountId = request.params.identifier;
+    var message = 'Service: delete account: ' + accountId;
+    if (debug) console.log(message);
+    message = 'Service: accounts cannot be deleted.';
+    if (debug) console.log(message);
+    response.writeHead(405, message);
+    response.end();
+};
+
+
 const pingCertificate = async function(request, response) {
     const certificateId = request.params.identifier;
     var message = 'Service: ping certificate: ' + certificateId;
@@ -548,6 +762,20 @@ const getMessage = async function(request, response) {
 
 // SERVICE INITIALIZATION
 
+const nameRouter = express.Router();
+nameRouter.head('/:identifier([a-zA-Z0-9/\\.]+)', pingName);
+nameRouter.post('/:identifier([a-zA-Z0-9/\\.]+)', postName);
+nameRouter.get('/:identifier([a-zA-Z0-9/\\.]+)', getName);
+nameRouter.put('/:identifier([a-zA-Z0-9/\\.]+)', putName);
+nameRouter.delete('/:identifier([a-zA-Z0-9/\\.]+)', deleteName);
+
+const accountRouter = express.Router();
+accountRouter.head('/:identifier', pingAccount);
+accountRouter.post('/:identifier', postAccount);
+accountRouter.get('/:identifier', getAccount);
+accountRouter.put('/:identifier', putAccount);
+accountRouter.delete('/:identifier', deleteAccount);
+
 const certificateRouter = express.Router();
 certificateRouter.head('/:identifier', pingCertificate);
 certificateRouter.post('/:identifier', postCertificate);
@@ -586,6 +814,7 @@ queueRouter.delete('/:identifier', deleteQueue);
 const service = express();
 
 service.use(bodyParser.text({ type: 'application/bali' }));
+service.use('/name', nameRouter);
 service.use('/certificate', certificateRouter);
 service.use('/draft', draftRouter);
 service.use('/document', documentRouter);

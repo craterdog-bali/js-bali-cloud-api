@@ -42,16 +42,16 @@ describe('Bali Nebula API™ - Test Remote API', function() {
         it('should create the consumer notary API', async function() {
             const secret = crypto.randomBytes(32);
             const consumerTag = bali.tag();
-            const consumerSSM = notary.ssm(secret, directory + consumerTag);
-            consumerNotary = notary.api(consumerSSM, consumerTag, directory);
+            const consumerSSM = notary.ssm(secret, directory + consumerTag.getValue() + '.keys');
+            consumerNotary = notary.api(consumerSSM, consumerTag, directory, debug);
             expect(consumerNotary).to.exist;
         });
 
         it('should create the merchant notary API', async function() {
             const secret = crypto.randomBytes(32);
             const merchantTag = bali.tag();
-            const merchantSSM = notary.ssm(secret, directory + merchantTag);
-            merchantNotary = notary.api(merchantSSM, merchantTag, directory);
+            const merchantSSM = notary.ssm(secret, directory + merchantTag.getValue() + '.keys');
+            merchantNotary = notary.api(merchantSSM, merchantTag, directory, debug);
             expect(merchantNotary).to.exist;
         });
 
@@ -81,7 +81,13 @@ describe('Bali Nebula API™ - Test Remote API', function() {
             expect(merchantCertificate).to.exist;
             merchantCitation = await merchantNotary.getCitation();
             expect(merchantCitation).to.exist;
-            const certificateId = extractId(merchantCitation);
+            var certificateId = extractId(merchantCitation);
+            await merchantRepository.createCertificate(certificateId, merchantCertificate);
+            merchantCertificate = await merchantNotary.generateKey();  // test regeneration
+            expect(merchantCertificate).to.exist;
+            merchantCitation = await merchantNotary.getCitation();
+            expect(merchantCitation).to.exist;
+            certificateId = extractId(merchantCitation);
             await merchantRepository.createCertificate(certificateId, merchantCertificate);
         });
 
