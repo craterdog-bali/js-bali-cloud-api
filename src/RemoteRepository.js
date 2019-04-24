@@ -56,117 +56,42 @@ exports.repository = function(notary, url) {
         },
 
         /**
-         * This function checks to see whether or not a citation is associated with the
-         * specified name.
+         * This function checks to see whether or not a document citation is associated
+         * with the specified name.
          * 
-         * @param {String} name The unique name for the citation being checked.
-         * @returns {Boolean} Whether or not the name exists.
+         * @param {String} name The unique name for the document citation being checked.
+         * @returns {Boolean} Whether or not the document citation exists.
          */
-        nameExists: async function(name) {
+        citationExists: async function(name) {
             const credentials = await generateCredentials(notary);
-            const status = await sendRequest(credentials, '$nameExists', url, 'HEAD', 'name', name);
+            const status = await sendRequest(credentials, '$citationExists', url, 'HEAD', 'name', name);
             return status;
         },
 
         /**
-         * This function attempts to retrieve a citation from the repository for the specified name.
-         * 
-         * @param {String} name The unique name for the citation being fetched.
-         * @returns {String} The canonical source string for the citation, or
-         * <code>undefined</code> if it doesn't exist.
-         */
-        fetchName: async function(name) {
-            const credentials = await generateCredentials(notary);
-            const citation = await sendRequest(credentials, '$fetchName', url, 'GET', 'name', name);
-            return citation;
-        },
-
-        /**
-         * This function associates a new name with the specified citation in the repository.
+         * This function associates a new name with the specified document citation in
+         * the repository.
          * 
          * @param {String} name The unique name for the specified citation.
          * @param {String} citation The canonical source string for the citation.
          */
-        createName: async function(name, citation) {
+        nameCitation: async function(name, citation) {
             const credentials = await generateCredentials(notary);
-            await sendRequest(credentials, '$createName', url, 'POST', 'name', name, citation);
+            await sendRequest(credentials, '$createCitation', url, 'POST', 'name', name, citation);
         },
 
         /**
-         * This function checks to see whether or not an account is associated with the
-         * specified identifier.
+         * This function attempts to retrieve a document citation from the repository for
+         * the specified name.
          * 
-         * @param {String} accountId The unique identifier for the account being checked.
-         * @returns {Boolean} Whether or not the account exists.
-         */
-        accountExists: async function(accountId) {
-            const credentials = await generateCredentials(notary);
-            const status = await sendRequest(credentials, '$accountExists', url, 'HEAD', 'account', accountId);
-            return status;
-        },
-
-        /**
-         * This function attempts to retrieve the specified account from the repository.
-         * 
-         * @param {String} accountId The unique identifier for the account being fetched.
-         * @returns {String} The canonical source string for the account, or
+         * @param {String} name The unique name for the document citation being fetched.
+         * @returns {String} The canonical source string for the document citation, or
          * <code>undefined</code> if it doesn't exist.
          */
-        fetchAccount: async function(accountId) {
+        fetchCitation: async function(name) {
             const credentials = await generateCredentials(notary);
-            const account = await sendRequest(credentials, '$fetchAccount', url, 'GET', 'account', accountId);
-            return account;
-        },
-
-        /**
-         * This function creates a new account in the repository.
-         * 
-         * @param {String} accountId The unique identifier for the account being created.
-         * @param {String} account The canonical source string for the account.
-         */
-        createAccount: async function(accountId, account) {
-            const credentials = await generateCredentials(notary);
-            await sendRequest(credentials, '$createAccount', url, 'POST', 'account', accountId, account);
-        },
-
-        /**
-         * This function checks to see whether or not a certificate is associated with the
-         * specified identifier.
-         * 
-         * @param {String} certificateId The unique identifier (including version number) for
-         * the certificate being checked.
-         * @returns {Boolean} Whether or not the certificate exists.
-         */
-        certificateExists: async function(certificateId) {
-            const credentials = await generateCredentials(notary);
-            const status = await sendRequest(credentials, '$certificateExists', url, 'HEAD', 'certificate', certificateId);
-            return status;
-        },
-
-        /**
-         * This function attempts to retrieve the specified certificate from the repository.
-         * 
-         * @param {String} certificateId The unique identifier (including version number) for
-         * the certificate being fetched.
-         * @returns {String} The canonical source string for the certificate, or
-         * <code>undefined</code> if it doesn't exist.
-         */
-        fetchCertificate: async function(certificateId) {
-            const credentials = await generateCredentials(notary);
-            const certificate = await sendRequest(credentials, '$fetchCertificate', url, 'GET', 'certificate', certificateId);
-            return certificate;
-        },
-
-        /**
-         * This function creates a new certificate in the repository.
-         * 
-         * @param {String} certificateId The unique identifier (including version number) for
-         * the certificate being created.
-         * @param {String} certificate The canonical source string for the certificate.
-         */
-        createCertificate: async function(certificateId, certificate) {
-            const credentials = await generateCredentials(notary);
-            await sendRequest(credentials, '$createCertificate', url, 'POST', 'certificate', certificateId, certificate);
+            const citation = await sendRequest(credentials, '$fetchCitation', url, 'GET', 'name', name);
+            return citation;
         },
 
         /**
@@ -201,7 +126,7 @@ exports.repository = function(notary, url) {
          * This function saves a draft document in the repository.
          * 
          * @param {String} draftId The unique identifier (including version number) for
-         * the draft document being created.
+         * the draft document being saved.
          * @param {String} draft The canonical source string for the draft document.
          */
         saveDraft: async function(draftId, draft) {
@@ -258,46 +183,6 @@ exports.repository = function(notary, url) {
         createDocument: async function(documentId, document) {
             const credentials = await generateCredentials(notary);
             await sendRequest(credentials, '$createDocument', url, 'POST', 'document', documentId, document);
-        },
-
-        /**
-         * This function checks to see whether or not a type is associated with the
-         * specified identifier.
-         * 
-         * @param {String} typeId The unique identifier (including version number) for
-         * the type being checked.
-         * @returns {Boolean} Whether or not the type exists.
-         */
-        typeExists: async function(typeId) {
-            const credentials = await generateCredentials(notary);
-            const status = await sendRequest(credentials, '$typeExists', url, 'HEAD', 'type', typeId);
-            return status;
-        },
-
-        /**
-         * This function attempts to retrieve the specified type from the repository.
-         * 
-         * @param {String} typeId The unique identifier (including version number) for
-         * the type being fetched.
-         * @returns {String} The canonical source string for the type, or
-         * <code>undefined</code> if it doesn't exist.
-         */
-        fetchType: async function(typeId) {
-            const credentials = await generateCredentials(notary);
-            const type = await sendRequest(credentials, '$fetchType', url, 'GET', 'type', typeId);
-            return type;
-        },
-
-        /**
-         * This function creates a new type in the repository.
-         * 
-         * @param {String} typeId The unique identifier (including version number) for
-         * the type being created.
-         * @param {String} type The canonical source string for the type.
-         */
-        createType: async function(typeId, type) {
-            const credentials = await generateCredentials(notary);
-            await sendRequest(credentials, '$createType', url, 'POST', 'type', typeId, type);
         },
 
         /**

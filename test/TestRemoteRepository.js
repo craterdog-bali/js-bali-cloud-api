@@ -49,14 +49,14 @@ describe('Bali Nebula API™ - Test Cloud Repository', function() {
             await notary.generateKey();
 
             // store a new name in the repository
-            await repository.createName(name, source);
+            await repository.nameCitation(name, source);
 
             // make sure the new name exists in the repository
-            exists = await repository.nameExists(name);
+            exists = await repository.citationExists(name);
             expect(exists).is.true;
 
             // fetch the new citation from the repository
-            const citation = await repository.fetchName(name);
+            const citation = await repository.fetchCitation(name);
             expect(citation).to.equal(source);
         });
 
@@ -64,23 +64,23 @@ describe('Bali Nebula API™ - Test Cloud Repository', function() {
             const identifier = 'KHMSK2LPXSWYMLZ8KJFNTL461A13M8Z7v3';
 
             // store a new certificate in the repository
-            await repository.createCertificate(identifier, source);
+            await repository.createDocument(identifier, source);
 
             // make sure the new certificate exists in the repository
-            exists = await repository.certificateExists(identifier);
+            exists = await repository.documentExists(identifier);
             expect(exists).is.true;
 
             // fetch the new certificate from the repository
-            const certificate = await repository.fetchCertificate(identifier);
+            const certificate = await repository.fetchDocument(identifier);
             expect(certificate).to.equal(source);
 
             // make sure the new certificate still exists in the repository
-            exists = await repository.certificateExists(identifier);
+            exists = await repository.documentExists(identifier);
             expect(exists).is.true;
 
             // attempt to store the same certificate in the repository
             try {
-                await repository.createCertificate(identifier, source);
+                await repository.createDocument(identifier, source);
                 assert.fail('The attempt to store the same certificate should have failed.');
             } catch (error) {
                 // expected
@@ -92,23 +92,23 @@ describe('Bali Nebula API™ - Test Cloud Repository', function() {
             const identifier = '1T2KNYM32FZ83VZQYP1ATMPQGNMWDVYAv1';
 
             // store a new type in the repository
-            await repository.createType(identifier, source);
+            await repository.createDocument(identifier, source);
 
             // make sure the new type exists in the repository
-            exists = await repository.typeExists(identifier);
+            exists = await repository.documentExists(identifier);
             expect(exists).is.true;
 
             // fetch the new type from the repository
-            const type = await repository.fetchType(identifier);
+            const type = await repository.fetchDocument(identifier);
             expect(type).to.equal(source);
 
             // make sure the new type still exists in the repository
-            exists = await repository.typeExists(identifier);
+            exists = await repository.documentExists(identifier);
             expect(exists).is.true;
 
             // attempt to store the same type in the repository
             try {
-                await repository.createType(identifier, source);
+                await repository.createDocument(identifier, source);
                 assert.fail('The attempt to store the same type should have failed.');
             } catch (error) {
                 // expected

@@ -38,7 +38,7 @@ const EOL = '\n';  // POSIX compliant end of line
  */
 exports.repository = function(directory) {
     const repositoryDirectory = directory + 'repository/';
-    const names = repositoryDirectory + 'names/';
+    const citations = repositoryDirectory + 'citations/';
     const accounts = repositoryDirectory + 'accounts/';
     const certificates = repositoryDirectory + 'certificates/';
     const drafts = repositoryDirectory + 'drafts/';
@@ -55,10 +55,11 @@ exports.repository = function(directory) {
          * @returns {String} A string providing attributes about this repository.
          */
         toString: function() {
-            return bali.catalog({
+            const catalog = bali.catalog({
                 $module: '/bali/repositories/LocalRepository',
                 $url: this.getURL()
             });
+            return catalog.toString();
         },
 
         /**
@@ -77,7 +78,7 @@ exports.repository = function(directory) {
         initializeAPI: async function() {
             await pfs.mkdir(directory, 0o700).catch(function() {});
             await pfs.mkdir(repositoryDirectory, 0o700).catch(function() {});
-            await pfs.mkdir(names, 0o700).catch(function() {});
+            await pfs.mkdir(citations, 0o700).catch(function() {});
             await pfs.mkdir(certificates, 0o700).catch(function() {});
             await pfs.mkdir(drafts, 0o700).catch(function() {});
             await pfs.mkdir(documents, 0o700).catch(function() {});
@@ -87,52 +88,34 @@ exports.repository = function(directory) {
         },
 
         /**
-         * This function checks to see whether or not a citation is associated with the
-         * specified name.
+         * This function checks to see whether or not a document citation is associated
+         * with the specified name.
          * 
-         * @param {String} name The unique name for the citation being checked.
-         * @returns {Boolean} Whether or not the name exists.
+         * @param {String} name The unique name for the document citation being checked.
+         * @returns {Boolean} Whether or not the document citation exists.
          */
-        nameExists: async function(name) {
+        citationExists: async function(name) {
             if (this.initializeAPI) await this.initializeAPI();
-            const filename = names + name.replace(/\//g, '_') + '.bali';
+            const filename = citations + name.replace(/\//g, '_') + '.bali';
             const exists = await doesExist(filename);
             return exists;
         },
 
         /**
-         * This function attempts to retrieve a citation from the repository for the specified name.
+         * This function associates a new name with the specified document citation in
+         * the repository.
          * 
-         * @param {String} name The unique name for the citation being fetched.
-         * @returns {String} The canonical source string for the citation, or
-         * <code>undefined</code> if it doesn't exist.
+         * @param {String} name The unique name for the specified document citation.
+         * @param {String} citation The canonical source string for the document citation.
          */
-        fetchName: async function(name) {
+        nameCitation: async function(name, citation) {
             if (this.initializeAPI) await this.initializeAPI();
-            var citation;
-            const filename = names + name.replace(/\//g, '_') + '.bali';
-            const exists = await doesExist(filename);
-            if (exists) {
-                citation = await pfs.readFile(filename);
-                citation = citation.toString().slice(0, -1);  // remove POSIX compliant <EOL>
-            }
-            return citation;
-        },
-
-        /**
-         * This function associates a new name with the specified citation in the repository.
-         * 
-         * @param {String} name The unique name for the specified citation.
-         * @param {String} citation The canonical source string for the citation.
-         */
-        createName: async function(name, citation) {
-            if (this.initializeAPI) await this.initializeAPI();
-            const filename = names + name.replace(/\//g, '_') + '.bali';
+            const filename = citations + name.replace(/\//g, '_') + '.bali';
             const exists = await doesExist(filename);
             if (exists) {
                 throw bali.exception({
                     $module: '/bali/repositories/LocalRepository',
-                    $procedure: '$createName',
+                    $procedure: '$nameCitation',
                     $exception: '$fileExists',
                     $url: bali.reference('file:' + directory),
                     $file: bali.text(filename),
@@ -144,120 +127,23 @@ exports.repository = function(directory) {
         },
 
         /**
-         * This function checks to see whether or not an account is associated with the
-         * specified identifier.
+         * This function attempts to retrieve a document citation from the repository for
+         * the specified name.
          * 
-         * @param {String} accountId The unique identifier for the account being checked.
-         * @returns {Boolean} Whether or not the account exists.
-         */
-        accountExists: async function(accountId) {
-            if (this.initializeAPI) await this.initializeAPI();
-            const filename = accounts + accountId + '.bali';
-            const exists = await doesExist(filename);
-            return exists;
-        },
-
-        /**
-         * This function attempts to retrieve the specified account from the repository.
-         * 
-         * @param {String} accountId The unique identifier for the account being fetched.
-         * @returns {String} The canonical source string for the account, or
+         * @param {String} name The unique name for the document citation being fetched.
+         * @returns {String} The canonical source string for the document citation, or
          * <code>undefined</code> if it doesn't exist.
          */
-        fetchAccount: async function(accountId) {
+        fetchCitation: async function(name) {
             if (this.initializeAPI) await this.initializeAPI();
-            var account;
-            const filename = accounts + accountId + '.bali';
+            var citation;
+            const filename = citations + name.replace(/\//g, '_') + '.bali';
             const exists = await doesExist(filename);
             if (exists) {
-                account = await pfs.readFile(filename);
-                account = account.toString().slice(0, -1);  // remove POSIX compliant <EOL>
+                citation = await pfs.readFile(filename);
+                citation = citation.toString().slice(0, -1);  // remove POSIX compliant <EOL>
             }
-            return account;
-        },
-
-        /**
-         * This function creates a new account in the repository.
-         * 
-         * @param {String} accountId The unique identifier for the account being created.
-         * @param {String} account The canonical source string for the account.
-         */
-        createAccount: async function(accountId, account) {
-            if (this.initializeAPI) await this.initializeAPI();
-            const filename = accounts + accountId + '.bali';
-            const exists = await doesExist(filename);
-            if (exists) {
-                throw bali.exception({
-                    $module: '/bali/repositories/LocalRepository',
-                    $procedure: '$createAccount',
-                    $exception: '$fileExists',
-                    $url: bali.reference('file:' + directory),
-                    $file: bali.text(filename),
-                    $text: bali.text('The file to be written already exists.')
-                });
-            }
-            const document = account + EOL;  // add POSIX compliant <EOL>
-            await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o400});
-        },
-
-        /**
-         * This function checks to see whether or not a certificate is associated with the
-         * specified identifier.
-         * 
-         * @param {String} certificateId The unique identifier (including version number) for
-         * the certificate being checked.
-         * @returns {Boolean} Whether or not the certificate exists.
-         */
-        certificateExists: async function(certificateId) {
-            if (this.initializeAPI) await this.initializeAPI();
-            const filename = certificates + certificateId + '.bali';
-            const exists = await doesExist(filename);
-            return exists;
-        },
-
-        /**
-         * This function attempts to retrieve the specified certificate from the repository.
-         * 
-         * @param {String} certificateId The unique identifier (including version number) for
-         * the certificate being fetched.
-         * @returns {String} The canonical source string for the certificate, or
-         * <code>undefined</code> if it doesn't exist.
-         */
-        fetchCertificate: async function(certificateId) {
-            if (this.initializeAPI) await this.initializeAPI();
-            var certificate;
-            const filename = certificates + certificateId + '.bali';
-            const exists = await doesExist(filename);
-            if (exists) {
-                certificate = await pfs.readFile(filename);
-                certificate = certificate.toString().slice(0, -1);  // remove POSIX compliant <EOL>
-            }
-            return certificate;
-        },
-
-        /**
-         * This function creates a new certificate in the repository.
-         * 
-         * @param {String} certificateId The unique identifier (including version number) for
-         * the certificate being created.
-         * @param {String} certificate The canonical source string for the certificate.
-         */
-        createCertificate: async function(certificateId, certificate) {
-            if (this.initializeAPI) await this.initializeAPI();
-            const filename = certificates + certificateId + '.bali';
-            const exists = await doesExist(filename);
-            if (exists) {
-                throw bali.exception({
-                    $module: '/bali/repositories/LocalRepository',
-                    $procedure: '$createCertificate',
-                    $exception: '$fileExists',
-                    $url: bali.reference('file:' + directory),
-                    $file: bali.text(filename),
-                    $text: bali.text('The file to be written already exists.')
-                });
-            }
-            const document = certificate + EOL;  // add POSIX compliant <EOL>
-            await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o400});
+            return citation;
         },
 
         /**
@@ -381,66 +267,6 @@ exports.repository = function(directory) {
                 });
             }
             document = document + EOL;  // add POSIX compliant <EOL>
-            await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o400});
-        },
-
-        /**
-         * This function checks to see whether or not a type is associated with the
-         * specified identifier.
-         * 
-         * @param {String} typeId The unique identifier (including version number) for
-         * the type being checked.
-         * @returns {Boolean} Whether or not the type exists.
-         */
-        typeExists: async function(typeId) {
-            if (this.initializeAPI) await this.initializeAPI();
-            const filename = types + typeId + '.bali';
-            const exists = await doesExist(filename);
-            return exists;
-        },
-
-        /**
-         * This function attempts to retrieve the specified type from the repository.
-         * 
-         * @param {String} typeId The unique identifier (including version number) for
-         * the type being fetched.
-         * @returns {String} The canonical source string for the type, or
-         * <code>undefined</code> if it doesn't exist.
-         */
-        fetchType: async function(typeId) {
-            if (this.initializeAPI) await this.initializeAPI();
-            var type;
-            const filename = types + typeId + '.bali';
-            const exists = await doesExist(filename);
-            if (exists) {
-                type = await pfs.readFile(filename);
-                type = type.toString().slice(0, -1);  // remove POSIX compliant <EOL>
-            }
-            return type;
-        },
-
-        /**
-         * This function creates a new type in the repository.
-         * 
-         * @param {String} typeId The unique identifier (including version number) for
-         * the type being created.
-         * @param {String} type The canonical source string for the type.
-         */
-        createType: async function(typeId, type) {
-            if (this.initializeAPI) await this.initializeAPI();
-            const filename = types + typeId + '.bali';
-            const exists = await doesExist(filename);
-            if (exists) {
-                throw bali.exception({
-                    $module: '/bali/repositories/LocalRepository',
-                    $procedure: '$createType',
-                    $exception: '$fileExists',
-                    $url: bali.reference('file:' + directory),
-                    $file: bali.text(filename),
-                    $text: bali.text('The file to be written already exists.')
-                });
-            }
-            const document = type + EOL;  // add POSIX compliant <EOL>
             await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o400});
         },
 

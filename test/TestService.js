@@ -22,7 +22,7 @@ const pingName = async function(request, response) {
     var message = 'Service: ping name: ' + name;
     if (debug) console.log(message);
     try {
-        if (await repository.nameExists(name)) {
+        if (await repository.citationExists(name)) {
             message = 'Service: name ' + name + ' exists.';
             if (debug) console.log(message);
             response.writeHead(200, message);
@@ -47,7 +47,7 @@ const getName = async function(request, response) {
     var message = 'Service: get name: ' + name;
     if (debug) console.log(message);
     try {
-        const citation = await repository.fetchName(name);
+        const citation = await repository.fetchCitation(name);
         if (citation) {
             const data = citation.toString();
             message = 'Service: citation for ' + name + ' was fetched.';
@@ -81,13 +81,13 @@ const postName = async function(request, response) {
     if (debug) console.log(message);
     try {
         const citation = request.body;
-        if (await repository.nameExists(name)) {
+        if (await repository.citationExists(name)) {
             message = 'Service: name ' + name + ' already exists.';
             if (debug) console.log(message);
             response.writeHead(409, message);
             response.end();
         } else {
-            await repository.createName(name, citation);
+            await repository.nameCitation(name, citation);
             message = 'Service: name ' + name + ' was stored.';
             if (debug) console.log(message);
             response.writeHead(201, message);
@@ -236,7 +236,7 @@ const pingCertificate = async function(request, response) {
     var message = 'Service: ping certificate: ' + certificateId;
     if (debug) console.log(message);
     try {
-        if (await repository.certificateExists(certificateId)) {
+        if (await repository.documentExists(certificateId)) {
             message = 'Service: certificate ' + certificateId + ' exists.';
             if (debug) console.log(message);
             response.writeHead(200, message);
@@ -261,7 +261,7 @@ const getCertificate = async function(request, response) {
     var message = 'Service: get certificate: ' + certificateId;
     if (debug) console.log(message);
     try {
-        const certificate = await repository.fetchCertificate(certificateId);
+        const certificate = await repository.fetchDocument(certificateId);
         if (certificate) {
             const data = certificate.toString();
             message = 'Service: certificate ' + certificateId + ' was fetched.';
@@ -295,13 +295,13 @@ const postCertificate = async function(request, response) {
     if (debug) console.log(message);
     try {
         const certificate = request.body;
-        if (await repository.certificateExists(certificateId)) {
+        if (await repository.documentExists(certificateId)) {
             message = 'Service: certificate ' + certificateId + ' already exists.';
             if (debug) console.log(message);
             response.writeHead(409, message);
             response.end();
         } else {
-            await repository.createCertificate(certificateId, certificate);
+            await repository.createDocument(certificateId, certificate);
             message = 'Service: certificate ' + certificateId + ' was stored.';
             if (debug) console.log(message);
             response.writeHead(201, message);
@@ -573,7 +573,7 @@ const pingType = async function(request, response) {
     var message = 'Service: ping type: ' + typeId;
     if (debug) console.log(message);
     try {
-        if (await repository.typeExists(typeId)) {
+        if (await repository.documentExists(typeId)) {
             message = 'Service: type ' + typeId + ' exists.';
             if (debug) console.log(message);
             response.writeHead(200, message);
@@ -598,7 +598,7 @@ const getType = async function(request, response) {
     var message = 'Service: get type: ' + typeId;
     if (debug) console.log(message);
     try {
-        const type = await repository.fetchType(typeId);
+        const type = await repository.fetchDocument(typeId);
         if (type) {
             const data = type.toString();
             message = 'Service: type ' + typeId + ' was fetched.';
@@ -632,13 +632,13 @@ const postType = async function(request, response) {
     if (debug) console.log(message);
     try {
         const type = request.body;
-        if (await repository.typeExists(typeId)) {
+        if (await repository.documentExists(typeId)) {
             message = 'Service: type ' + typeId + ' already exists.';
             if (debug) console.log(message);
             response.writeHead(409, message);
             response.end();
         } else {
-            await repository.createType(typeId, type);
+            await repository.createDocument(typeId, type);
             message = 'Service: type ' + typeId + ' was stored.';
             if (debug) console.log(message);
             response.writeHead(201, message);

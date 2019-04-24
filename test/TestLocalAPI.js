@@ -19,8 +19,9 @@ const notary = require('bali-digital-notary');
 const nebula = require('../');
 
 function extractId(component) {
-    const identifier = component.getValue('$tag').getValue();
-    const version = component.getValue('$version');
+    const parameters = component.getValue('$component').getParameters();
+    const identifier = parameters.getParameter('$tag').getValue();
+    const version = parameters.getParameter('$version');
     return '' + identifier + version;
 }
 
@@ -69,41 +70,19 @@ describe('Bali Nebula API™ - Test Local API', function() {
         it('should setup the digital notary for the consumer', async function() {
             consumerCertificate = await consumerNotary.generateKey();
             expect(consumerCertificate).to.exist;
-            consumerCitation = await consumerNotary.getCitation();
-            expect(consumerCitation).to.exist;
-            const certificateId = extractId(consumerCitation);
-            await consumerRepository.createCertificate(certificateId, consumerCertificate);
+            const certificateId = extractId(consumerCertificate);
+            await consumerRepository.createDocument(certificateId, consumerCertificate);
         });
 
         it('should setup the digital notary for the merchant', async function() {
             merchantCertificate = await merchantNotary.generateKey();
             expect(merchantCertificate).to.exist;
-            merchantCitation = await merchantNotary.getCitation();
-            expect(merchantCitation).to.exist;
-            var certificateId = extractId(merchantCitation);
-            await merchantRepository.createCertificate(certificateId, merchantCertificate);
+            var certificateId = extractId(merchantCertificate);
+            await merchantRepository.createDocument(certificateId, merchantCertificate);
             merchantCertificate = await merchantNotary.generateKey();  // test regeneration
             expect(merchantCertificate).to.exist;
-            merchantCitation = await merchantNotary.getCitation();
-            expect(merchantCitation).to.exist;
-            certificateId = extractId(merchantCitation);
-            await merchantRepository.createCertificate(certificateId, merchantCertificate);
-        });
-
-        it('should setup the client environment for the consumer', async function() {
-            const citation = await consumerClient.getCitation();
-            expect(citation).to.exist;
-            expect(citation.isEqualTo(consumerCitation)).to.equal(true);
-            consumerCertificate = await consumerClient.retrieveCertificate(consumerCitation);
-            expect(consumerCertificate).to.exist;
-        });
-
-        it('should setup the client environment for the merchant', async function() {
-            const citation = await merchantClient.getCitation();
-            expect(citation).to.exist;
-            expect(citation.isEqualTo(merchantCitation)).to.equal(true);
-            merchantCertificate = await merchantClient.retrieveCertificate(merchantCitation);
-            expect(merchantCertificate).to.exist;
+            certificateId = extractId(merchantCertificate);
+            await merchantRepository.createDocument(certificateId, merchantCertificate);
         });
 
     });
@@ -243,14 +222,14 @@ describe('Bali Nebula API™ - Test Local API', function() {
                 $previous: bali.NONE
             }));
             const documentCitation = await merchantClient.saveDraft(type);
-            typeCitation = await merchantClient.commitType(type);
+            typeCitation = await merchantClient.commitDocument(type);
             expect(typeCitation).to.exist;
         });
 
         it('should allow a compiled type to be retrieved', async function() {
-            const expected = await merchantClient.retrieveType(typeCitation);
+            const expected = await merchantClient.retrieveDocument(typeCitation);
             expect(expected).to.exist;
-            const type = await consumerClient.retrieveType(typeCitation);
+            const type = await consumerClient.retrieveDocument(typeCitation);
             expect(type).to.exist;
             expect(type.toString()).to.equal(expected.toString());
         });
