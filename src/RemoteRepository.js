@@ -64,20 +64,8 @@ exports.repository = function(notary, url) {
          */
         citationExists: async function(name) {
             const credentials = await generateCredentials(notary);
-            const status = await sendRequest(credentials, '$citationExists', url, 'HEAD', 'name', name);
+            const status = await sendRequest(credentials, '$citationExists', url, 'HEAD', 'citation', name);
             return status;
-        },
-
-        /**
-         * This function associates a new name with the specified document citation in
-         * the repository.
-         * 
-         * @param {String} name The unique name for the specified citation.
-         * @param {String} citation The canonical source string for the citation.
-         */
-        nameCitation: async function(name, citation) {
-            const credentials = await generateCredentials(notary);
-            await sendRequest(credentials, '$createCitation', url, 'POST', 'name', name, citation);
         },
 
         /**
@@ -90,8 +78,20 @@ exports.repository = function(notary, url) {
          */
         fetchCitation: async function(name) {
             const credentials = await generateCredentials(notary);
-            const citation = await sendRequest(credentials, '$fetchCitation', url, 'GET', 'name', name);
+            const citation = await sendRequest(credentials, '$fetchCitation', url, 'GET', 'citation', name);
             return citation;
+        },
+
+        /**
+         * This function associates a new name with the specified document citation in
+         * the repository.
+         * 
+         * @param {String} name The unique name for the specified document citation.
+         * @param {String} citation The canonical source string for the document citation.
+         */
+        createCitation: async function(name, citation) {
+            const credentials = await generateCredentials(notary);
+            await sendRequest(credentials, '$createCitation', url, 'POST', 'citation', name, citation);
         },
 
         /**
@@ -301,6 +301,7 @@ const sendRequest = async function(credentials, functionName, url, method, type,
                 $details: bali.text(cause.response.statusText),
                 $text: bali.text('The request was rejected by the Bali Nebula™.')
             });
+            console.log('exception: ' + exception);
             throw exception;
         }
         if (cause.request) {

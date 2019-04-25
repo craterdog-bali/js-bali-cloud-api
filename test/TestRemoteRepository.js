@@ -49,7 +49,7 @@ describe('Bali Nebula API™ - Test Cloud Repository', function() {
             await notary.generateKey();
 
             // store a new name in the repository
-            await repository.nameCitation(name, source);
+            await repository.createCitation(name, source);
 
             // make sure the new name exists in the repository
             exists = await repository.citationExists(name);

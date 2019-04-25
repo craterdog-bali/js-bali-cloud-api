@@ -39,11 +39,8 @@ const EOL = '\n';  // POSIX compliant end of line
 exports.repository = function(directory) {
     const repositoryDirectory = directory + 'repository/';
     const citations = repositoryDirectory + 'citations/';
-    const accounts = repositoryDirectory + 'accounts/';
-    const certificates = repositoryDirectory + 'certificates/';
     const drafts = repositoryDirectory + 'drafts/';
     const documents = repositoryDirectory + 'documents/';
-    const types = repositoryDirectory + 'types/';
     const queues = repositoryDirectory + 'queues/';
 
     // return a singleton object for the API
@@ -79,10 +76,8 @@ exports.repository = function(directory) {
             await pfs.mkdir(directory, 0o700).catch(function() {});
             await pfs.mkdir(repositoryDirectory, 0o700).catch(function() {});
             await pfs.mkdir(citations, 0o700).catch(function() {});
-            await pfs.mkdir(certificates, 0o700).catch(function() {});
             await pfs.mkdir(drafts, 0o700).catch(function() {});
             await pfs.mkdir(documents, 0o700).catch(function() {});
-            await pfs.mkdir(types, 0o700).catch(function() {});
             await pfs.mkdir(queues, 0o700).catch(function() {});
             this.initializeAPI = undefined;  // can only be called once
         },
@@ -99,31 +94,6 @@ exports.repository = function(directory) {
             const filename = citations + name.replace(/\//g, '_') + '.bali';
             const exists = await doesExist(filename);
             return exists;
-        },
-
-        /**
-         * This function associates a new name with the specified document citation in
-         * the repository.
-         * 
-         * @param {String} name The unique name for the specified document citation.
-         * @param {String} citation The canonical source string for the document citation.
-         */
-        nameCitation: async function(name, citation) {
-            if (this.initializeAPI) await this.initializeAPI();
-            const filename = citations + name.replace(/\//g, '_') + '.bali';
-            const exists = await doesExist(filename);
-            if (exists) {
-                throw bali.exception({
-                    $module: '/bali/repositories/LocalRepository',
-                    $procedure: '$nameCitation',
-                    $exception: '$fileExists',
-                    $url: bali.reference('file:' + directory),
-                    $file: bali.text(filename),
-                    $text: bali.text('The file to be written already exists.')
-                });
-            }
-            const document = citation + EOL;  // add POSIX compliant <EOL>
-            await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o400});
         },
 
         /**
@@ -144,6 +114,31 @@ exports.repository = function(directory) {
                 citation = citation.toString().slice(0, -1);  // remove POSIX compliant <EOL>
             }
             return citation;
+        },
+
+        /**
+         * This function associates a new name with the specified document citation in
+         * the repository.
+         * 
+         * @param {String} name The unique name for the specified document citation.
+         * @param {String} citation The canonical source string for the document citation.
+         */
+        createCitation: async function(name, citation) {
+            if (this.initializeAPI) await this.initializeAPI();
+            const filename = citations + name.replace(/\//g, '_') + '.bali';
+            const exists = await doesExist(filename);
+            if (exists) {
+                throw bali.exception({
+                    $module: '/bali/repositories/LocalRepository',
+                    $procedure: '$createCitation',
+                    $exception: '$fileExists',
+                    $url: bali.reference('file:' + directory),
+                    $file: bali.text(filename),
+                    $text: bali.text('The file to be written already exists.')
+                });
+            }
+            const document = citation + EOL;  // add POSIX compliant <EOL>
+            await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o400});
         },
 
         /**
