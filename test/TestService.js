@@ -8,7 +8,7 @@
  * Source Initiative. (See http://opensource.org/licenses/MIT)          *
  ************************************************************************/
 
-const debug = true;  // set to true for request-response logging
+const debug = false;  // set to true for request-response logging
 const bali = require('bali-component-framework');
 const repository = require('../').local('test/config/');
 const express = require("express");

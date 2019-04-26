@@ -8,7 +8,7 @@
  * Source Initiative. (See http://opensource.org/licenses/MIT)          *
  ************************************************************************/
 
-const debug = true;  // set to true for error logging
+const debug = false;  // set to true for error logging
 const crypto = require('crypto');
 const directory = 'test/config/';
 const mocha = require('mocha');
@@ -29,12 +29,10 @@ describe('Bali Nebula API™ - Test Local API', function() {
     var consumerNotary;
     var consumerRepository;
     var consumerClient;
-    var consumerCitation;
     var consumerCertificate;
     var merchantNotary;
     var merchantRepository;
     var merchantClient;
-    var merchantCitation;
     var merchantCertificate;
 
     describe('Initialize Environment', function() {
@@ -204,34 +202,6 @@ describe('Bali Nebula API™ - Test Local API', function() {
             document = await consumerClient.retrieveDocument(documentCitation);
             expect(document).to.exist;
             expect(document.toString()).to.equal(newSource);
-        });
-
-    });
-
-    describe('Test Types', function() {
-        var typeCitation;
-
-        it('should allow a new compiled type to be committed', async function() {
-            const type = bali.catalog({
-                $foo: '"bar"'
-            }, bali.parameters({
-                $type: '/bali/abstractions/Type/v1',
-                $tag: bali.tag(),
-                $version: bali.version(),
-                $permissions: '/bali/permissions/public/v1',
-                $previous: bali.NONE
-            }));
-            const documentCitation = await merchantClient.saveDraft(type);
-            typeCitation = await merchantClient.commitDocument(type);
-            expect(typeCitation).to.exist;
-        });
-
-        it('should allow a compiled type to be retrieved', async function() {
-            const expected = await merchantClient.retrieveDocument(typeCitation);
-            expect(expected).to.exist;
-            const type = await consumerClient.retrieveDocument(typeCitation);
-            expect(type).to.exist;
-            expect(type.toString()).to.equal(expected.toString());
         });
 
     });

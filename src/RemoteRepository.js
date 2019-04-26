@@ -301,7 +301,6 @@ const sendRequest = async function(credentials, functionName, url, method, type,
                 $details: bali.text(cause.response.statusText),
                 $text: bali.text('The request was rejected by the Bali Nebula™.')
             });
-            console.log('exception: ' + exception);
             throw exception;
         }
         if (cause.request) {
