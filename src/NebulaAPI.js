@@ -226,18 +226,18 @@ exports.api = function(notary, repository, debug) {
          * This method creates a new draft document template based on the specified document
          * type name.
          * 
-         * @param {Name} name The name of the type of document to be created.
+         * @param {Name} type The name of the type of document to be created.
          * @returns {Catalog} A document template for the new draft document.
          */
-        createDraft: async function(name) {
+        createDraft: async function(type) {
             try {
-                validateParameter('$createDraft', 'name', name);
-                var citation = cache.fetchCitation(name);
+                validateParameter('$createDraft', 'type', type);
+                var citation = cache.fetchCitation(type);
                 if (!citation) {
-                    const source = await repository.fetchCitation(name);
+                    const source = await repository.fetchCitation(type);
                     if (source) {
                         citation = bali.parse(source);
-                        cache.createCitation(name, citation);
+                        cache.createCitation(type, citation);
                     }
                 }
                 const draft = constructTemplate(repository, citation);
