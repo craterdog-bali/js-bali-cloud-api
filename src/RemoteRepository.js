@@ -63,9 +63,21 @@ exports.repository = function(notary, url) {
          * @returns {Boolean} Whether or not the document citation exists.
          */
         citationExists: async function(name) {
-            const credentials = await generateCredentials(notary);
-            const status = await sendRequest(credentials, '$citationExists', url, 'HEAD', 'citation', name);
-            return status;
+            try {
+                const credentials = await generateCredentials(notary);
+                const status = await sendRequest(credentials, '$citationExists', url, 'HEAD', 'citation', name);
+                return status;
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '/bali/services/RemoteRepository',
+                    $procedure: '$citationExists',
+                    $exception: '$unexpected',
+                    $name: bali.text(name),
+                    $text: bali.text('An unexpected error occurred while attempting to verify the existence of a citation.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
         },
 
         /**
@@ -77,9 +89,21 @@ exports.repository = function(notary, url) {
          * <code>undefined</code> if it doesn't exist.
          */
         fetchCitation: async function(name) {
-            const credentials = await generateCredentials(notary);
-            const citation = await sendRequest(credentials, '$fetchCitation', url, 'GET', 'citation', name);
-            return citation;
+            try {
+                const credentials = await generateCredentials(notary);
+                const citation = await sendRequest(credentials, '$fetchCitation', url, 'GET', 'citation', name);
+                return citation;
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '/bali/services/RemoteRepository',
+                    $procedure: '$fetchCitation',
+                    $exception: '$unexpected',
+                    $name: bali.text(name),
+                    $text: bali.text('An unexpected error occurred while attempting to fetch a citation.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
         },
 
         /**
@@ -90,8 +114,21 @@ exports.repository = function(notary, url) {
          * @param {String} citation The canonical source string for the document citation.
          */
         createCitation: async function(name, citation) {
-            const credentials = await generateCredentials(notary);
-            await sendRequest(credentials, '$createCitation', url, 'POST', 'citation', name, citation);
+            try {
+                const credentials = await generateCredentials(notary);
+                await sendRequest(credentials, '$createCitation', url, 'POST', 'citation', name, citation);
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '/bali/services/RemoteRepository',
+                    $procedure: '$createCitation',
+                    $exception: '$unexpected',
+                    $name: bali.text(name),
+                    $citation: citation,
+                    $text: bali.text('An unexpected error occurred while attempting to create a citation.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
         },
 
         /**
@@ -103,9 +140,21 @@ exports.repository = function(notary, url) {
          * @returns {Boolean} Whether or not the draft document exists.
          */
         draftExists: async function(draftId) {
-            const credentials = await generateCredentials(notary);
-            const status = await sendRequest(credentials, '$draftExists', url, 'HEAD', 'draft', draftId);
-            return status;
+            try {
+                const credentials = await generateCredentials(notary);
+                const status = await sendRequest(credentials, '$draftExists', url, 'HEAD', 'draft', draftId);
+                return status;
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '/bali/services/RemoteRepository',
+                    $procedure: '$draftExists',
+                    $exception: '$unexpected',
+                    $draftId: draftId,
+                    $text: bali.text('An unexpected error occurred while attempting to verify the existence of a draft.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
         },
 
         /**
@@ -117,9 +166,21 @@ exports.repository = function(notary, url) {
          * <code>undefined</code> if it doesn't exist.
          */
         fetchDraft: async function(draftId) {
-            const credentials = await generateCredentials(notary);
-            const draft = await sendRequest(credentials, '$fetchDraft', url, 'GET', 'draft', draftId);
-            return draft;
+            try {
+                const credentials = await generateCredentials(notary);
+                const draft = await sendRequest(credentials, '$fetchDraft', url, 'GET', 'draft', draftId);
+                return draft;
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '/bali/services/RemoteRepository',
+                    $procedure: '$fetchDraft',
+                    $exception: '$unexpected',
+                    $draftId: draftId,
+                    $text: bali.text('An unexpected error occurred while attempting to fetch a draft.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
         },
 
         /**
@@ -130,8 +191,21 @@ exports.repository = function(notary, url) {
          * @param {String} draft The canonical source string for the draft document.
          */
         saveDraft: async function(draftId, draft) {
-            const credentials = await generateCredentials(notary);
-            await sendRequest(credentials, '$saveDraft', url, 'PUT', 'draft', draftId, draft);
+            try {
+                const credentials = await generateCredentials(notary);
+                await sendRequest(credentials, '$saveDraft', url, 'PUT', 'draft', draftId, draft);
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '/bali/services/RemoteRepository',
+                    $procedure: '$saveDraft',
+                    $exception: '$unexpected',
+                    $draftId: draftId,
+                    $draft: draft,
+                    $text: bali.text('An unexpected error occurred while attempting to save a draft.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
         },
 
         /**
@@ -141,8 +215,20 @@ exports.repository = function(notary, url) {
          * the draft document being deleted.
          */
         deleteDraft: async function(draftId) {
-            const credentials = await generateCredentials(notary);
-            await sendRequest(credentials, '$deleteDraft', url, 'DELETE', 'draft', draftId);
+            try {
+                const credentials = await generateCredentials(notary);
+                await sendRequest(credentials, '$deleteDraft', url, 'DELETE', 'draft', draftId);
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '/bali/services/RemoteRepository',
+                    $procedure: '$deleteDraft',
+                    $exception: '$unexpected',
+                    $draftId: draftId,
+                    $text: bali.text('An unexpected error occurred while attempting to delete a draft.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
         },
 
         /**
@@ -154,9 +240,21 @@ exports.repository = function(notary, url) {
          * @returns {Boolean} Whether or not the document exists.
          */
         documentExists: async function(documentId) {
-            const credentials = await generateCredentials(notary);
-            const status = await sendRequest(credentials, '$documentExists', url, 'HEAD', 'document', documentId);
-            return status;
+            try {
+                const credentials = await generateCredentials(notary);
+                const status = await sendRequest(credentials, '$documentExists', url, 'HEAD', 'document', documentId);
+                return status;
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '/bali/services/RemoteRepository',
+                    $procedure: '$documentExists',
+                    $exception: '$unexpected',
+                    $documentId: documentId,
+                    $text: bali.text('An unexpected error occurred while attempting to verify the existence of a document.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
         },
 
         /**
@@ -168,9 +266,21 @@ exports.repository = function(notary, url) {
          * <code>undefined</code> if it doesn't exist.
          */
         fetchDocument: async function(documentId) {
-            const credentials = await generateCredentials(notary);
-            const document = await sendRequest(credentials, '$fetchDocument', url, 'GET', 'document', documentId);
-            return document;
+            try {
+                const credentials = await generateCredentials(notary);
+                const document = await sendRequest(credentials, '$fetchDocument', url, 'GET', 'document', documentId);
+                return document;
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '/bali/services/RemoteRepository',
+                    $procedure: '$fetchDocument',
+                    $exception: '$unexpected',
+                    $documentId: documentId,
+                    $text: bali.text('An unexpected error occurred while attempting to fetch a document.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
         },
 
         /**
@@ -181,8 +291,21 @@ exports.repository = function(notary, url) {
          * @param {String} document The canonical source string for the document.
          */
         createDocument: async function(documentId, document) {
-            const credentials = await generateCredentials(notary);
-            await sendRequest(credentials, '$createDocument', url, 'POST', 'document', documentId, document);
+            try {
+                const credentials = await generateCredentials(notary);
+                await sendRequest(credentials, '$createDocument', url, 'POST', 'document', documentId, document);
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '/bali/services/RemoteRepository',
+                    $procedure: '$createDocument',
+                    $exception: '$unexpected',
+                    $documentId: documentId,
+                    $document: document,
+                    $text: bali.text('An unexpected error occurred while attempting to create a document.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
         },
 
         /**
@@ -192,8 +315,21 @@ exports.repository = function(notary, url) {
          * @param {String} message The canonical source string for the message.
          */
         queueMessage: async function(queueId, message) {
-            const credentials = await generateCredentials(notary);
-            await sendRequest(credentials, '$queueMessage', url, 'PUT', 'queue', queueId, message);
+            try {
+                const credentials = await generateCredentials(notary);
+                await sendRequest(credentials, '$queueMessage', url, 'PUT', 'queue', queueId, message);
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '/bali/services/RemoteRepository',
+                    $procedure: '$queueMessage',
+                    $exception: '$unexpected',
+                    $queueId: queueId,
+                    $message: message,
+                    $text: bali.text('An unexpected error occurred while attempting to queue a message.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
         },
 
         /**
@@ -203,9 +339,21 @@ exports.repository = function(notary, url) {
          * @returns {String} The canonical source string for the message.
          */
         dequeueMessage: async function(queueId) {
-            const credentials = await generateCredentials(notary);
-            const message = await sendRequest(credentials, '$dequeueMessage', url, 'GET', 'queue', queueId);
-            return message;
+            try {
+                const credentials = await generateCredentials(notary);
+                const message = await sendRequest(credentials, '$dequeueMessage', url, 'GET', 'queue', queueId);
+                return message;
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '/bali/services/RemoteRepository',
+                    $procedure: '$dequeueMessage',
+                    $exception: '$unexpected',
+                    $queueId: queueId,
+                    $text: bali.text('An unexpected error occurred while attempting to dequeue a message.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
         }
 
     };
@@ -223,15 +371,27 @@ exports.repository = function(notary, url) {
  * @returns {Catalog} The newly generated credentials.
  */
 const generateCredentials = async function(notary) {
-    const citation = await notary.getCitation();
-    const document = bali.duplicate(citation);
-    const parameters = document.getParameters();
-    parameters.setParameter('$tag', bali.tag());
-    parameters.setParameter('$version', bali.version());
-    parameters.setParameter('$permissions', bali.parse('/bali/permissions/private/v1'));
-    parameters.setParameter('$previous', bali.NONE);
-    const credentials = await notary.signComponent(document);
-    return credentials;
+    try {
+        const citation = await notary.getCitation();
+        const document = bali.duplicate(citation);
+        const parameters = document.getParameters();
+        parameters.setParameter('$tag', bali.tag());
+        parameters.setParameter('$version', bali.version());
+        parameters.setParameter('$permissions', bali.parse('/bali/permissions/private/v1'));
+        parameters.setParameter('$previous', bali.NONE);
+        const credentials = await notary.signComponent(document);
+        return credentials;
+    } catch (cause) {
+        const exception = bali.exception({
+            $module: '/bali/services/RemoteRepository',
+            $procedure: '$generateCredentials',
+            $exception: '$unexpected',
+            $queueId: queueId,
+            $text: bali.text('An unexpected error occurred while attempting to generate credentials.')
+        }, cause);
+        if (debug) console.error(exception.toString());
+        throw exception;
+    }
 };
 
 

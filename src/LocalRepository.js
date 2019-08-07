@@ -73,13 +73,25 @@ exports.repository = function(directory) {
          * other API function executes and can only be called once.
          */
         initializeAPI: async function() {
-            await pfs.mkdir(directory, 0o700).catch(function() {});
-            await pfs.mkdir(repositoryDirectory, 0o700).catch(function() {});
-            await pfs.mkdir(citations, 0o700).catch(function() {});
-            await pfs.mkdir(drafts, 0o700).catch(function() {});
-            await pfs.mkdir(documents, 0o700).catch(function() {});
-            await pfs.mkdir(queues, 0o700).catch(function() {});
-            this.initializeAPI = undefined;  // can only be called once
+            try {
+                await pfs.mkdir(directory, 0o700).catch(function() {});
+                await pfs.mkdir(repositoryDirectory, 0o700).catch(function() {});
+                await pfs.mkdir(citations, 0o700).catch(function() {});
+                await pfs.mkdir(drafts, 0o700).catch(function() {});
+                await pfs.mkdir(documents, 0o700).catch(function() {});
+                await pfs.mkdir(queues, 0o700).catch(function() {});
+                this.initializeAPI = undefined;  // can only be called once
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '/bali/services/LocalRepository',
+                    $procedure: '$initializeAPI',
+                    $exception: '$unexpected',
+                    $directory: bali.text(directory),
+                    $text: bali.text('An unexpected error occurred while attempting to initialize the local repository.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
         },
 
         /**
@@ -90,10 +102,22 @@ exports.repository = function(directory) {
          * @returns {Boolean} Whether or not the document citation exists.
          */
         citationExists: async function(name) {
-            if (this.initializeAPI) await this.initializeAPI();
-            const filename = citations + name.replace(/\//g, '_') + '.bali';
-            const exists = await doesExist(filename);
-            return exists;
+            try {
+                if (this.initializeAPI) await this.initializeAPI();
+                const filename = citations + name.replace(/\//g, '_') + '.bali';
+                const exists = await doesExist(filename);
+                return exists;
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '/bali/services/LocalRepository',
+                    $procedure: '$citationExists',
+                    $exception: '$unexpected',
+                    $name: bali.text(name),
+                    $text: bali.text('An unexpected error occurred while attempting to verify the existence of a citation.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
         },
 
         /**
@@ -105,15 +129,27 @@ exports.repository = function(directory) {
          * <code>undefined</code> if it doesn't exist.
          */
         fetchCitation: async function(name) {
-            if (this.initializeAPI) await this.initializeAPI();
-            var citation;
-            const filename = citations + name.replace(/\//g, '_') + '.bali';
-            const exists = await doesExist(filename);
-            if (exists) {
-                citation = await pfs.readFile(filename);
-                citation = citation.toString().slice(0, -1);  // remove POSIX compliant <EOL>
+            try {
+                if (this.initializeAPI) await this.initializeAPI();
+                var citation;
+                const filename = citations + name.replace(/\//g, '_') + '.bali';
+                const exists = await doesExist(filename);
+                if (exists) {
+                    citation = await pfs.readFile(filename);
+                    citation = citation.toString().slice(0, -1);  // remove POSIX compliant <EOL>
+                }
+                return citation;
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '/bali/services/LocalRepository',
+                    $procedure: '$fetchCitation',
+                    $exception: '$unexpected',
+                    $name: bali.text(name),
+                    $text: bali.text('An unexpected error occurred while attempting to fetch a citation.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
             }
-            return citation;
         },
 
         /**
@@ -124,21 +160,34 @@ exports.repository = function(directory) {
          * @param {String} citation The canonical source string for the document citation.
          */
         createCitation: async function(name, citation) {
-            if (this.initializeAPI) await this.initializeAPI();
-            const filename = citations + name.replace(/\//g, '_') + '.bali';
-            const exists = await doesExist(filename);
-            if (exists) {
-                throw bali.exception({
-                    $module: '/bali/repositories/LocalRepository',
+            try {
+                if (this.initializeAPI) await this.initializeAPI();
+                const filename = citations + name.replace(/\//g, '_') + '.bali';
+                const exists = await doesExist(filename);
+                if (exists) {
+                    throw bali.exception({
+                        $module: '/bali/repositories/LocalRepository',
+                        $procedure: '$createCitation',
+                        $exception: '$fileExists',
+                        $url: bali.reference('file:' + directory),
+                        $file: bali.text(filename),
+                        $text: bali.text('The file to be written already exists.')
+                    });
+                }
+                const document = citation + EOL;  // add POSIX compliant <EOL>
+                await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o400});
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '/bali/services/LocalRepository',
                     $procedure: '$createCitation',
-                    $exception: '$fileExists',
-                    $url: bali.reference('file:' + directory),
-                    $file: bali.text(filename),
-                    $text: bali.text('The file to be written already exists.')
-                });
+                    $exception: '$unexpected',
+                    $name: bali.text(name),
+                    $citation: citation,
+                    $text: bali.text('An unexpected error occurred while attempting to create a citation.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
             }
-            const document = citation + EOL;  // add POSIX compliant <EOL>
-            await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o400});
         },
 
         /**
@@ -150,10 +199,22 @@ exports.repository = function(directory) {
          * @returns {Boolean} Whether or not the draft document exists.
          */
         draftExists: async function(draftId) {
-            if (this.initializeAPI) await this.initializeAPI();
-            const filename = drafts + draftId + '.bali';
-            const exists = await doesExist(filename);
-            return exists;
+            try {
+                if (this.initializeAPI) await this.initializeAPI();
+                const filename = drafts + draftId + '.bali';
+                const exists = await doesExist(filename);
+                return exists;
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '/bali/services/LocalRepository',
+                    $procedure: '$draftExists',
+                    $exception: '$unexpected',
+                    $draftId: draftId,
+                    $text: bali.text('An unexpected error occurred while attempting to verify the existence of a draft.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
         },
 
         /**
@@ -165,15 +226,27 @@ exports.repository = function(directory) {
          * <code>undefined</code> if it doesn't exist.
          */
         fetchDraft: async function(draftId) {
-            if (this.initializeAPI) await this.initializeAPI();
-            var draft;
-            const filename = drafts + draftId + '.bali';
-            const exists = await doesExist(filename);
-            if (exists) {
-                draft = await pfs.readFile(filename);
-                draft = draft.toString().slice(0, -1);  // remove POSIX compliant <EOL>
+            try {
+                if (this.initializeAPI) await this.initializeAPI();
+                var draft;
+                const filename = drafts + draftId + '.bali';
+                const exists = await doesExist(filename);
+                if (exists) {
+                    draft = await pfs.readFile(filename);
+                    draft = draft.toString().slice(0, -1);  // remove POSIX compliant <EOL>
+                }
+                return draft;
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '/bali/services/LocalRepository',
+                    $procedure: '$fetchDraft',
+                    $exception: '$unexpected',
+                    $draftId: draftId,
+                    $text: bali.text('An unexpected error occurred while attempting to fetch a draft.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
             }
-            return draft;
         },
 
         /**
@@ -184,10 +257,23 @@ exports.repository = function(directory) {
          * @param {String} draft The canonical source string for the draft document.
          */
         saveDraft: async function(draftId, draft) {
-            if (this.initializeAPI) await this.initializeAPI();
-            const filename = drafts + draftId + '.bali';
-            const document = draft + EOL;  // add POSIX compliant <EOL>
-            await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o600});
+            try {
+                if (this.initializeAPI) await this.initializeAPI();
+                const filename = drafts + draftId + '.bali';
+                const document = draft + EOL;  // add POSIX compliant <EOL>
+                await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o600});
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '/bali/services/LocalRepository',
+                    $procedure: '$saveDraft',
+                    $exception: '$unexpected',
+                    $draftId: draftId,
+                    $draft: draft,
+                    $text: bali.text('An unexpected error occurred while attempting to save a draft.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
         },
 
         /**
@@ -197,11 +283,23 @@ exports.repository = function(directory) {
          * the draft document being deleted.
          */
         deleteDraft: async function(draftId) {
-            if (this.initializeAPI) await this.initializeAPI();
-            const filename = drafts + draftId + '.bali';
-            const exists = await doesExist(filename);
-            if (exists) {
-                await pfs.unlink(filename);
+            try {
+                if (this.initializeAPI) await this.initializeAPI();
+                const filename = drafts + draftId + '.bali';
+                const exists = await doesExist(filename);
+                if (exists) {
+                    await pfs.unlink(filename);
+                }
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '/bali/services/LocalRepository',
+                    $procedure: '$deleteDraft',
+                    $exception: '$unexpected',
+                    $draftId: draftId,
+                    $text: bali.text('An unexpected error occurred while attempting to delete a draft.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
             }
         },
 
@@ -214,10 +312,22 @@ exports.repository = function(directory) {
          * @returns {Boolean} Whether or not the document exists.
          */
         documentExists: async function(documentId) {
-            if (this.initializeAPI) await this.initializeAPI();
-            const filename = documents + documentId + '.bali';
-            const exists = await doesExist(filename);
-            return exists;
+            try {
+                if (this.initializeAPI) await this.initializeAPI();
+                const filename = documents + documentId + '.bali';
+                const exists = await doesExist(filename);
+                return exists;
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '/bali/services/LocalRepository',
+                    $procedure: '$documentExists',
+                    $exception: '$unexpected',
+                    $documentId: documentId,
+                    $text: bali.text('An unexpected error occurred while attempting to verify the existence of a document.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
         },
 
         /**
@@ -229,15 +339,27 @@ exports.repository = function(directory) {
          * <code>undefined</code> if it doesn't exist.
          */
         fetchDocument: async function(documentId) {
-            if (this.initializeAPI) await this.initializeAPI();
-            var document;
-            const filename = documents + documentId + '.bali';
-            const exists = await doesExist(filename);
-            if (exists) {
-                document = await pfs.readFile(filename);
-                document = document.toString().slice(0, -1);  // remove POSIX compliant <EOL>
+            try {
+                if (this.initializeAPI) await this.initializeAPI();
+                var document;
+                const filename = documents + documentId + '.bali';
+                const exists = await doesExist(filename);
+                if (exists) {
+                    document = await pfs.readFile(filename);
+                    document = document.toString().slice(0, -1);  // remove POSIX compliant <EOL>
+                }
+                return document;
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '/bali/services/LocalRepository',
+                    $procedure: '$fetchDocument',
+                    $exception: '$unexpected',
+                    $documentId: documentId,
+                    $text: bali.text('An unexpected error occurred while attempting to fetch a document.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
             }
-            return document;
         },
 
         /**
@@ -248,21 +370,34 @@ exports.repository = function(directory) {
          * @param {String} document The canonical source string for the document.
          */
         createDocument: async function(documentId, document) {
-            if (this.initializeAPI) await this.initializeAPI();
-            const filename = documents + documentId + '.bali';
-            const exists = await doesExist(filename);
-            if (exists) {
-                throw bali.exception({
-                    $module: '/bali/repositories/LocalRepository',
+            try {
+                if (this.initializeAPI) await this.initializeAPI();
+                const filename = documents + documentId + '.bali';
+                const exists = await doesExist(filename);
+                if (exists) {
+                    throw bali.exception({
+                        $module: '/bali/repositories/LocalRepository',
+                        $procedure: '$createDocument',
+                        $exception: '$fileExists',
+                        $url: bali.reference('file:' + directory),
+                        $file: bali.text(filename),
+                        $text: bali.text('The file to be written already exists.')
+                    });
+                }
+                document = document + EOL;  // add POSIX compliant <EOL>
+                await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o400});
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '/bali/services/LocalRepository',
                     $procedure: '$createDocument',
-                    $exception: '$fileExists',
-                    $url: bali.reference('file:' + directory),
-                    $file: bali.text(filename),
-                    $text: bali.text('The file to be written already exists.')
-                });
+                    $exception: '$unexpected',
+                    $documentId: documentId,
+                    $document: document,
+                    $text: bali.text('An unexpected error occurred while attempting to create a document.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
             }
-            document = document + EOL;  // add POSIX compliant <EOL>
-            await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o400});
         },
 
         /**
@@ -272,13 +407,26 @@ exports.repository = function(directory) {
          * @param {String} message The canonical source string for the message.
          */
         queueMessage: async function(queueId, message) {
-            if (this.initializeAPI) await this.initializeAPI();
-            const queue = queues + queueId + '/';
-            const messageId = bali.tag().getValue();
-            if (!await doesExist(queue)) await pfs.mkdir(queue, 0o700);
-            const filename = queue + messageId + '.bali';
-            const document = message + EOL;  // add POSIX compliant <EOL>
-            await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o600});
+            try {
+                if (this.initializeAPI) await this.initializeAPI();
+                const queue = queues + queueId + '/';
+                const messageId = bali.tag().getValue();
+                if (!await doesExist(queue)) await pfs.mkdir(queue, 0o700);
+                const filename = queue + messageId + '.bali';
+                const document = message + EOL;  // add POSIX compliant <EOL>
+                await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o600});
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '/bali/services/LocalRepository',
+                    $procedure: '$queueMessage',
+                    $exception: '$unexpected',
+                    $queueId: queueId,
+                    $message: message,
+                    $text: bali.text('An unexpected error occurred while attempting to queue a message.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
+            }
         },
 
         /**
@@ -288,31 +436,43 @@ exports.repository = function(directory) {
          * @returns {String} The canonical source string for the message.
          */
         dequeueMessage: async function(queueId) {
-            if (this.initializeAPI) await this.initializeAPI();
-            const queue = queues + queueId + '/';
-            var message;
-            while (await doesExist(queue)) {
-                const messages = await pfs.readdir(queue);
-                const count = messages.length;
-                if (count) {
-                    // select a message a random since a distributed queue cannot guarantee FIFO
-                    const index = bali.random.index(count) - 1;  // convert to zero based indexing
-                    const messageFile = messages[index];
-                    const filename = queue + messageFile;
-                    message = await pfs.readFile(filename);
-                    message = message.toString().slice(0, -1);  // remove POSIX compliant <EOL>
-                    try {
-                        await pfs.unlink(filename);
-                        break; // we got there first
-                    } catch (exception) {
-                        // another process got there first
-                        message = undefined;
+            try {
+                if (this.initializeAPI) await this.initializeAPI();
+                const queue = queues + queueId + '/';
+                var message;
+                while (await doesExist(queue)) {
+                    const messages = await pfs.readdir(queue);
+                    const count = messages.length;
+                    if (count) {
+                        // select a message a random since a distributed queue cannot guarantee FIFO
+                        const index = bali.random.index(count) - 1;  // convert to zero based indexing
+                        const messageFile = messages[index];
+                        const filename = queue + messageFile;
+                        message = await pfs.readFile(filename);
+                        message = message.toString().slice(0, -1);  // remove POSIX compliant <EOL>
+                        try {
+                            await pfs.unlink(filename);
+                            break; // we got there first
+                        } catch (exception) {
+                            // another process got there first
+                            message = undefined;
+                        }
+                    } else {
+                        break;  // no more messages
                     }
-                } else {
-                    break;  // no more messages
                 }
+                return message;
+            } catch (cause) {
+                const exception = bali.exception({
+                    $module: '/bali/services/LocalRepository',
+                    $procedure: '$dequeueMessage',
+                    $exception: '$unexpected',
+                    $queueId: queueId,
+                    $text: bali.text('An unexpected error occurred while attempting to dequeue a message.')
+                }, cause);
+                if (debug) console.error(exception.toString());
+                throw exception;
             }
-            return message;
         }
 
     };

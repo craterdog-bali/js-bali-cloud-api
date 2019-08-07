@@ -679,16 +679,29 @@ const extractId = function(catalog) {
  * contained within the document citation.
  */
 const validateCitation = async function(notary, citation, document) {
-    const matches = await notary.citationMatches(citation, document);
-    if (!matches) {
-        throw bali.exception({
+    try {
+        const matches = await notary.citationMatches(citation, document);
+        if (!matches) {
+            throw bali.exception({
+                $module: '/bali/services/NebulaAPI',
+                $procedure: '$validateCitation',
+                $exception: '$documentModified',
+                $citation: citation,
+                $document: document,
+                $text: '"The cited document was modified after it was committed."'
+            });
+        }
+    } catch (cause) {
+        const exception = bali.exception({
             $module: '/bali/services/NebulaAPI',
             $procedure: '$validateCitation',
-            $exception: '$documentModified',
+            $exception: '$unexpected',
             $citation: citation,
             $document: document,
-            $text: '"The cited document was modified after it was committed."'
-        });
+            $text: bali.text('An unexpected error occurred while attempting to validate a citation.')
+        }, cause);
+        if (debug) console.error(exception.toString());
+        throw exception;
     }
 };
 
@@ -702,91 +715,103 @@ const validateCitation = async function(notary, citation, document) {
  * @param {Catalog} document The notarized document to be validated.
  */
 const validateDocument = async function(notary, repository, document) {
-    var certificateCitation = document.getValue('$certificate');
-    while (certificateCitation && !certificateCitation.isEqualTo(bali.NONE) && !certificateCitation.getValue('$digest').isEqualTo(bali.NONE)) {
+    try {
+        var certificateCitation = document.getValue('$certificate');
+        while (certificateCitation && !certificateCitation.isEqualTo(bali.NONE) && !certificateCitation.getValue('$digest').isEqualTo(bali.NONE)) {
 
-        // validate the document citation to the previous version of the document
-        const previousCitation = document.getValue('$previous');
-        if (previousCitation && !previousCitation.isEqualTo(bali.NONE)) {
-            const previousId = extractId(previousCitation);
-            source = await repository.fetchDocument(previousId);
-            if (!source) {
+            // validate the document citation to the previous version of the document
+            const previousCitation = document.getValue('$previous');
+            if (previousCitation && !previousCitation.isEqualTo(bali.NONE)) {
+                const previousId = extractId(previousCitation);
+                source = await repository.fetchDocument(previousId);
+                if (!source) {
+                    throw bali.exception({
+                        $module: '/bali/services/NebulaAPI',
+                        $procedure: '$validateDocument',
+                        $exception: '$documentMissing',
+                        $previousId: '"' + previousId + '"',
+                        $text: '"The previous version of the document does not exist."'
+                    });
+                }
+                const previousDocument = bali.parse(source);
+                if (!(await notary.citationMatches(previousCitation, previousDocument))) {
+                    throw bali.exception({
+                        $module: '/bali/services/NebulaAPI',
+                        $procedure: '$validateDocument',
+                        $exception: '$invalidCitation',
+                        $citation: previousCitation,
+                        $text: '"The digest in the previous document citation does not match the previous document."'
+                    });
+                }
+                // don't cache the previous version since it has not been validated!
+            }
+
+            // check for a self signed document
+            var certificate;
+            if (certificateCitation.isEqualTo(bali.NONE)) {
+                certificate = document.getValue('$component');
+                if (await notary.documentIsValid(document, certificate)) return;
                 throw bali.exception({
                     $module: '/bali/services/NebulaAPI',
                     $procedure: '$validateDocument',
-                    $exception: '$documentMissing',
-                    $previousId: '"' + previousId + '"',
-                    $text: '"The previous version of the document does not exist."'
+                    $exception: '$documentInvalid',
+                    $document: document,
+                    $text: '"The self signed document is invalid."'
                 });
             }
-            const previousDocument = bali.parse(source);
-            if (!(await notary.citationMatches(previousCitation, previousDocument))) {
+
+            // fetch and validate if necessary the certificate
+            const certificateId = extractId(certificateCitation);
+            certificate = cache.fetchDocument(certificateId);
+            if (!certificate) {
+                const source = await repository.fetchDocument(certificateId);
+                if (!source) {
+                    throw bali.exception({
+                        $module: '/bali/services/NebulaAPI',
+                        $procedure: '$validateDocument',
+                        $exception: '$certificateMissing',
+                        $certificateId: '"' + certificateId + '"',
+                        $text: '"The certificate for the document does not exist."'
+                    });
+                }
+                const document = bali.parse(source);
+                await validateCitation(notary, certificateCitation, document);
+                await validateDocument(notary, repository, document);
+                certificate = document.getValue('$component');
+                cache.createDocument(certificateId, certificate);
+            }
+
+            // validate the document
+            const valid = await notary.documentIsValid(document, certificate);
+            if (!valid) {
                 throw bali.exception({
                     $module: '/bali/services/NebulaAPI',
                     $procedure: '$validateDocument',
-                    $exception: '$invalidCitation',
-                    $citation: previousCitation,
-                    $text: '"The digest in the previous document citation does not match the previous document."'
+                    $exception: '$documentInvalid',
+                    $document: document,
+                    $text: '"The signature on the document is invalid."'
                 });
             }
-            // don't cache the previous version since it has not been validated!
-        }
 
-        // check for a self signed document
-        var certificate;
-        if (certificateCitation.isEqualTo(bali.NONE)) {
-            certificate = document.getValue('$component');
-            if (await notary.documentIsValid(document, certificate)) return;
-            throw bali.exception({
-                $module: '/bali/services/NebulaAPI',
-                $procedure: '$validateDocument',
-                $exception: '$documentInvalid',
-                $document: document,
-                $text: '"The self signed document is invalid."'
-            });
-        }
-
-        // fetch and validate if necessary the certificate
-        const certificateId = extractId(certificateCitation);
-        certificate = cache.fetchDocument(certificateId);
-        if (!certificate) {
-            const source = await repository.fetchDocument(certificateId);
-            if (!source) {
-                throw bali.exception({
-                    $module: '/bali/services/NebulaAPI',
-                    $procedure: '$validateDocument',
-                    $exception: '$certificateMissing',
-                    $certificateId: '"' + certificateId + '"',
-                    $text: '"The certificate for the document does not exist."'
-                });
+            // validate any nested documents
+            try {
+                document = document.getValue('$component');
+                certificateCitation = document.getValue('$certificate');
+            } catch (e) {
+                // we have validated the inner most document so we are done
+                break;
             }
-            const document = bali.parse(source);
-            await validateCitation(notary, certificateCitation, document);
-            await validateDocument(notary, repository, document);
-            certificate = document.getValue('$component');
-            cache.createDocument(certificateId, certificate);
         }
-
-        // validate the document
-        const valid = await notary.documentIsValid(document, certificate);
-        if (!valid) {
-            throw bali.exception({
-                $module: '/bali/services/NebulaAPI',
-                $procedure: '$validateDocument',
-                $exception: '$documentInvalid',
-                $document: document,
-                $text: '"The signature on the document is invalid."'
-            });
-        }
-
-        // validate any nested documents
-        try {
-            document = document.getValue('$component');
-            certificateCitation = document.getValue('$certificate');
-        } catch (e) {
-            // we have validated the inner most document so we are done
-            break;
-        }
+    } catch (cause) {
+        const exception = bali.exception({
+            $module: '/bali/services/NebulaAPI',
+            $procedure: '$validateDocument',
+            $exception: '$unexpected',
+            $document: document,
+            $text: bali.text('An unexpected error occurred while attempting to validate a document.')
+        }, cause);
+        if (debug) console.error(exception.toString());
+        throw exception;
     }
 };
 
@@ -912,7 +937,7 @@ const validateParameter = function(procedureName, parameterName, parameterValue,
 };
 
 
-const constructTemplate = async function(repository, type) {
+const constructTemplate = function(repository, type) {
     const template = bali.catalog({}, bali.parameters({
         $type: type,
         $tag: bali.tag(),  // a new unique tag
