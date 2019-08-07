@@ -9,7 +9,6 @@
  ************************************************************************/
 
 const debug = false;  // set to true for error logging
-const crypto = require('crypto');
 const directory = 'test/config/';
 const mocha = require('mocha');
 const assert = require('chai').assert;
@@ -38,17 +37,15 @@ describe('Bali Nebula API™ - Test Local API', function() {
     describe('Initialize Environment', function() {
 
         it('should create the consumer notary API', async function() {
-            const secret = crypto.randomBytes(32);
             const consumerTag = bali.tag();
-            const consumerSSM = notary.ssm(secret, directory + consumerTag.getValue() + '.keys');
+            const consumerSSM = notary.ssm(directory + consumerTag.getValue() + '.keys');
             consumerNotary = notary.api(consumerSSM, consumerTag, directory, debug);
             expect(consumerNotary).to.exist;
         });
 
         it('should create the merchant notary API', async function() {
-            const secret = crypto.randomBytes(32);
             const merchantTag = bali.tag();
-            const merchantSSM = notary.ssm(secret, directory + merchantTag.getValue() + '.keys');
+            const merchantSSM = notary.ssm(directory + merchantTag.getValue() + '.keys');
             merchantNotary = notary.api(merchantSSM, merchantTag, directory, debug);
             expect(merchantNotary).to.exist;
         });
@@ -77,7 +74,7 @@ describe('Bali Nebula API™ - Test Local API', function() {
             expect(merchantCertificate).to.exist;
             var certificateId = extractId(merchantCertificate);
             await merchantRepository.createDocument(certificateId, merchantCertificate);
-            merchantCertificate = await merchantNotary.generateKey();  // test regeneration
+            merchantCertificate = await merchantNotary.rotateKey();  // test regeneration
             expect(merchantCertificate).to.exist;
             certificateId = extractId(merchantCertificate);
             await merchantRepository.createDocument(certificateId, merchantCertificate);
