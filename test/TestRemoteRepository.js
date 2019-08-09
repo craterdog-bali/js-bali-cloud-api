@@ -8,7 +8,7 @@
  * Source Initiative. (See http://opensource.org/licenses/MIT)          *
  ************************************************************************/
 
-const debug = false;  // set to true for exception logging
+const debug = true;  // set to true for exception logging
 const mocha = require('mocha');
 const assert = require('chai').assert;
 const expect = require('chai').expect;
