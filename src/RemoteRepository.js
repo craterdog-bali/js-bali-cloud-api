@@ -152,7 +152,7 @@ exports.repository = function(notary, url, debug) {
                     $module: '/bali/services/RemoteRepository',
                     $procedure: '$draftExists',
                     $exception: '$unexpected',
-                    $draftId: draftId,
+                    $draftId: bali.text(draftId),
                     $text: bali.text('An unexpected error occurred while attempting to verify the existence of a draft.')
                 }, cause);
                 if (debug) console.error(exception.toString());
@@ -178,7 +178,7 @@ exports.repository = function(notary, url, debug) {
                     $module: '/bali/services/RemoteRepository',
                     $procedure: '$fetchDraft',
                     $exception: '$unexpected',
-                    $draftId: draftId,
+                    $draftId: bali.text(draftId),
                     $text: bali.text('An unexpected error occurred while attempting to fetch a draft.')
                 }, cause);
                 if (debug) console.error(exception.toString());
@@ -202,8 +202,8 @@ exports.repository = function(notary, url, debug) {
                     $module: '/bali/services/RemoteRepository',
                     $procedure: '$saveDraft',
                     $exception: '$unexpected',
-                    $draftId: draftId,
-                    $draft: draft,
+                    $draftId: bali.text(draftId),
+                    $draft: bali.text(draft),
                     $text: bali.text('An unexpected error occurred while attempting to save a draft.')
                 }, cause);
                 if (debug) console.error(exception.toString());
@@ -226,7 +226,7 @@ exports.repository = function(notary, url, debug) {
                     $module: '/bali/services/RemoteRepository',
                     $procedure: '$deleteDraft',
                     $exception: '$unexpected',
-                    $draftId: draftId,
+                    $draftId: bali.text(draftId),
                     $text: bali.text('An unexpected error occurred while attempting to delete a draft.')
                 }, cause);
                 if (debug) console.error(exception.toString());
@@ -252,7 +252,7 @@ exports.repository = function(notary, url, debug) {
                     $module: '/bali/services/RemoteRepository',
                     $procedure: '$documentExists',
                     $exception: '$unexpected',
-                    $documentId: documentId,
+                    $documentId: bali.text(documentId),
                     $text: bali.text('An unexpected error occurred while attempting to verify the existence of a document.')
                 }, cause);
                 if (debug) console.error(exception.toString());
@@ -278,7 +278,7 @@ exports.repository = function(notary, url, debug) {
                     $module: '/bali/services/RemoteRepository',
                     $procedure: '$fetchDocument',
                     $exception: '$unexpected',
-                    $documentId: documentId,
+                    $documentId: bali.text(documentId),
                     $text: bali.text('An unexpected error occurred while attempting to fetch a document.')
                 }, cause);
                 if (debug) console.error(exception.toString());
@@ -302,8 +302,8 @@ exports.repository = function(notary, url, debug) {
                     $module: '/bali/services/RemoteRepository',
                     $procedure: '$createDocument',
                     $exception: '$unexpected',
-                    $documentId: documentId,
-                    $document: document,
+                    $documentId: bali.text(documentId),
+                    $document: bali.text(document),
                     $text: bali.text('An unexpected error occurred while attempting to create a document.')
                 }, cause);
                 if (debug) console.error(exception.toString());
@@ -326,7 +326,7 @@ exports.repository = function(notary, url, debug) {
                     $module: '/bali/services/RemoteRepository',
                     $procedure: '$queueMessage',
                     $exception: '$unexpected',
-                    $queueId: queueId,
+                    $queueId: bali.text(queueId),
                     $message: message,
                     $text: bali.text('An unexpected error occurred while attempting to queue a message.')
                 }, cause);
@@ -351,7 +351,7 @@ exports.repository = function(notary, url, debug) {
                     $module: '/bali/services/RemoteRepository',
                     $procedure: '$dequeueMessage',
                     $exception: '$unexpected',
-                    $queueId: queueId,
+                    $queueId: bali.text(queueId),
                     $text: bali.text('An unexpected error occurred while attempting to dequeue a message.')
                 }, cause);
                 if (debug) console.error(exception.toString());
