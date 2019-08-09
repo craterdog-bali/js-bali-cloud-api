@@ -34,9 +34,12 @@ const EOL = '\n';  // POSIX compliant end of line
  * 
  * @param {String} directory The location of the directory to be used for the repository.
  * will be logged to the error console.
+ * @param {Boolean} debug An optional flag that determines whether or not exceptions
+ * will be logged to the error console.
  * @returns {Object} An object implementing the document repository interface.
  */
-exports.repository = function(directory) {
+exports.repository = function(directory, debug) {
+    debug = debug || false;
     const repositoryDirectory = directory + 'repository/';
     const citations = repositoryDirectory + 'citations/';
     const drafts = repositoryDirectory + 'drafts/';
@@ -165,7 +168,7 @@ exports.repository = function(directory) {
                 const filename = citations + name.replace(/\//g, '_') + '.bali';
                 const exists = await doesExist(filename);
                 if (exists) {
-                    throw bali.exception({
+                    const exception = bali.exception({
                         $module: '/bali/repositories/LocalRepository',
                         $procedure: '$createCitation',
                         $exception: '$fileExists',
@@ -173,6 +176,8 @@ exports.repository = function(directory) {
                         $file: bali.text(filename),
                         $text: bali.text('The file to be written already exists.')
                     });
+                    if (debug) console.error(exception.toString());
+                    throw exception;
                 }
                 const document = citation + EOL;  // add POSIX compliant <EOL>
                 await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o400});
@@ -375,7 +380,7 @@ exports.repository = function(directory) {
                 const filename = documents + documentId + '.bali';
                 const exists = await doesExist(filename);
                 if (exists) {
-                    throw bali.exception({
+                    const exception = bali.exception({
                         $module: '/bali/repositories/LocalRepository',
                         $procedure: '$createDocument',
                         $exception: '$fileExists',
@@ -383,6 +388,8 @@ exports.repository = function(directory) {
                         $file: bali.text(filename),
                         $text: bali.text('The file to be written already exists.')
                     });
+                    if (debug) console.error(exception.toString());
+                    throw exception;
                 }
                 document = document + EOL;  // add POSIX compliant <EOL>
                 await pfs.writeFile(filename, document, {encoding: 'utf8', mode: 0o400});
@@ -481,7 +488,16 @@ exports.repository = function(directory) {
 
 // PRIVATE FUNCTIONS
 
-const doesExist = async function(path) {
+/**
+ * This function determines whether or not the specified directory path exists.
+ * 
+ * @param {String} path The directory path. 
+ * @param {Boolean} debug An optional flag that determines whether or not exceptions
+ * will be logged to the error console.
+ * @returns {Boolean} Whether or not the directory exists.
+ */
+const doesExist = async function(path, debug) {
+    debug = debug || false;
     var exists = true;
     try {
         await pfs.stat(path);
@@ -491,6 +507,7 @@ const doesExist = async function(path) {
             exists = false;
         } else {
             // something else went wrong
+            if (debug) console.error(exception.toString());
             throw exception;
         }
     }

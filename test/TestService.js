@@ -9,8 +9,9 @@
  ************************************************************************/
 
 const debug = false;  // set to true for request-response logging
+const directory = 'test/config/';
 const bali = require('bali-component-framework');
-const repository = require('../').local('test/config/');
+const repository = require('../').local(directory, debug);
 const express = require("express");
 const bodyParser = require('body-parser');
 const EOL = '\n';

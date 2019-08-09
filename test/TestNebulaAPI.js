@@ -52,13 +52,13 @@ describe('Bali Nebula API™ - Test Remote API', function() {
         });
 
         it('should create the consumer nebula API', async function() {
-            consumerRepository = nebula.remote(consumerNotary, url);
+            consumerRepository = nebula.remote(consumerNotary, url, debug);
             consumerClient = nebula.api(consumerNotary, consumerRepository, debug);
             expect(consumerClient).to.exist;
         });
 
         it('should create the merchant nebula API', async function() {
-            merchantRepository = nebula.remote(merchantNotary, url);
+            merchantRepository = nebula.remote(merchantNotary, url, debug);
             merchantClient = nebula.api(merchantNotary, merchantRepository, debug);
             expect(merchantClient).to.exist;
         });

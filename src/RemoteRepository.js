@@ -24,9 +24,12 @@ const axios = require('axios');
  * @param {Object} notary An object that implements the API for the digital notary.
  * @param {Reference} url A reference that defines the URL for the cloud repository.
  * will be logged to the error console.
+ * @param {Boolean} debug An optional flag that determines whether or not exceptions
+ * will be logged to the error console.
  * @returns {Object} An object implementing the document repository interface.
  */
-exports.repository = function(notary, url) {
+exports.repository = function(notary, url, debug) {
+    debug = debug || false;
     const accountId = notary.getAccountId();
 
     // return a singleton object for the API
@@ -368,9 +371,12 @@ exports.repository = function(notary, url) {
  * the client and verify their permissions.
  * 
  * @param {Object} notary An object that implements the API for the digital notary.
+ * @param {Boolean} debug An optional flag that determines whether or not exceptions
+ * will be logged to the error console.
  * @returns {Catalog} The newly generated credentials.
  */
-const generateCredentials = async function(notary) {
+const generateCredentials = async function(notary, debug) {
+    debug = debug || false;
     try {
         const citation = await notary.getCitation();
         const document = bali.duplicate(citation);
@@ -386,7 +392,6 @@ const generateCredentials = async function(notary) {
             $module: '/bali/services/RemoteRepository',
             $procedure: '$generateCredentials',
             $exception: '$unexpected',
-            $queueId: queueId,
             $text: bali.text('An unexpected error occurred while attempting to generate credentials.')
         }, cause);
         if (debug) console.error(exception.toString());
@@ -407,9 +412,12 @@ const generateCredentials = async function(notary) {
  * @param {String} type The type of resource being acted upon.
  * @param {String} identifier An identifier for the specific resource being acted upon.
  * @param {Catalog} document An optional signed document to be passed to the web service.
+ * @param {Boolean} debug An optional flag that determines whether or not exceptions
+ * will be logged to the error console.
  * @returns {Boolean|Catalog} The result of the request.
  */
-const sendRequest = async function(credentials, functionName, url, method, type, identifier, document) {
+const sendRequest = async function(credentials, functionName, url, method, type, identifier, document, debug) {
+    debug = debug || false;
 
     // setup the request URL and options
     const fullURL = url.getValue().toString() + type + '/' + identifier;
@@ -461,6 +469,7 @@ const sendRequest = async function(credentials, functionName, url, method, type,
                 $details: bali.text(cause.response.statusText),
                 $text: bali.text('The request was rejected by the Bali Nebula™.')
             });
+            if (debug) console.error(exception.toString());
             throw exception;
         }
         if (cause.request) {
@@ -475,6 +484,7 @@ const sendRequest = async function(credentials, functionName, url, method, type,
                 $details: bali.text(cause.request.statusText),
                 $text: bali.text('The request received no response.')
             });
+            if (debug) console.error(exception.toString());
             throw exception;
         } 
         // the request could not be sent
@@ -486,6 +496,7 @@ const sendRequest = async function(credentials, functionName, url, method, type,
             $method: bali.text(options.method),
             $text: bali.text('The request was not formed correctly.')
         });
+        if (debug) console.error(exception.toString());
         throw exception;
     }
 };

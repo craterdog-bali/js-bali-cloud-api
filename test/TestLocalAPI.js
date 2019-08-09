@@ -51,13 +51,13 @@ describe('Bali Nebula API™ - Test Local API', function() {
         });
 
         it('should create the consumer nebula API', async function() {
-            consumerRepository = nebula.local(directory);
+            consumerRepository = nebula.local(directory, debug);
             consumerClient = nebula.api(consumerNotary, consumerRepository, debug);
             expect(consumerClient).to.exist;
         });
 
         it('should create the merchant nebula API', async function() {
-            merchantRepository = nebula.local(directory);
+            merchantRepository = nebula.local(directory, debug);
             merchantClient = nebula.api(merchantNotary, merchantRepository, debug);
             expect(merchantClient).to.exist;
         });

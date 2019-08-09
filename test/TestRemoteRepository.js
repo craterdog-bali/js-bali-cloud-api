@@ -18,7 +18,7 @@ const directory = 'test/config/';
 const url = bali.reference('http://localhost:3000');
 const securityModule = require('bali-digital-notary').ssm(directory + accountId.getValue() + '.keys');
 const notary = require('bali-digital-notary').api(securityModule, accountId, directory, debug);
-const repository = require('../').remote(notary, url);
+const repository = require('../').remote(notary, url, debug);
 
 const transaction = bali.catalog({
     $timestamp: bali.moment(),
@@ -36,9 +36,9 @@ const transaction = bali.catalog({
 
 const source = transaction.toString();
 
-describe('Bali Nebula API™ - Test Cloud Repository', function() {
+describe('Bali Nebula API™ - Test Remote Repository', function() {
 
-    describe('Test Cloud Repository', function() {
+    describe('Test Remote Repository', function() {
 
         it('should perform a citation name lifecycle', async function() {
             const name = 'bali/examples/name/v1.2.3.4';
