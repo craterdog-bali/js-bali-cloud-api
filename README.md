@@ -8,7 +8,7 @@ This project provides a JavaScript version of the API needed to interact with th
  * send and receive notarized messages over global queues
  * post notarized events to other interested components
 
-![Architecture](https://raw.githubusercontent.com/craterdog-bali/js-bali-nebula-api/master/docs/images/The\ Bali\ Nebula\ API.png)
+![Architecture](https://raw.githubusercontent.com/craterdog-bali/js-bali-nebula-api/master/docs/images/The%20Bali%20Nebula%20API.png)
 
 _**WARNING**_
 _This project is still in its early stages and the classes and interfaces to the classes are likely to change._
