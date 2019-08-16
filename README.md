@@ -1,6 +1,6 @@
 ![Logo](https://raw.githubusercontent.com/craterdog-bali/bali-project-documentation/master/images/CraterDogLogo.png)
 
-### Bali Nebula API
+### Bali Nebula™ API
 This project provides a JavaScript version of the API needed to interact with the [_Bali Nebula™_](https://github.com/craterdog-bali/bali-project-documentation/wiki). It allows a client program to perform the following tasks:
  * create components and commit them to the Bali Nebula™ document repository as notarized documents
  * compile component type documents to create new types in the repository

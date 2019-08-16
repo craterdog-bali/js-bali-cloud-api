@@ -15,7 +15,8 @@ const assert = require('chai').assert;
 const expect = require('chai').expect;
 const bali = require('bali-component-framework');
 const notary = require('bali-digital-notary');
-const nebula = require('../');
+const repository = require('bali-document-repository').local;
+const api = require('../').api;
 
 function extractId(component) {
     const parameters = component.getValue('$component').getParameters();
@@ -24,7 +25,7 @@ function extractId(component) {
     return '' + identifier + version;
 }
 
-describe('Bali Nebula API™ - Test Local API', function() {
+describe('Bali Nebula™ API - Test Local API', function() {
     var consumerNotary;
     var consumerRepository;
     var consumerClient;
@@ -51,14 +52,14 @@ describe('Bali Nebula API™ - Test Local API', function() {
         });
 
         it('should create the consumer nebula API', async function() {
-            consumerRepository = nebula.local(directory, debug);
-            consumerClient = nebula.api(consumerNotary, consumerRepository, debug);
+            consumerRepository = repository(directory, debug);
+            consumerClient = api(consumerNotary, consumerRepository, debug);
             expect(consumerClient).to.exist;
         });
 
         it('should create the merchant nebula API', async function() {
-            merchantRepository = nebula.local(directory, debug);
-            merchantClient = nebula.api(merchantNotary, merchantRepository, debug);
+            merchantRepository = repository(directory, debug);
+            merchantClient = api(merchantNotary, merchantRepository, debug);
             expect(merchantClient).to.exist;
         });
 
@@ -89,7 +90,7 @@ describe('Bali Nebula API™ - Test Local API', function() {
             $tag: bali.tag(),
             $version: bali.version(),
             $permissions: bali.parse('/bali/permissions/public/v1'),
-            $previous: bali.NONE
+            $previous: bali.pattern.NONE
         }));
         var draftCitation;
         var draftSource = draft.toString();
@@ -138,7 +139,7 @@ describe('Bali Nebula API™ - Test Local API', function() {
                 $tag: bali.tag(),
                 $version: bali.version(),
                 $permissions: bali.parse('/bali/permissions/private/v1'),
-                $previous: bali.NONE
+                $previous: bali.pattern.NONE
             }));
             draftCitation = await consumerClient.saveDraft(catalog);
             draft = await consumerClient.retrieveDraft(draftCitation);
@@ -224,7 +225,7 @@ describe('Bali Nebula API™ - Test Local API', function() {
                     $tag: bali.tag(),
                     $version: bali.version(),
                     $permissions: bali.parse('/bali/permissions/public/v1'),
-                    $previous: bali.NONE
+                    $previous: bali.pattern.NONE
                 }));
                 await consumerClient.queueMessage(queue, transaction);
             }
@@ -256,7 +257,7 @@ describe('Bali Nebula API™ - Test Local API', function() {
             $tag: bali.tag(),
             $version: bali.version(),
             $permissions: bali.parse('/bali/permissions/public/v1'),
-            $previous: bali.NONE
+            $previous: bali.pattern.NONE
         }));
 
         it('should allow the merchant to publish an event', async function() {

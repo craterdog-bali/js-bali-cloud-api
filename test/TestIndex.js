@@ -11,7 +11,7 @@
 const mocha = require('mocha');
 const expect = require('chai').expect;
 
-describe('Bali Nebula API™', function() {
+describe('Bali Nebula™ API', function() {
 
     describe('Test the require of the top level index.', function() {
 

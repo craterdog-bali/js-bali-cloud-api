@@ -12,13 +12,9 @@
 
 /*
  * This module uses the singleton pattern to provide an object that implements the API
- * used to by registered accounts to access the Bali Nebula™. The implementation
- * requires that objects implementing the digital notary API and the document repository API
- * be passed into the constructor.
- */
-
-/*
- * This library provides useful functions for accessing the Bali Environment™.
+ * used by registered accounts to access the Bali Nebula™. The implementation requires
+ * that objects implementing the digital notary API, the document repository API, and
+ * the procedure compiler API be passed into the constructor.
  */
 const bali = require('bali-component-framework');
 
@@ -26,15 +22,14 @@ const bali = require('bali-component-framework');
 /**
  * This function returns an object that implements the API for the Bali Nebula™.
  *
- * @param {Object} notary An object that implements the API for the digital notary. This API
- * should not yet be initialized.
+ * @param {Object} notary An object that implements the API for the digital notary.
  * @param {Object} repository An object that implements the API for the document repository.
- * This API should not yet be initialized.
+ * @param {Object} compiler An object that implements the API for the procedure compiler.
  * @param {Boolean} debug An optional flag that determines whether or not exceptions
  * will be logged to the error console.
  * @returns {Object} An object that implements the API for the Bali Nebula™.
  */
-exports.api = function(notary, repository, debug) {
+exports.api = function(notary, repository, compiler, debug) {
     // validate the parameters
     debug = debug || false;
 
@@ -533,7 +528,7 @@ exports.api = function(notary, repository, debug) {
         compileType: async function(citation) {
             try {
                 validateParameter('$compileType', 'citation', citation, 'citation', debug);
-                //await processor.compileType(citation);
+                await compileType(this, citation, debug);
             } catch (cause) {
                 const exception = bali.exception({
                     $module: '/bali/services/NebulaAPI',
@@ -744,11 +739,11 @@ const validateDocument = async function(notary, repository, document, debug) {
     debug = debug || false;
     try {
         var certificateCitation = document.getValue('$certificate');
-        while (certificateCitation && !certificateCitation.isEqualTo(bali.NONE) && !certificateCitation.getValue('$digest').isEqualTo(bali.NONE)) {
+        while (certificateCitation && !certificateCitation.isEqualTo(bali.pattern.NONE) && !certificateCitation.getValue('$digest').isEqualTo(bali.pattern.NONE)) {
 
             // validate the document citation to the previous version of the document
             const previousCitation = document.getValue('$previous');
-            if (previousCitation && !previousCitation.isEqualTo(bali.NONE)) {
+            if (previousCitation && !previousCitation.isEqualTo(bali.pattern.NONE)) {
                 const previousId = extractId(previousCitation);
                 source = await repository.fetchDocument(previousId);
                 if (!source) {
@@ -779,7 +774,7 @@ const validateDocument = async function(notary, repository, document, debug) {
 
             // check for a self signed document
             var certificate;
-            if (certificateCitation.isEqualTo(bali.NONE)) {
+            if (certificateCitation.isEqualTo(bali.pattern.NONE)) {
                 certificate = document.getValue('$component');
                 if (await notary.documentIsValid(document, certificate)) return;
                 const exception = bali.exception({
@@ -890,7 +885,7 @@ const validateParameter = function(procedureName, parameterName, parameterValue,
                 // A certificate must have the following:
                 //  * a parameterized type of /bali/types/Citation/v...
                 //  * exactly five specific attributes
-                if (parameterValue.getTypeId && parameterValue.isEqualTo(bali.NONE)) return;
+                if (parameterValue.getTypeId && parameterValue.isEqualTo(bali.pattern.NONE)) return;
                 if (parameterValue.getTypeId && parameterValue.getTypeId() === bali.types.CATALOG && parameterValue.getSize() === 5) {
                     validateParameter(procedureName, parameterName + '.protocol', parameterValue.getValue('$protocol'), 'version');
                     validateParameter(procedureName, parameterName + '.timestamp', parameterValue.getValue('$timestamp'), 'moment');
@@ -959,7 +954,7 @@ const validateParameter = function(procedureName, parameterName, parameterValue,
         $procedure: procedureName,
         $exception: '$invalidParameter',
         $parameter: bali.text(parameterName),
-        $value: parameterValue ? bali.text(parameterValue.toString()) : bali.NONE,
+        $value: parameterValue ? bali.text(parameterValue.toString()) : bali.pattern.NONE,
         $text: bali.text('An invalid parameter value was passed to the function.')
     });
     if (debug) console.error(exception.toString());
@@ -984,7 +979,7 @@ const constructTemplate = function(type, debug) {
             $tag: bali.tag(),  // a new unique tag
             $version: bali.version(),  // initial version
             $permissions: '/bali/permissions/private/v1',
-            $previous: bali.NONE
+            $previous: bali.pattern.NONE
         }));
         const attributes = type.getValue('$attributes');
         if (attributes && attributes.getIterator) {
@@ -1065,4 +1060,115 @@ const cache = {
         this.documents.set(documentId, document);
     }
 
+};
+
+
+// COMPILE FUNCTION
+/**
+ * This function compiles a type definition residing in the Bali Nebula™ and returns
+ * a document citation to the newly compiled type.  The type definition must be a
+ * committed document in the Bali Nebula™.
+ * 
+ * @param {Object} nebula A JavaScript object that implements the Bali Nebula™ API.
+ * @param {Catalog} citation A Bali document citation to the type definition.
+ * @param {Boolean} debug An optional flag that determines whether or not exceptions
+ * will be logged to the error console.
+ * @returns {Catalog} A Bali document citation to the newly compiled type.
+ */
+const compileType = async function(nebula, citation, debug) {
+    try {
+        const compiler = new exports.Compiler();
+        const assembler = new exports.Assembler();
+
+        // retrieve the type document
+        const document = await nebula.retrieveDocument(citation);
+        const parameters = document.getParameters();
+
+        // extract the literals, constants and procedures for the parent type
+        const literals = bali.list();
+        const constants = bali.catalog();
+        var procedures = bali.catalog();
+        citation = document.getValue('$parent');
+        if (citation) {
+            // TODO: This is a citation to the parent type definition document, not the compiled
+            //       type so its digest will not match the parent type.  How do we address this in
+            //       a way that preserves the merkle pointer chain?
+            citation.setValue('$digest', bali.pattern.NONE);
+
+            // retrieve the compiled parent type
+            const parent = await nebula.retrieveDocument(citation);
+            literals.addItems(parent.getValue('$literals'));
+            constants.addItems(parent.getValue('$constants'));
+            procedures.addItems(parent.getValue('$procedures'));
+        }
+
+        // add in the constants from the child type document
+        const items = document.getValue('$constants');
+        if (items) constants.addItems(items);
+
+        // create the compilation type context
+        const type = bali.catalog([], bali.parameters({
+            $type: parameters.getParameter('$type'),
+            $name: parameters.getParameter('$name'),
+            $tag: parameters.getParameter('$tag'),
+            $version: parameters.getParameter('$version'),
+            $permissions: parameters.getParameter('$permissions'),
+            $previous: parameters.getParameter('$previous')
+        }));
+        type.setValue('$literals', literals);
+        type.setValue('$constants', constants);
+        type.setValue('$procedures', procedures);
+
+        // compile each procedure defined in the type definition document
+        var association, name, procedure;
+        procedures = document.getValue('$procedures');
+        if (procedures) {
+            // iterate through procedure definitions
+            var iterator = procedures.getIterator();
+            procedures = bali.catalog();  // for compiled procedures
+            while (iterator.hasNext()) {
+
+                // retrieve the source code for the procedure
+                association = iterator.getNext();
+                name = association.getKey();
+                const source = association.getValue().getValue('$source');
+
+                // compile the source code
+                procedure = compiler.compileProcedure(type, source);
+                procedures.setValue(name, procedure);  // compiled procedure
+            }
+
+            // iterate through the compiled procedures
+            iterator = procedures.getIterator();
+            while (iterator.hasNext()) {
+
+                // retrieve the compiled procedure
+                association = iterator.getNext();
+                name = association.getKey();
+                procedure = association.getValue();
+
+                // assemble the instructions in the procedure into bytecode
+                assembler.assembleProcedure(type, procedure);
+
+                // add the assembled procedure to the type context
+                type.getValue('$procedures').setValue(name, procedure);
+            }
+        }
+
+        // checkin the newly compiled type
+        citation = await nebula.commitDocument(type);
+
+        return citation;
+
+    } catch (cause) {
+        const exception = bali.exception({
+            $module: '/bali/vm/Compiler',
+            $procedure: '$compile',
+            $exception: '$unexpected',
+            $citation: citation,
+            $text: bali.text('An unexpected error occurred while attempting to compile a document.')
+        }, cause);
+        if (debug) console.error(exception.toString());
+        throw exception;
+    }
 };
