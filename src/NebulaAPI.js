@@ -96,7 +96,7 @@ exports.api = function(notary, repository, compiler, debug) {
                         $exception: '$documentInvalid',
                         $document: credentials,
                         $certificate: certificate,
-                        $text: '"The signed credentials document is invalid."'
+                        $text: bali.text('The signed credentials document is invalid.')
                     });
                     if (debug) console.error(exception.toString());
                     throw exception;
@@ -108,7 +108,7 @@ exports.api = function(notary, repository, compiler, debug) {
                         $exception: '$documentInvalid',
                         $document: account,
                         $certificate: certificate,
-                        $text: '"The signed account document is invalid."'
+                        $text: bali.text('The signed account document is invalid.')
                     });
                     if (debug) console.error(exception.toString());
                     throw exception;
@@ -121,7 +121,7 @@ exports.api = function(notary, repository, compiler, debug) {
                         $procedure: '$registerAccount',
                         $exception: '$versionExists',
                         $accountId: accountId,
-                        $text: '"A committed version of the account already exists."'
+                        $text: bali.text('A committed version of the account already exists.')
                     });
                     if (debug) console.error(exception.toString());
                     throw exception;
@@ -135,7 +135,7 @@ exports.api = function(notary, repository, compiler, debug) {
                         $exception: '$versionExists',
                         $tag: certificateCitation.getValue('$tag'),
                         $version: certificateCitation.getValue('$version'),
-                        $text: '"A committed version of the certificate already exists."'
+                        $text: bali.text('A committed version of the certificate already exists.')
                     });
                     if (debug) console.error(exception.toString());
                     throw exception;
@@ -173,7 +173,7 @@ exports.api = function(notary, repository, compiler, debug) {
                         $procedure: '$nameCitation',
                         $exception: '$nameExists',
                         $name: name,
-                        $text: '"The citation name already exists."'
+                        $text: bali.text('The citation name already exists.')
                     });
                     if (debug) console.error(exception.toString());
                     throw exception;
@@ -279,7 +279,7 @@ exports.api = function(notary, repository, compiler, debug) {
                         $exception: '$versionExists',
                         $tag: draftCitation.getValue('$tag'),
                         $version: draftCitation.getValue('$version'),
-                        $text: '"A committed version of the document referenced by the citation already exists."'
+                        $text: bali.text('A committed version of the document referenced by the citation already exists.')
                     });
                     if (debug) console.error(exception.toString());
                     throw exception;
@@ -376,8 +376,8 @@ exports.api = function(notary, repository, compiler, debug) {
                         $module: '/bali/services/NebulaAPI',
                         $procedure: '$commitDocument',
                         $exception: '$versionExists',
-                        $documentId: '"' + documentId + '"',
-                        $text: '"A committed version of the document referenced by the citation already exists."'
+                        $documentId: bali.text(documentId),
+                        $text: bali.text('A committed version of the document referenced by the citation already exists.')
                     });
                     if (debug) console.error(exception.toString());
                     throw exception;
@@ -469,8 +469,8 @@ exports.api = function(notary, repository, compiler, debug) {
                         $module: '/bali/services/NebulaAPI',
                         $procedure: '$checkoutDocument',
                         $exception: '$versionExists',
-                        $documentId: '"' + draftId + '"',
-                        $text: '"A committed version of the document referenced by the citation already exists."'
+                        $documentId: bali.text(draftId),
+                        $text: bali.text('A committed version of the document referenced by the citation already exists.')
                     });
                     if (debug) console.error(exception.toString());
                     throw exception;
@@ -484,8 +484,8 @@ exports.api = function(notary, repository, compiler, debug) {
                         $module: '/bali/services/NebulaAPI',
                         $procedure: '$checkoutDocument',
                         $exception: '$documentMissing',
-                        $documentId: '"' + documentId + '"',
-                        $text: '"The document referenced by the citation does not exist."'
+                        $documentId: bali.text(documentId),
+                        $text: bali.text('The document referenced by the citation does not exist.')
                     });
                     if (debug) console.error(exception.toString());
                     throw exception;
@@ -523,19 +523,96 @@ exports.api = function(notary, repository, compiler, debug) {
          * This method compiles the document type associated with the specified document
          * citation in the Bali Nebula™.
          * 
-         * @param {Catalog} citation The document citation for the type to be compiled.
+         * @param {Catalog} draft The draft document for the type to be compiled.
+         * @returns {Catalog} A Bali document citation to the newly compiled type document.
          */
-        compileType: async function(citation) {
+        compileType: async function(draft) {
             try {
-                validateParameter('$compileType', 'citation', citation, 'citation', debug);
-                await compileType(this, citation, debug);
+                validateParameter('$compileType', 'draft', draft, 'draft', debug);
+                const parameters = draft.getParameters();
+        
+                // extract any literals, constants and procedures from the parent type
+                const literals = bali.list();
+                const constants = bali.catalog();
+                var procedures = bali.catalog();
+                const parentTypeCitation = draft.getValue('$parent');
+                if (parentTypeCitation && parentTypeCitation.getTypeId() === bali.types.CATALOG) {
+                    const parentType = await this.retrieveDocument(parentTypeCitation);
+                    const compiledParentCitation = parentType.getValue('$compiled');
+                    if (compiledParentCitation && compiledParentCitation.getTypeId() === bali.types.CATALOG) {
+                        const compiledParent = await this.retrieveDocument(compiledParentCitation);
+                        literals.addItems(compiledParent.getValue('$literals'));
+                        constants.addItems(compiledParent.getValue('$constants'));
+                        procedures.addItems(compiledParent.getValue('$procedures'));
+                    }
+                }
+        
+                // add in the constants from the child draft type
+                const items = draft.getValue('$constants');
+                if (items) constants.addItems(items);
+                var compiledCitation = draft.getValue('$compiled');
+        
+                // create the compilation type context
+                const type = bali.catalog([], bali.parameters({
+                    $tag: compiledCitation ? compiledCitation.getValue('$tag') : bali.tag(),
+                    $version: parameters.getParameter('$version'),
+                    $permissions: parameters.getParameter('$permissions'),
+                    $previous: compiledCitation || bali.pattern.NONE
+                }));
+                type.setValue('$literals', literals);
+                type.setValue('$constants', constants);
+                type.setValue('$procedures', procedures);
+        
+                // compile each procedure defined in the type definition document
+                var association, name, procedure;
+                procedures = draft.getValue('$procedures');
+                if (procedures) {
+                    // iterate through procedure definitions
+                    var iterator = procedures.getIterator();
+                    procedures = bali.catalog();  // for compiled procedures
+                    while (iterator.hasNext()) {
+        
+                        // retrieve the source code for the procedure
+                        association = iterator.getNext();
+                        name = association.getKey();
+                        const source = association.getValue().getValue('$source');
+        
+                        // compile the source code
+                        procedure = compiler.compile(type, source, debug);
+                        procedures.setValue(name, procedure);  // compiled procedure
+                    }
+        
+                    // iterate through the compiled procedures
+                    iterator = procedures.getIterator();
+                    while (iterator.hasNext()) {
+        
+                        // retrieve the compiled procedure
+                        association = iterator.getNext();
+                        name = association.getKey();
+                        procedure = association.getValue();
+        
+                        // assemble the instructions in the procedure into bytecode
+                        compiler.assemble(type, procedure, debug);
+        
+                        // add the assembled procedure to the type context
+                        type.getValue('$procedures').setValue(name, procedure);
+                    }
+                }
+        
+                // checkin the draft and newly compiled type
+                compiledCitation = await this.commitDocument(type);
+                draft.setValue('$compiled', compiledCitation);
+                const typeCitation = await this.commitDocument(draft);
+        
+                return typeCitation;
+        
             } catch (cause) {
                 const exception = bali.exception({
                     $module: '/bali/services/NebulaAPI',
                     $procedure: '$compileType',
                     $exception: '$unexpected',
-                    $accountId: notary.getAccountId(),
-                    $text: bali.text('An unexpected error occurred while attempting to commit the compiled type.')
+                    $draft: draft,
+                    $text: bali.text('An unexpected error occurred while attempting to compile a draft type.')
                 }, cause);
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -704,7 +781,7 @@ const validateCitation = async function(notary, citation, document, debug) {
                 $exception: '$documentModified',
                 $citation: citation,
                 $document: document,
-                $text: '"The cited document was modified after it was committed."'
+                $text: bali.text('The cited document was modified after it was committed.')
             });
             if (debug) console.error(exception.toString());
             throw exception;
@@ -751,8 +828,8 @@ const validateDocument = async function(notary, repository, document, debug) {
                         $module: '/bali/services/NebulaAPI',
                         $procedure: '$validateDocument',
                         $exception: '$documentMissing',
-                        $previousId: '"' + previousId + '"',
-                        $text: '"The previous version of the document does not exist."'
+                        $previousId: bali.text(previousId),
+                        $text: bali.text('The previous version of the document does not exist.')
                     });
                     if (debug) console.error(exception.toString());
                     throw exception;
@@ -764,7 +841,7 @@ const validateDocument = async function(notary, repository, document, debug) {
                         $procedure: '$validateDocument',
                         $exception: '$invalidCitation',
                         $citation: previousCitation,
-                        $text: '"The digest in the previous document citation does not match the previous document."'
+                        $text: bali.text('The digest in the previous document citation does not match the previous document.')
                     });
                     if (debug) console.error(exception.toString());
                     throw exception;
@@ -782,7 +859,7 @@ const validateDocument = async function(notary, repository, document, debug) {
                     $procedure: '$validateDocument',
                     $exception: '$documentInvalid',
                     $document: document,
-                    $text: '"The self signed document is invalid."'
+                    $text: bali.text('The self signed document is invalid.')
                 });
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -798,8 +875,8 @@ const validateDocument = async function(notary, repository, document, debug) {
                         $module: '/bali/services/NebulaAPI',
                         $procedure: '$validateDocument',
                         $exception: '$certificateMissing',
-                        $certificateId: '"' + certificateId + '"',
-                        $text: '"The certificate for the document does not exist."'
+                        $certificateId: bali.text(certificateId),
+                        $text: bali.text('The certificate for the document does not exist.')
                     });
                     if (debug) console.error(exception.toString());
                     throw exception;
@@ -819,7 +896,7 @@ const validateDocument = async function(notary, repository, document, debug) {
                     $procedure: '$validateDocument',
                     $exception: '$documentInvalid',
                     $document: document,
-                    $text: '"The signature on the document is invalid."'
+                    $text: bali.text('The signature on the document is invalid.')
                 });
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -1060,115 +1137,4 @@ const cache = {
         this.documents.set(documentId, document);
     }
 
-};
-
-
-// COMPILE FUNCTION
-/**
- * This function compiles a type definition residing in the Bali Nebula™ and returns
- * a document citation to the newly compiled type.  The type definition must be a
- * committed document in the Bali Nebula™.
- * 
- * @param {Object} nebula A JavaScript object that implements the Bali Nebula™ API.
- * @param {Catalog} citation A Bali document citation to the type definition.
- * @param {Boolean} debug An optional flag that determines whether or not exceptions
- * will be logged to the error console.
- * @returns {Catalog} A Bali document citation to the newly compiled type.
- */
-const compileType = async function(nebula, citation, debug) {
-    try {
-        const compiler = new exports.Compiler();
-        const assembler = new exports.Assembler();
-
-        // retrieve the type document
-        const document = await nebula.retrieveDocument(citation);
-        const parameters = document.getParameters();
-
-        // extract the literals, constants and procedures for the parent type
-        const literals = bali.list();
-        const constants = bali.catalog();
-        var procedures = bali.catalog();
-        citation = document.getValue('$parent');
-        if (citation) {
-            // TODO: This is a citation to the parent type definition document, not the compiled
-            //       type so its digest will not match the parent type.  How do we address this in
-            //       a way that preserves the merkle pointer chain?
-            citation.setValue('$digest', bali.pattern.NONE);
-
-            // retrieve the compiled parent type
-            const parent = await nebula.retrieveDocument(citation);
-            literals.addItems(parent.getValue('$literals'));
-            constants.addItems(parent.getValue('$constants'));
-            procedures.addItems(parent.getValue('$procedures'));
-        }
-
-        // add in the constants from the child type document
-        const items = document.getValue('$constants');
-        if (items) constants.addItems(items);
-
-        // create the compilation type context
-        const type = bali.catalog([], bali.parameters({
-            $type: parameters.getParameter('$type'),
-            $name: parameters.getParameter('$name'),
-            $tag: parameters.getParameter('$tag'),
-            $version: parameters.getParameter('$version'),
-            $permissions: parameters.getParameter('$permissions'),
-            $previous: parameters.getParameter('$previous')
-        }));
-        type.setValue('$literals', literals);
-        type.setValue('$constants', constants);
-        type.setValue('$procedures', procedures);
-
-        // compile each procedure defined in the type definition document
-        var association, name, procedure;
-        procedures = document.getValue('$procedures');
-        if (procedures) {
-            // iterate through procedure definitions
-            var iterator = procedures.getIterator();
-            procedures = bali.catalog();  // for compiled procedures
-            while (iterator.hasNext()) {
-
-                // retrieve the source code for the procedure
-                association = iterator.getNext();
-                name = association.getKey();
-                const source = association.getValue().getValue('$source');
-
-                // compile the source code
-                procedure = compiler.compileProcedure(type, source);
-                procedures.setValue(name, procedure);  // compiled procedure
-            }
-
-            // iterate through the compiled procedures
-            iterator = procedures.getIterator();
-            while (iterator.hasNext()) {
-
-                // retrieve the compiled procedure
-                association = iterator.getNext();
-                name = association.getKey();
-                procedure = association.getValue();
-
-                // assemble the instructions in the procedure into bytecode
-                assembler.assembleProcedure(type, procedure);
-
-                // add the assembled procedure to the type context
-                type.getValue('$procedures').setValue(name, procedure);
-            }
-        }
-
-        // checkin the newly compiled type
-        citation = await nebula.commitDocument(type);
-
-        return citation;
-
-    } catch (cause) {
-        const exception = bali.exception({
-            $module: '/bali/vm/Compiler',
-            $procedure: '$compile',
-            $exception: '$unexpected',
-            $citation: citation,
-            $text: bali.text('An unexpected error occurred while attempting to compile a document.')
-        }, cause);
-        if (debug) console.error(exception.toString());
-        throw exception;
-    }
 };

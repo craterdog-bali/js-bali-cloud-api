@@ -34,9 +34,9 @@
   },
   "dependencies": {
     "axios": "^0.18.0",
-    "bali-component-framework": "^1.12.2",
-    "bali-digital-notary": "^1.8.10",
-    "bali-document-repository": "^1.0.1",
-    "bali-procedure-compiler": "^1.0.0"
+    "bali-component-framework": "^1.12.3",
+    "bali-digital-notary": "^1.8.12",
+    "bali-document-repository": "^1.0.2",
+    "bali-procedure-compiler": "^1.0.1"
   }
 }

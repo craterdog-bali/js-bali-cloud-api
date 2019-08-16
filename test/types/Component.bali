@@ -1,0 +1,99 @@
+[
+    $parent: none
+    $description: "
+        This abstract class defines the messages that all components support.
+    "($mediatype: "application/bsmd")
+    $procedures: [
+        $asSource: [
+            $description: "
+                This procedure returns the source code equivalent of this value.
+            "($mediatype: "application/bsmd")
+            $type: /bali/elements/Text/v1($mediatype: "application/bali")
+            $source: {
+                return format(target)
+            }
+        ]
+        $isA: [
+            $description: "
+                This procedure determines whether or not this component is an instance
+                of the specified type.
+            "($mediatype: "application/bsmd")
+            $parameters: [
+                $type: [
+                    $description: "
+                        The component type to be compared with.
+                    "($mediatype: "application/bsmd")
+                    $type: /bali/elements/Reference/v1(
+                        $referencedType: /bali/abstractions/Type/v1
+                    )
+                ]
+            ]
+            $type: /bali/elements/Probability/v1($granularity: $boolean)
+            $source: {
+                $ancestors := @getType(target).getAncestors()
+                with each $ancestor in ancestors do {
+                    if ancestor = type then {
+                        return true
+                    }
+                }
+                return false
+            }($type)
+        ]
+        $getAncestry: [
+            $description: "
+                This procedure returns a list of references to the ancestors for the
+                type of this component.
+            "($mediatype: "application/bsmd")
+            $type: /bali/collections/List/v1(
+                $itemType: /bali/elements/Reference/v1(
+                    $referencedType: /bali/abstractions/Type/v1
+                )
+            )
+            $source: {
+                $type := getType(target)
+                $ancestors := [type]
+                ancestors.addItems(@type[$ancestors])
+                return ancestors
+            }
+        ]
+        $getArguments: [
+            $description: "
+                This procedure returns a catalog of any arguments that were used to
+                parameterize this component.
+            "($mediatype: "application/bsmd")
+            $type: /bali/collections/Catalog/v1(
+                $valueType: /bali/composites/Argument/v1
+            )
+            $source: {
+                return getArguments(target)
+            }
+        ]
+        $getHash: [
+            $description: "
+                This procedure returns a consistent hash value of this component.
+            "($mediatype: "application/bsmd")
+            $type: /bali/elements/Number/v1(0..4294967295)
+            $source: {
+                return getHash(target)
+            }
+        ]
+        $getType: [
+            $description: "
+                This procedure returns the type of this component.
+            "($mediatype: "application/bsmd")
+            $type: /bali/elements/Reference/v1(
+                $referencedType: /bali/abstractions/Type/v1
+            )
+            $source: {
+                return getType(target)
+            }
+        ]
+    ]
+](
+    $type: /bali/abstractions/Class/v1($existence: $abstract)
+    $name: /bali/abstractions/Component
+    $tag: #GC5TG7QPT80BM6243Z15SKR0NB59KD94
+    $version: v1
+    $permissions: /bali/permissions/public/v1
+    $previous: none
+)

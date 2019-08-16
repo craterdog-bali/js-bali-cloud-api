@@ -10,16 +10,17 @@
 'use strict';
 
 /**
- * This function initializes the Bali Nebula™ API. It requires that a digital notary
- * and document repository be specified.
+ * This function initializes the Bali Nebula™ API. It requires that a digital notary,
+ * a document repository, and a procedure compileer be specified.
  * 
  * @param {Object} notary An object that implements the digital notary API.
  * @param {Object} repository An object that implements the document repository API.
+ * @param {Object} compiler An object that implements the procedure compiler API.
  * @param {Boolean} debug An optional flag that determines whether or not exceptions
  * will be logged to the error console.
  * @returns {Object} A singleton object containing the initialized Bali Nebula™ API.
  */
-exports.api = function(notary, repository, debug) {
-    const api = require('./src/NebulaAPI').api(notary, repository, debug);
+exports.api = function(notary, repository, compiler, debug) {
+    const api = require('./src/NebulaAPI').api(notary, repository, compiler, debug);
     return api;
 };

@@ -1,0 +1,52 @@
+[
+    $description: "
+        This class contains test procedures used for testing the virtual machine EXECUTE and HANDLE instructions.
+    "
+    $procedures: [
+        $function1: [
+            $source: {
+                return true
+            }
+        ]
+        $function2: [
+            $source: {
+                throw none handle $exception matching "none"? with {
+                    return first
+                }
+                return false
+            }($first)
+        ]
+        $message1: [
+            $source: {
+                return target
+            }
+        ]
+        $message2: [
+            $source: {
+                throw second handle $exception matching "none"? with {
+                    return true
+                }
+                return false
+            }($first, $second)
+        ]
+    ]
+    $compiled: [
+        $protocol: v1
+        $timestamp: <2019-08-16T21:41:26.688>
+        $tag: #JMZ45905VJHPV8AVR1J7TCLWQGV5C8JH
+        $version: v1
+        $digest: '
+            QG4P95YDAXQN4NC2Z1LJTYZTK1162DW19XJ15ZHHD9A88JMBSXAA8YM0BTY2
+            QQ9Q215HSAMZZ79QZB9WRDBDHPVP2X07G81XHR5MKSH
+        '
+    ](
+        $type: /bali/notary/Citation/v1
+    )
+](
+    $type: /bali/abstractions/Class/v1
+    $name: /bali/examples/Test
+    $tag: #M8G7XJH640RR4YBCLGNDYABD6328741S
+    $version: v1
+    $permissions: /bali/permissions/public/v1
+    $previous: none
+)

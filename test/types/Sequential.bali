@@ -1,0 +1,48 @@
+[
+    $parent: /bali/abstractions/Component/v1
+    $description: "
+        This interface defines the messages that all composite components that maintain
+        a sequence of subcomponents support.
+    "($mediatype: "application/bsmd")
+    $parameters: [
+        $itemType: [
+            $description: "
+                This parameter defines the type of item that the sequential component manages.
+            "($mediatype: "application/bsmd")
+            $type: /bali/elements/Reference/v1(
+                $referencedType: /bali/abstractions/Type/v1
+            )
+        ]
+    ]
+    $messages: [
+        $getIterator: [
+            $description: "
+                This message causes the target component to return an iterator component
+                that can be used to iterate over the subcomponents that make up this
+                composite component.
+            "($mediatype: "application/bsmd")
+            $type: /bali/utilities/Iterator/v1($itemType: itemType)
+        ]
+        $getSize: [
+            $description: "
+                This message causes the target component to return the number of
+                subcomponents that make up this component.
+            "($mediatype: "application/bsmd")
+            $type: /bali/elements/Number/v1(0..infinity)
+        ]
+        $isEmpty: [
+            $description: "
+                This message causes the target component to return whether or not this
+                component has any subcomponents.
+            "($mediatype: "application/bsmd")
+            $type: /bali/elements/Probability/v1($granularity: $boolean)
+        ]
+    ]
+](
+    $type: /bali/abstractions/Interface/v1
+    $name: /bali/interfaces/Sequential
+    $tag: #7ZG69N9QGDQSS66RVWYN7P8TYVV3FAM3
+    $version: v1
+    $permissions: /bali/permissions/public/v1
+    $previous: none
+)
