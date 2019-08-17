@@ -73,6 +73,11 @@ describe('Bali Virtual Macine™', function() {
                 const typeCitation = await nebula.compileType(draft);
                 expect(typeCitation).to.exist;
                 const type = await nebula.retrieveDocument(typeCitation);
+                expect(type).to.exist;
+                const compiledCitation = type.getValue('$compiled');
+                expect(compiledCitation).to.exist;
+                const compiledType = await nebula.retrieveDocument(compiledCitation);
+                expect(compiledType).to.exist;
             }
         });
 

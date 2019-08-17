@@ -600,6 +600,8 @@ exports.api = function(notary, repository, compiler, debug) {
                 }
         
                 // checkin the draft and newly compiled type
+                // TODO: replace this logic with calls to notaryDocument and then make remote call
+                //       compile the type and verify that the result is identical before posting.
                 compiledCitation = await this.commitDocument(type);
                 draft.setValue('$compiled', compiledCitation);
                 const typeCitation = await this.commitDocument(draft);
