@@ -1,6 +1,6 @@
 {
   "name": "bali-nebula-api",
-  "version": "1.1.7",
+  "version": "1.1.8",
   "description": "This library provides a JavaScript based API to the Bali Nebula™.",
   "repository": {
     "type": "git",
@@ -33,10 +33,10 @@
     "webpack": "^4.35.3"
   },
   "dependencies": {
-    "axios": "^0.18.0",
+    "axios": "^0.19.0",
     "bali-component-framework": "^1.12.3",
-    "bali-digital-notary": "^1.8.12",
-    "bali-document-repository": "^1.0.2",
-    "bali-procedure-compiler": "^1.0.1"
+    "bali-digital-notary": "^1.9.0",
+    "bali-document-repository": "^1.1.0",
+    "bali-procedure-compiler": "^1.1.0"
   }
 }

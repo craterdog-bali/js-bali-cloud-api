@@ -25,7 +25,7 @@ function extractId(component) {
     return '' + identifier + version;
 }
 
-describe('Bali Nebula™ API - Test Local API', function() {
+describe('Bali Nebula™ API - Local API', function() {
     var consumerNotary;
     var consumerRepository;
     var consumerClient;

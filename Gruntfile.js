@@ -41,8 +41,7 @@ module.exports = function(grunt) {
           timeout: 90000 
         },
         src: [
-          'test/**/*.js',
-          '!test/TestRemoteAPI.js'
+          'test/**/*.js'
         ]
       }
     },

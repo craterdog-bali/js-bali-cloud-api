@@ -18,11 +18,11 @@ const account = bali.tag('GTDHQ9B8ZGS7WCBJJJBFF6KDCCF55R2P');
 const securityModule = require('bali-digital-notary').ssm(directory + account, debug);
 const notary = require('bali-digital-notary').api(securityModule, account, directory, debug);
 const repository = require('bali-document-repository').local(directory, debug);
-const compiler = require('bali-procedure-compiler');
+const compiler = require('bali-procedure-compiler').api(debug);
 const nebula = require('../').api(notary, repository, compiler, debug);
 
 
-describe('Bali Virtual Macine™', function() {
+describe('Bali Nebula™ API - Compiler API', function() {
 
     describe('Initialize the environment', function() {
 

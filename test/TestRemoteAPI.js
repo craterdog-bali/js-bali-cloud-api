@@ -26,7 +26,7 @@ function extractId(component) {
     return '' + identifier + version;
 }
 
-describe('Bali Nebula™ API - Test Remote API', function() {
+describe('Bali Nebula™ API - Remote API', function() {
     var consumerNotary;
     var consumerRepository;
     var consumerClient;
