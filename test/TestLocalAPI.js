@@ -14,9 +14,12 @@ const mocha = require('mocha');
 const assert = require('chai').assert;
 const expect = require('chai').expect;
 const bali = require('bali-component-framework');
-const notary = require('bali-digital-notary');
+const ssm = require('bali-digital-notary').ssm;
+const notary = require('bali-digital-notary').api;
 const repository = require('bali-document-repository').local;
-const api = require('../').api;
+const compiler = require('bali-procedure-compiler').api(debug);
+const nebula = require('../index').api;
+
 
 function extractId(component) {
     const parameters = component.getValue('$component').getParameters();
@@ -39,27 +42,27 @@ describe('Bali Nebula™ API - Local API', function() {
 
         it('should create the consumer notary API', async function() {
             const consumerTag = bali.tag();
-            const consumerSSM = notary.ssm(directory + consumerTag.getValue() + '.keys');
-            consumerNotary = notary.api(consumerSSM, consumerTag, directory, debug);
+            const consumerSSM = ssm(directory + consumerTag.getValue() + '.keys', false);
+            consumerNotary = notary(consumerSSM, consumerTag, directory, false);
             expect(consumerNotary).to.exist;
         });
 
         it('should create the merchant notary API', async function() {
             const merchantTag = bali.tag();
-            const merchantSSM = notary.ssm(directory + merchantTag.getValue() + '.keys');
-            merchantNotary = notary.api(merchantSSM, merchantTag, directory, debug);
+            const merchantSSM = ssm(directory + merchantTag.getValue() + '.keys', false);
+            merchantNotary = notary(merchantSSM, merchantTag, directory, false);
             expect(merchantNotary).to.exist;
         });
 
         it('should create the consumer nebula API', async function() {
             consumerRepository = repository(directory, debug);
-            consumerClient = api(consumerNotary, consumerRepository, debug);
+            consumerClient = nebula(consumerNotary, consumerRepository, compiler, debug);
             expect(consumerClient).to.exist;
         });
 
         it('should create the merchant nebula API', async function() {
             merchantRepository = repository(directory, debug);
-            merchantClient = api(merchantNotary, merchantRepository, debug);
+            merchantClient = nebula(merchantNotary, merchantRepository, compiler, debug);
             expect(merchantClient).to.exist;
         });
 
@@ -89,7 +92,7 @@ describe('Bali Nebula™ API - Local API', function() {
         }, bali.parameters({
             $tag: bali.tag(),
             $version: bali.version(),
-            $permissions: bali.parse('/bali/permissions/public/v1'),
+            $permissions: '/bali/permissions/public/v1',
             $previous: bali.pattern.NONE
         }));
         var draftCitation;
@@ -138,7 +141,7 @@ describe('Bali Nebula™ API - Local API', function() {
             }, bali.parameters({
                 $tag: bali.tag(),
                 $version: bali.version(),
-                $permissions: bali.parse('/bali/permissions/private/v1'),
+                $permissions: '/bali/permissions/private/v1',
                 $previous: bali.pattern.NONE
             }));
             draftCitation = await consumerClient.saveDraft(catalog);
@@ -218,13 +221,13 @@ describe('Bali Nebula™ API - Local API', function() {
                     $timestamp: bali.moment(),
                     $product: bali.text('Snickers Bar'),
                     $quantity: i,
-                    $price: bali.parse('1.25($USD)'),
-                    $tax: bali.parse('1.07($USD)'),
-                    $total: bali.parse('13.57($USD)')
+                    $price: '1.25($USD)',
+                    $tax: '1.07($USD)',
+                    $total: '13.57($USD)'
                 }, bali.parameters({
                     $tag: bali.tag(),
                     $version: bali.version(),
-                    $permissions: bali.parse('/bali/permissions/public/v1'),
+                    $permissions: '/bali/permissions/public/v1',
                     $previous: bali.pattern.NONE
                 }));
                 await consumerClient.queueMessage(queue, transaction);
@@ -256,7 +259,7 @@ describe('Bali Nebula™ API - Local API', function() {
         }, bali.parameters({
             $tag: bali.tag(),
             $version: bali.version(),
-            $permissions: bali.parse('/bali/permissions/public/v1'),
+            $permissions: '/bali/permissions/public/v1',
             $previous: bali.pattern.NONE
         }));
 

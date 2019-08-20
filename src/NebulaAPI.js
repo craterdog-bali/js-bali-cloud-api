@@ -17,6 +17,7 @@
  * the procedure compiler API be passed into the constructor.
  */
 const bali = require('bali-component-framework');
+const EOF = '\n';
 
 
 /**
@@ -86,8 +87,11 @@ exports.api = function(notary, repository, compiler, debug) {
          */
         registerAccount: async function(account, credentials) {
             try {
+                // validate the parameter types
                 validateParameter('$registerAccount', 'account', account, 'account', debug);
                 validateParameter('$registerAccount', 'credentials', credentials, 'credentials', debug);
+
+                // validate the credentials
                 const certificate = credentials.getValue('$component');
                 if (!(await notary.documentIsValid(credentials, certificate))) {
                     const exception = bali.exception({
@@ -96,11 +100,13 @@ exports.api = function(notary, repository, compiler, debug) {
                         $exception: '$documentInvalid',
                         $document: credentials,
                         $certificate: certificate,
-                        $text: bali.text('The signed credentials document is invalid.')
+                        $text: bali.text('The notarized credentials document is invalid.')
                     });
                     if (debug) console.error(exception.toString());
                     throw exception;
                 }
+
+                // validate the account document
                 if (!(await notary.documentIsValid(account, certificate))) {
                     const exception = bali.exception({
                         $module: '/bali/services/NebulaAPI',
@@ -108,13 +114,29 @@ exports.api = function(notary, repository, compiler, debug) {
                         $exception: '$documentInvalid',
                         $document: account,
                         $certificate: certificate,
-                        $text: bali.text('The signed account document is invalid.')
+                        $text: bali.text('The notarized account document is invalid.')
                     });
                     if (debug) console.error(exception.toString());
                     throw exception;
                 }
-                const accountCitation = await notary.citeDocument(account);
+
+                // make sure the accountIds match
                 const accountId = notary.getAccountId();
+                const accountCitation = await notary.citeDocument(account);
+                if (extractId(accountCitation) !== accountId) {
+                    const exception = bali.exception({
+                        $module: '/bali/services/NebulaAPI',
+                        $procedure: '$registerAccount',
+                        $exception: '$invalidCitation',
+                        $accountId: accountId,
+                        $citation: accountCitation,
+                        $text: bali.text('The accountId for the new account does not match the notary accountId.')
+                    });
+                    if (debug) console.error(exception.toString());
+                    throw exception;
+                }
+
+                // make sure the account doesn't already exist
                 if (await repository.documentExists(accountId)) {
                     const exception = bali.exception({
                         $module: '/bali/services/NebulaAPI',
@@ -126,6 +148,8 @@ exports.api = function(notary, repository, compiler, debug) {
                     if (debug) console.error(exception.toString());
                     throw exception;
                 }
+
+                // make sure the certificate doesn't already exist
                 const certificateCitation = await notary.citeDocument(credentials);
                 const certificateId = extractId(certificateCitation);
                 if (await repository.documentExists(certificateId)) {
@@ -140,8 +164,11 @@ exports.api = function(notary, repository, compiler, debug) {
                     if (debug) console.error(exception.toString());
                     throw exception;
                 }
+
+                // create the documents in the repository
                 await repository.createDocument(accountId, account);
                 await repository.createDocument(certificateId, credentials);
+
             } catch (cause) {
                 const exception = bali.exception({
                     $module: '/bali/services/NebulaAPI',
@@ -362,13 +389,13 @@ exports.api = function(notary, repository, compiler, debug) {
          * This method commits to the Bali Nebula™ the specified draft document
          * to be associated with the specified document citation.
          * 
-         * @param {Component} document The draft document to be committed.
+         * @param {Component} draft The draft document to be committed.
          * @returns {Catalog} The updated citation for the committed document.
          */
-        commitDocument: async function(document) {
+        commitDocument: async function(draft) {
             try {
-                validateParameter('$commitDocument', 'document', document, 'document', debug);
-                document = await notary.signComponent(document);
+                validateParameter('$commitDocument', 'draft', draft, 'draft', debug);
+                var document = await notary.signComponent(draft);
                 const documentCitation = await notary.citeDocument(document);
                 const documentId = extractId(documentCitation);
                 if (cache.documentExists(documentId) || await repository.documentExists(documentId)) {
@@ -630,7 +657,7 @@ exports.api = function(notary, repository, compiler, debug) {
          */
         publishEvent: async function(event) {
             try {
-                validateParameter('$publishEvent', 'event', event, 'event', debug);
+                validateParameter('$publishEvent', 'event', event, 'draft', debug);
                 event = await notary.signComponent(event);
                 await repository.queueMessage(EVENT_QUEUE_ID, event);
             } catch (cause) {
@@ -657,8 +684,8 @@ exports.api = function(notary, repository, compiler, debug) {
          */
         sendMessage: async function(target, message) {
             try {
-                validateParameter('$sendMessage', 'target', target, 'target', debug);
-                validateParameter('$sendMessage', 'message', message, 'message', debug);
+                validateParameter('$sendMessage', 'target', target, 'citation', debug);
+                validateParameter('$sendMessage', 'message', message, 'draft', debug);
                 message.setValue('$target', target);
                 message = await notary.signComponent(message);
                 await repository.queueMessage(SEND_QUEUE_ID, message);
@@ -686,8 +713,8 @@ exports.api = function(notary, repository, compiler, debug) {
          */
         queueMessage: async function(queue, message) {
             try {
-                validateParameter('$queueMessage', 'queue', queue, 'queue', debug);
-                validateParameter('$queueMessage', 'message', message, 'message', debug);
+                validateParameter('$queueMessage', 'queue', queue, 'tag', debug);
+                validateParameter('$queueMessage', 'message', message, 'draft', debug);
                 message = await notary.signComponent(message);
                 const queueId = queue.getValue();
                 await repository.queueMessage(queueId, message);
@@ -716,7 +743,7 @@ exports.api = function(notary, repository, compiler, debug) {
          */
         receiveMessage: async function(queue) {
             try {
-                validateParameter('$receiveMessage', 'queue', queue, 'queue', debug);
+                validateParameter('$receiveMessage', 'queue', queue, 'tag', debug);
                 const queueId = queue.getValue();
                 var message;
                 const source = await repository.dequeueMessage(queueId);
@@ -851,7 +878,7 @@ const validateDocument = async function(notary, repository, document, debug) {
                 // don't cache the previous version since it has not been validated!
             }
 
-            // check for a self signed document
+            // check for a self notarized document
             var certificate;
             if (certificateCitation.isEqualTo(bali.pattern.NONE)) {
                 certificate = document.getValue('$component');
@@ -861,7 +888,7 @@ const validateDocument = async function(notary, repository, document, debug) {
                     $procedure: '$validateDocument',
                     $exception: '$documentInvalid',
                     $document: document,
-                    $text: bali.text('The self signed document is invalid.')
+                    $text: bali.text('The self notarized document is invalid.')
                 });
                 if (debug) console.error(exception.toString());
                 throw exception;
@@ -933,23 +960,26 @@ const validateDocument = async function(notary, repository, document, debug) {
  * @param {String} procedureName The name of the procedure being passed the parameter. 
  * @param {String} parameterName The name of the parameter being passed.
  * @param {Object} parameterValue The value of the parameter being passed.
- * @param {String} type The expected type of the parameter being passed.
+ * @param {String} parameterType The expected type of the parameter being passed.
  * @param {Boolean} debug An optional flag that determines whether or not exceptions
  * will be logged to the error console.
  * @throws {Exception} The parameter is not valid.
  */
-const validateParameter = function(procedureName, parameterName, parameterValue, type, debug) {
+const validateParameter = function(procedureName, parameterName, parameterValue, parameterType, debug) {
     debug = debug || false;
-    /*
     if (parameterValue) {
-        switch (type) {
+        switch (parameterType) {
             case 'binary':
             case 'moment':
             case 'name':
             case 'tag':
             case 'version':
                 // Primitive types must have a typeId and their type must match the passed in type
-                if (parameterValue.getTypeId && parameterValue.getTypeId() === bali.types[type.toUpperCase()]) return;
+                if (parameterValue && parameterValue.getTypeId) {
+                    if (parameterValue.getTypeId() === bali.types[parameterType.toUpperCase()]) {
+                        return;
+                    }
+                }
                 break;
             case 'directory':
                 // A directory must be a string that matches a specific pattern
@@ -966,15 +996,15 @@ const validateParameter = function(procedureName, parameterName, parameterValue,
                 //  * exactly five specific attributes
                 if (parameterValue.getTypeId && parameterValue.isEqualTo(bali.pattern.NONE)) return;
                 if (parameterValue.getTypeId && parameterValue.getTypeId() === bali.types.CATALOG && parameterValue.getSize() === 5) {
-                    validateParameter(procedureName, parameterName + '.protocol', parameterValue.getValue('$protocol'), 'version');
-                    validateParameter(procedureName, parameterName + '.timestamp', parameterValue.getValue('$timestamp'), 'moment');
-                    validateParameter(procedureName, parameterName + '.tag', parameterValue.getValue('$tag'), 'tag');
-                    validateParameter(procedureName, parameterName + '.version', parameterValue.getValue('$version'), 'version');
-                    validateParameter(procedureName, parameterName + '.digest', parameterValue.getValue('$digest'), 'binary');
+                    validateParameter(procedureName, parameterName + '.protocol', parameterValue.getValue('$protocol'), 'version', debug);
+                    validateParameter(procedureName, parameterName + '.timestamp', parameterValue.getValue('$timestamp'), 'moment', debug);
+                    validateParameter(procedureName, parameterName + '.tag', parameterValue.getValue('$tag'), 'tag', debug);
+                    validateParameter(procedureName, parameterName + '.version', parameterValue.getValue('$version'), 'version', debug);
+                    validateParameter(procedureName, parameterName + '.digest', parameterValue.getValue('$digest'), 'binary', debug);
                     const parameters = parameterValue.getParameters();
                     if (parameters && parameters.getSize() === 1) {
-                        validateParameter(procedureName, parameterName + '.parameters.type', parameters.getParameter('$Type'), 'name');
-                        if (parameters.getParameter('$Type').toString().startsWith('/bali/types/Citation/v')) return;
+                        validateParameter(procedureName, parameterName + '.parameters.type', parameters.getParameter('$type'), 'name', debug);
+                        if (parameters.getParameter('$type').toString().startsWith('/bali/notary/Citation/v')) return;
                     }
                 }
                 break;
@@ -984,20 +1014,33 @@ const validateParameter = function(procedureName, parameterName, parameterValue,
                 //  * exactly four specific attributes
                 //  * and be parameterized with exactly 5 specific parameters
                 if (parameterValue.getTypeId && parameterValue.getTypeId() === bali.types.CATALOG && parameterValue.getSize() === 4) {
-                    validateParameter(procedureName, parameterName + '.protocol', parameterValue.getValue('$protocol'), 'version');
-                    validateParameter(procedureName, parameterName + '.timestamp', parameterValue.getValue('$timestamp'), 'moment');
-                    validateParameter(procedureName, parameterName + '.account', parameterValue.getValue('$account'), 'tag');
-                    validateParameter(procedureName, parameterName + '.publicKey', parameterValue.getValue('$publicKey'), 'binary');
+                    validateParameter(procedureName, parameterName + '.protocol', parameterValue.getValue('$protocol'), 'version', debug);
+                    validateParameter(procedureName, parameterName + '.timestamp', parameterValue.getValue('$timestamp'), 'moment', debug);
+                    validateParameter(procedureName, parameterName + '.account', parameterValue.getValue('$account'), 'tag', debug);
+                    validateParameter(procedureName, parameterName + '.publicKey', parameterValue.getValue('$publicKey'), 'binary', debug);
                     const parameters = parameterValue.getParameters();
-                    if (parameters && parameters.getSize() === 5) {
-                        validateParameter(procedureName, parameterName + '.parameters.type', parameters.getParameter('$Type'), 'name');
-                        validateParameter(procedureName, parameterName + '.parameters.tag', parameters.getParameter('$tag'), 'tag');
-                        validateParameter(procedureName, parameterName + '.parameters.version', parameters.getParameter('$version'), 'version');
-                        validateParameter(procedureName, parameterName + '.parameters.permissions', parameters.getParameter('$permissions'), 'name');
-                        validateParameter(procedureName, parameterName + '.parameters.previous', parameters.getParameter('$previous'), 'citation');
-                        if (parameters.getParameter('$Type').toString().startsWith('/bali/types/Certificate/v') &&
+                    if (parameters && parameters.getSize() > 4) {
+                        validateParameter(procedureName, parameterName + '.parameters.type', parameters.getParameter('$type'), 'name', debug);
+                        validateParameter(procedureName, parameterName + '.parameters.tag', parameters.getParameter('$tag'), 'tag', debug);
+                        validateParameter(procedureName, parameterName + '.parameters.version', parameters.getParameter('$version'), 'version', debug);
+                        validateParameter(procedureName, parameterName + '.parameters.permissions', parameters.getParameter('$permissions'), 'name', debug);
+                        validateParameter(procedureName, parameterName + '.parameters.previous', parameters.getParameter('$previous'), 'citation', debug);
+                        if (parameters.getParameter('$type').toString().startsWith('/bali/types/Certificate/v') &&
                             parameters.getParameter('$permissions').toString().startsWith('/bali/permissions/public/v')) return;
                     }
+                }
+                break;
+            case 'draft':
+                // A draft must have the following:
+                //  * be parameterized with at least four parameters
+                if (parameterValue.getTypeId && parameterValue.getTypeId() === bali.types.CATALOG) {
+                    var parameters = parameterValue.getParameters();
+                    if (parameters && parameters.getSize() > 3) {
+                        validateParameter(procedureName, parameterName + '.parameters.tag', parameters.getParameter('$tag'), 'tag', debug);
+                        validateParameter(procedureName, parameterName + '.parameters.version', parameters.getParameter('$version'), 'version', debug);
+                        validateParameter(procedureName, parameterName + '.parameters.permissions', parameters.getParameter('$permissions'), 'name', debug);
+                        validateParameter(procedureName, parameterName + '.parameters.previous', parameters.getParameter('$previous'), 'citation', debug);
+                    } return;
                 }
                 break;
             case 'document':
@@ -1007,38 +1050,41 @@ const validateParameter = function(procedureName, parameterName, parameterValue,
                 //  * the $component attribute must be parameterized with at least four parameters
                 //  * the $component attribute may have a parameterized type as well
                 if (parameterValue.getTypeId && parameterValue.getTypeId() === bali.types.CATALOG && parameterValue.getSize() === 5) {
-                    validateParameter(procedureName, parameterName + '.component', parameterValue.getValue('$component'), 'component');
-                    validateParameter(procedureName, parameterName + '.protocol', parameterValue.getValue('$protocol'), 'version');
-                    validateParameter(procedureName, parameterName + '.timestamp', parameterValue.getValue('$timestamp'), 'moment');
-                    validateParameter(procedureName, parameterName + '.certificate', parameterValue.getValue('$certificate'), 'citation');
-                    validateParameter(procedureName, parameterName + '.signature', parameterValue.getValue('$signature'), 'binary');
+                    validateParameter(procedureName, parameterName + '.component', parameterValue.getValue('$component'), 'component', debug);
+                    validateParameter(procedureName, parameterName + '.protocol', parameterValue.getValue('$protocol'), 'version', debug);
+                    validateParameter(procedureName, parameterName + '.timestamp', parameterValue.getValue('$timestamp'), 'moment', debug);
+                    validateParameter(procedureName, parameterName + '.certificate', parameterValue.getValue('$certificate'), 'citation', debug);
+                    validateParameter(procedureName, parameterName + '.signature', parameterValue.getValue('$signature'), 'binary', debug);
                     var parameters = parameterValue.getValue('$component').getParameters();
                     if (parameters) {
-                        if (parameters.getParameter('$Type')) validateParameter(procedureName, parameterName + '.parameters.type', parameters.getParameter('$Type'), 'name');
-                        validateParameter(procedureName, parameterName + '.parameters.tag', parameters.getParameter('$tag'), 'tag');
-                        validateParameter(procedureName, parameterName + '.parameters.version', parameters.getParameter('$version'), 'version');
-                        validateParameter(procedureName, parameterName + '.parameters.permissions', parameters.getParameter('$permissions'), 'name');
-                        validateParameter(procedureName, parameterName + '.parameters.previous', parameters.getParameter('$previous'), 'citation');
+                        if (parameters.getParameter('$type')) validateParameter(procedureName, parameterName + '.parameters.type', parameters.getParameter('$type'), 'name', debug);
+                        validateParameter(procedureName, parameterName + '.parameters.tag', parameters.getParameter('$tag'), 'tag', debug);
+                        validateParameter(procedureName, parameterName + '.parameters.version', parameters.getParameter('$version'), 'version', debug);
+                        validateParameter(procedureName, parameterName + '.parameters.permissions', parameters.getParameter('$permissions'), 'name', debug);
+                        validateParameter(procedureName, parameterName + '.parameters.previous', parameters.getParameter('$previous'), 'citation', debug);
                         parameters = parameterValue.getParameters();
                         if (parameters && parameters.getSize() === 1) {
-                            if (parameters.getParameter('$Type').toString().startsWith('/bali/types/Document/v')) return;
+                            if (parameters.getParameter('$type').toString().startsWith('/bali/types/Document/v')) return;
                         }
                     }
                 }
                 break;
         }
     }
+    if (parameterType === 'level') {
+        if (typeof parameterValue === 'undefined') return;
+        if (typeof parameterValue === 'number' && parameterValue > 0) return;
+    }
     const exception = bali.exception({
         $module: '/bali/services/NebulaAPI',
         $procedure: procedureName,
         $exception: '$invalidParameter',
-        $parameter: bali.text(parameterName),
-        $value: parameterValue ? bali.text(parameterValue.toString()) : bali.pattern.NONE,
+        $parameter: bali.symbol(parameterName),
+        $value: parameterValue ? bali.text(EOF + parameterValue.toString() + EOF) : bali.pattern.NONE,
         $text: bali.text('An invalid parameter value was passed to the function.')
     });
     if (debug) console.error(exception.toString());
     throw exception;
-    */
 };
 
 
