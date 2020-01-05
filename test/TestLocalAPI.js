@@ -11,8 +11,9 @@
 const debug = false;  // set to true for error logging
 const directory = 'test/config/';
 const mocha = require('mocha');
-const assert = require('chai').assert;
-const expect = require('chai').expect;
+const chai = require('chai');
+const expect = chai.expect;
+const assert = require('assert');
 const bali = require('bali-component-framework');
 const ssm = require('bali-digital-notary').ssm;
 const notary = require('bali-digital-notary').api;
@@ -23,8 +24,8 @@ const nebula = require('../index').api;
 
 function extractId(component) {
     const parameters = component.getValue('$component').getParameters();
-    const identifier = parameters.getParameter('$tag').getValue();
-    const version = parameters.getParameter('$version');
+    const identifier = parameters.getValue('$tag').getValue();
+    const version = parameters.getValue('$version');
     return '' + identifier + version;
 }
 
@@ -240,7 +241,7 @@ describe('Bali Nebula™ API - Local API', function() {
             while (transaction) {
                 count++;
 
-                var tag = transaction.getParameters().getParameter('$tag');
+                var tag = transaction.getParameters().getValue('$tag');
                 var documentCitation = await merchantClient.commitDocument(transaction);
                 expect(documentCitation.getValue('$tag').isEqualTo(tag)).to.equal(true);
                 expect(documentCitation.getValue('$version').toString()).to.equal('v1');
