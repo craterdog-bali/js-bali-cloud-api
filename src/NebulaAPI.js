@@ -43,7 +43,7 @@ exports.api = function(notary, repository, compiler, debug) {
 
         /**
          * This function returns a string providing attributes about this repository.
-         * 
+         *
          * @returns {String} A string providing attributes about this repository.
          */
         toString: function() {
@@ -58,7 +58,7 @@ exports.api = function(notary, repository, compiler, debug) {
         /**
          * This function returns the unique tag for the account that owns the notary key
          * for this client.
-         * 
+         *
          * @returns {Tag} The unique tag for the account that owns the notary key for
          * this client.
          */
@@ -69,7 +69,7 @@ exports.api = function(notary, repository, compiler, debug) {
         /**
          * This function returns a reference to the document repository that is used by this
          * client.
-         * 
+         *
          * @returns {Reference} A reference to the document repository that is used by this
          * client.
          */
@@ -80,7 +80,7 @@ exports.api = function(notary, repository, compiler, debug) {
         /**
          * This function registers a new account with the Bali Nebula™. A valid account is
          * required for general access to the Bali Nebula™.
-         * 
+         *
          * @param {Catalog} information A catalog containing the account information.
          */
         registerAccount: async function(information) {
@@ -143,7 +143,7 @@ exports.api = function(notary, repository, compiler, debug) {
         /**
          * This function associates the specified global name to the specified document
          * citation.
-         * 
+         *
          * @param {Name} name The global name to be associated with the specified document
          * citation.
          * @param {Catalog} citation The document citation to be named.
@@ -182,7 +182,7 @@ exports.api = function(notary, repository, compiler, debug) {
         /**
          * This method retrieves from the Bali Nebula™ the document citation associated with
          * the specified name.
-         * 
+         *
          * @param {Name} name The globally unique name for the desired document citation.
          * @returns {Catalog} The document citation associated with the name.
          */
@@ -215,7 +215,7 @@ exports.api = function(notary, repository, compiler, debug) {
         /**
          * This method creates a new draft document template based on the specified document
          * type name.
-         * 
+         *
          * @param {Name} type The name of the type of document to be created.
          * @returns {Catalog} A document template for the new draft document.
          */
@@ -247,7 +247,7 @@ exports.api = function(notary, repository, compiler, debug) {
 
         /**
          * This method saves in the Bali Nebula™ a draft document.
-         * 
+         *
          * @param {Component} draft The draft document to be saved.
          * @returns {Catalog} A document citation for the draft document.
          */
@@ -288,7 +288,7 @@ exports.api = function(notary, repository, compiler, debug) {
         /**
          * This method retrieves from the Bali Nebula™ the saved draft document
          * associated with the specified document citation.
-         * 
+         *
          * @param {Catalog} citation The document citation for the desired draft document.
          * @returns {Component} The desired draft document.
          */
@@ -322,7 +322,7 @@ exports.api = function(notary, repository, compiler, debug) {
         /**
          * This method deletes from the Bali Nebula™ the saved draft document
          * associated with the specified document citation.
-         * 
+         *
          * @param {Catalog} citation The document citation for the draft document to be deleted.
          */
         discardDraft: async function(citation) {
@@ -346,7 +346,7 @@ exports.api = function(notary, repository, compiler, debug) {
         /**
          * This method commits to the Bali Nebula™ the specified draft document
          * to be associated with the specified document citation.
-         * 
+         *
          * @param {Component} draft The draft document to be committed.
          * @returns {Catalog} The updated citation for the committed document.
          */
@@ -388,7 +388,7 @@ exports.api = function(notary, repository, compiler, debug) {
         /**
          * This method retrieves from the Bali Nebula™ the committed document
          * for the specified document citation.
-         * 
+         *
          * @param {Catalog} citation The document citation for the desired document.
          * @returns {Component} The desired document.
          */
@@ -431,7 +431,7 @@ exports.api = function(notary, repository, compiler, debug) {
          *     level 2:    v5.7              v5.8       (optimization/bug fixes)
          *     level 2:    v5.7              v5.7.1     (changes being tested)
          * </pre>
-         * 
+         *
          * @param {Catalog} citation The document citation for the committed document.
          * @param {Number} level The (optional) version level that should be incremented. If no
          * level is specified, the last number in the document version string is incremented.
@@ -507,7 +507,7 @@ exports.api = function(notary, repository, compiler, debug) {
         /**
          * This method compiles the document type associated with the specified document
          * citation in the Bali Nebula™.
-         * 
+         *
          * @param {Catalog} draft The draft document for the type to be compiled.
          * @returns {Catalog} A Bali document citation to the newly compiled type document.
          */
@@ -515,7 +515,7 @@ exports.api = function(notary, repository, compiler, debug) {
             try {
                 validateParameter('$compileType', 'draft', draft, 'draft', debug);
                 const parameters = draft.getParameters();
-        
+
                 // extract any literals, constants and procedures from the parent type
                 const literals = bali.list();
                 const constants = bali.catalog();
@@ -531,12 +531,12 @@ exports.api = function(notary, repository, compiler, debug) {
                         procedures.addItems(compiledParent.getValue('$procedures'));
                     }
                 }
-        
+
                 // add in the constants from the child draft type
                 const items = draft.getValue('$constants');
                 if (items) constants.addItems(items);
                 var compiledCitation = draft.getValue('$compiled');
-        
+
                 // create the compilation type context
                 const type = bali.catalog([], bali.parameters({
                     $tag: compiledCitation ? compiledCitation.getValue('$tag') : bali.tag(),
@@ -547,7 +547,7 @@ exports.api = function(notary, repository, compiler, debug) {
                 type.setValue('$literals', literals);
                 type.setValue('$constants', constants);
                 type.setValue('$procedures', procedures);
-        
+
                 // compile each procedure defined in the type definition document
                 var association, name, procedure;
                 procedures = draft.getValue('$procedures');
@@ -556,43 +556,43 @@ exports.api = function(notary, repository, compiler, debug) {
                     var iterator = procedures.getIterator();
                     procedures = bali.catalog();  // for compiled procedures
                     while (iterator.hasNext()) {
-        
+
                         // retrieve the source code for the procedure
                         association = iterator.getNext();
                         name = association.getKey();
                         const source = association.getValue().getValue('$source');
-        
+
                         // compile the source code
                         procedure = compiler.compile(type, source, debug);
                         procedures.setValue(name, procedure);  // compiled procedure
                     }
-        
+
                     // iterate through the compiled procedures
                     iterator = procedures.getIterator();
                     while (iterator.hasNext()) {
-        
+
                         // retrieve the compiled procedure
                         association = iterator.getNext();
                         name = association.getKey();
                         procedure = association.getValue();
-        
+
                         // assemble the instructions in the procedure into bytecode
                         compiler.assemble(type, procedure, debug);
-        
+
                         // add the assembled procedure to the type context
                         type.getValue('$procedures').setValue(name, procedure);
                     }
                 }
-        
+
                 // checkin the draft and newly compiled type
                 // TODO: replace this logic with calls to notaryDocument and then make remote call
                 //       compile the type and verify that the result is identical before posting.
                 compiledCitation = await this.commitDocument(type);
                 draft.setValue('$compiled', compiledCitation);
                 const typeCitation = await this.commitDocument(draft);
-        
+
                 return typeCitation;
-        
+
             } catch (cause) {
                 const exception = bali.exception({
                     $module: '/bali/services/NebulaAPI',
@@ -610,7 +610,7 @@ exports.api = function(notary, repository, compiler, debug) {
          * This method publishes the specified event in the Bali Nebula™.
          * Any component that has registered event handlers for this type of event
          * will be automatically notified.
-         * 
+         *
          * @param {Catalog} event The Bali catalog documenting the event.
          */
         publishEvent: async function(event) {
@@ -635,7 +635,7 @@ exports.api = function(notary, repository, compiler, debug) {
          * This method sends the specified message to the document residing in the Bali
          * Nebula™ that is referenced by the specified target document citation.
          * The message is sent asynchronously so there is no response.
-         * 
+         *
          * @param {Catalog} target A document citation referencing the document containing
          * the target component of the message.
          * @param {Catalog} message The message to be sent to the target component.
@@ -664,7 +664,7 @@ exports.api = function(notary, repository, compiler, debug) {
          * This method places the specified message on the specified queue in the Bali
          * Nebula™. The message will be received by another task using the
          * <code>receiveMessage(queue)</code> method with the same queue from the API.
-         * 
+         *
          * @param {Tag} queue The unique tag identifying the queue on which to place
          * the message.
          * @param {Catalog} message The message to be placed on the queue.
@@ -694,7 +694,7 @@ exports.api = function(notary, repository, compiler, debug) {
          * Nebula™. The message was placed there by another task using the
          * <code>queueMessage(queue, message)</code> method with the same queue from the API.
          * If there are no messages on the queue, the result of this call will be 'none'.
-         * 
+         *
          * @param {Tag} queue The unique tag identifying the queue from which to receive
          * the message.
          * @returns {Component} The message received from the queue.
@@ -733,7 +733,7 @@ exports.api = function(notary, repository, compiler, debug) {
 /**
  * This function extracts the '$tag' and '$version' attributes from the specified catalog
  * and uses them to form a unique identification string.
- * 
+ *
  * @param {Catalog} catalog A catalog component.
  * @returns {String} A unique identification string for the component.
  */
@@ -747,7 +747,7 @@ const extractId = function(catalog) {
  * This function validates the specified document citation against a document to make sure
  * that the citation digest was generated from the same document.  If not, an exception is
  * thrown.
- * 
+ *
  * @param {Object} notary The notary to be used when validating the document citation.
  * @param {Catalog} citation The document citation to be validated.
  * @param {Component} document The document that supposedly was used to generate the
@@ -791,7 +791,7 @@ const validateCitation = async function(notary, citation, document, debug) {
 /**
  * This function validates a notarized document. It makes sure that all notary seals
  * attached to the document are valid. If any seal is not valid an exception is thrown.
- * 
+ *
  * @param {Object} notary The notary to be used for validating the document.
  * @param {Object} repository The document repository containing the certificates.
  * @param {Catalog} document The notarized document to be validated.
@@ -914,8 +914,8 @@ const validateDocument = async function(notary, repository, document, debug) {
 
 /**
  * This function determines whether or not the specified parameter is valid.
- * 
- * @param {String} procedureName The name of the procedure being passed the parameter. 
+ *
+ * @param {String} procedureName The name of the procedure being passed the parameter.
  * @param {String} parameterName The name of the parameter being passed.
  * @param {Object} parameterValue The value of the parameter being passed.
  * @param {String} parameterType The expected type of the parameter being passed.
@@ -1048,8 +1048,8 @@ const validateParameter = function(procedureName, parameterName, parameterValue,
 
 /**
  * This function constructs a template of a component of the specified type.
- * 
- * @param {Catalog} type A catalog containing a type definition. 
+ *
+ * @param {Catalog} type A catalog containing a type definition.
  * @param {Boolean} debug An optional flag that determines whether or not exceptions
  * will be logged to the error console.
  * @returns {Catalog} The newly constructed component template.

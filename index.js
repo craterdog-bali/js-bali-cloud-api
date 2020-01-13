@@ -12,7 +12,7 @@
 /**
  * This function initializes the Bali Nebula™ API. It requires that a digital notary,
  * a document repository, and a procedure compileer be specified.
- * 
+ *
  * @param {Object} notary An object that implements the digital notary API.
  * @param {Object} repository An object that implements the document repository API.
  * @param {Object} compiler An object that implements the procedure compiler API.
