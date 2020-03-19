@@ -1,6 +1,9 @@
-![Logo](docs/images/CraterDogLogo.png)
+## Bali Nebula™ API
+<img src="https://craterdog.com/images/CraterDogLogo.png" width="50%">
 
-### Bali Nebula™ API
+_**WARNING**_
+_This project is still in its early stages and the classes and interfaces to the classes are likely to change._
+
 This project provides a JavaScript version of the API needed to interact with the _Bali Nebula™_. It allows a client program to perform the following tasks:
  * create components and commit them to the Bali Nebula™ document repository as notarized documents
  * compile component type documents to create new types in the repository
@@ -9,9 +12,6 @@ This project provides a JavaScript version of the API needed to interact with th
  * post notarized events to other interested components
 
 ![Architecture](docs/images/BaliNebulaArchitecture.png)
-
-_**WARNING**_
-_This project is still in its early stages and the classes and interfaces to the classes are likely to change._
 
 ### Quick Links
 For more information on this project click on the following links:
