@@ -27,6 +27,7 @@ npm install bali-nebula-api
 ```
 Then add the following line to your NodeJS modules:
 ```
+const debug = 1;  // debugging level: [0..3]
 const nebula = require('bali-nebula-api');
 ```
 
